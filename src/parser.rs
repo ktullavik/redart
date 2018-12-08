@@ -179,9 +179,14 @@ pub fn parse(tokens: &Vec<Token>) -> Result<Node, String> {
     let (funnode, i) = fundef(tokens, i).unwrap();
     &root.children.push(funnode);
 
-    if i != tokens.len() - 1 {
+    if i < tokens.len() - 1 {
         return Err(format!("Expected end of input, found {:?} at {}", tokens[i], i))
     }
+    else if i > tokens.len() - 1 {
+        return Err(format!("Index returned beyond end of token array. Index: {}, len: {}", i, tokens.len()))
+    }
+
+    println!("parse finished at index: {}", i);
     Ok(root)
 }
 
@@ -251,6 +256,8 @@ fn fundef(tokens: &Vec<Token>, pos: usize) -> Result<(Node, usize), String>  {
                     let mut node = Node::new(NodeType::FUNDEF(fname.to_string()));
                     let (params, new_pos) = paramlist(tokens, i).unwrap();
                     i = new_pos;
+                    node.children.push(params);
+
                     let t3: &Token = tokens.get(i).unwrap();
                     i += 1;
 
@@ -258,8 +265,8 @@ fn fundef(tokens: &Vec<Token>, pos: usize) -> Result<(Node, usize), String>  {
                         Token::BLOCK1 => {
                             let (body, new_pos) = block(tokens, i).unwrap();
                             node.children.push(body);
-                            println!("pos after block: {}", new_pos);
                             i = new_pos;
+                            println!("fundef parsed to {}", new_pos);
                             Ok((node, i))
                         }
 
