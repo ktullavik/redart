@@ -25,6 +25,7 @@ pub fn eval(node: &Node, symtable: &mut HashMap<String, Object>) -> Object {
     match t {
 
         NodeType::ASSIGN => {
+            println!("NodeType::ASSIGN");
             match &node.children[0].nodetype {
                 NodeType::NAME(ref s1) => {
 
@@ -44,6 +45,7 @@ pub fn eval(node: &Node, symtable: &mut HashMap<String, Object>) -> Object {
         },
 
         NodeType::ADD => {
+            println!("NodeType::ADD");
 
             let left_obj = eval(&node.children[0], symtable);
 
@@ -64,6 +66,7 @@ pub fn eval(node: &Node, symtable: &mut HashMap<String, Object>) -> Object {
         },
 
         NodeType::SUB => {
+            println!("NodeType::SUB");
 
             let left_obj = eval(&node.children[0], symtable);
 
@@ -85,6 +88,7 @@ pub fn eval(node: &Node, symtable: &mut HashMap<String, Object>) -> Object {
 
 
         NodeType::MUL => {
+            println!("NodeType::MUL");
 
             let left_obj = eval(&node.children[0], symtable);
 
@@ -104,13 +108,18 @@ pub fn eval(node: &Node, symtable: &mut HashMap<String, Object>) -> Object {
             }
         },
 
-        NodeType::NUM(s) =>
-            Object::NUM(s.parse().unwrap()),
+        NodeType::NUM(s) => {
+            println!("NodeType::NUM");
+            Object::NUM(s.parse().unwrap())
+        },
 
-        NodeType::STRING(s) =>
-            Object::STRING(s.parse().unwrap()),
+        NodeType::STRING(s) => {
+            println!("NodeType::STRING");
+            Object::STRING(s.parse().unwrap())
+        },
 
         NodeType::NAME(s) => {
+            println!("NodeType::NAME");
             if symtable.contains_key(s) {
                 match symtable.get(s).unwrap() {
                     &Object::NUM(ref v) => {
@@ -130,6 +139,7 @@ pub fn eval(node: &Node, symtable: &mut HashMap<String, Object>) -> Object {
         }
 
         NodeType::FUNCALL(s) => {
+            println!("NodeType::FUNCALL");
 
             if builtin::has_function(s) {
                 let res: Object = builtin::call(s, &node.children);
@@ -140,6 +150,7 @@ pub fn eval(node: &Node, symtable: &mut HashMap<String, Object>) -> Object {
         }
 
         NodeType::FUNDEF(s) => {
+            println!("NodeType::FUNDEF");
 
             let params = &node.children[0];
             let body = &node.children[1];
@@ -161,6 +172,8 @@ pub fn eval(node: &Node, symtable: &mut HashMap<String, Object>) -> Object {
         }
 
         NodeType::MODULE => {
+            println!("NodeType::MODULE");
+
             eval(&node.children[1], symtable)
         }
 
