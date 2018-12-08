@@ -31,6 +31,7 @@ pub enum Token {
 }
 
 
+#[derive(PartialEq)]
 pub enum NodeType {
     ADD,
     SUB,
@@ -102,8 +103,8 @@ impl fmt::Display for NodeType {
             NodeType::FUNDEF(s)                     => write!(f, "{}() {{}}", s),
             NodeType::FUNCALL(s)                    => write!(f, "{}()", s),
             NodeType::METHODCALL(objname, methname) => write!(f, "{}.{}()", objname, methname),
-            NodeType::PAREN1                        => write!(f, "("),
-            NodeType::PAREN2                        => write!(f, ")"),
+//            NodeType::PAREN1                        => write!(f, "("),
+//            NodeType::PAREN2                        => write!(f, ")"),
             NodeType::LIST                          => write!(f, "[]"),
             NodeType::PARAMLIST                     => write!(f, "PARAMLIST"),
             NodeType::ARGLIST                       => write!(f, "PARAMLIST"),

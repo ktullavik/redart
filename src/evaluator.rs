@@ -148,15 +148,15 @@ pub fn eval(node: &Node, symtable: &mut HashMap<String, Object>) -> Object {
                 panic!("Expected paramlist for FUNDEF in eval.");
             }
 
-            let mut args: Object = Vec::new();
+            let mut args: Vec<Object> = Vec::new();
 
-            for i in 0 .. params.len() {
-                args.push(eval(params[i], symtable));
+            for i in 0 .. params.children.len() {
+                args.push(eval(&params.children[i], symtable));
             }
 
             let obj = Object::FUNCTION(s.to_string());
 
-            symtable.push(s, obj);
+            symtable.insert(s.to_string(), obj);
             return Object::VOID;
         }
 
