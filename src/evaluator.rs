@@ -1,4 +1,3 @@
-use std::str::FromStr;
 use std::collections::HashMap;
 use parser::Node;
 use parser::NodeType;
@@ -155,7 +154,7 @@ pub fn eval(node: &Node, symtable: &mut HashMap<String, Object>) -> Object {
             if symtable.contains_key(s) {
                 let funcobj = symtable[s].clone();
                 match funcobj {
-                    Object::FUNCTION(name, body) => {
+                    Object::FUNCTION(_, body) => {
                         return eval(&body, symtable);
                     }
                     _ => panic!("Called a non function object")

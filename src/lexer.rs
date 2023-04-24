@@ -239,14 +239,14 @@ pub fn tokenize(input: &str) -> Vec<parser::Token> {
                         nl += 1;
                         continue;
                     }
-                        else if nc == '.' {
-                            if input.get(i+nl-1 .. i+nl) == Some(".") {
-                                panic!("Unexpected symbol: \".\"");
-                            }
-                            is_int = false;
-                            nl += 1;
-                            continue;
+                    else if nc == '.' {
+                        if input.get(i+nl-1 .. i+nl) == Some(".") {
+                            panic!("Unexpected symbol: \".\"");
                         }
+                        is_int = false;
+                        nl += 1;
+                        continue;
+                    }
                     break;
                 }
 

@@ -4,10 +4,6 @@ use std::io::prelude::*;
 use std::env;
 use std::fs::File;
 use std::collections::HashMap;
-use rustyline::error::ReadlineError;
-use rustyline::Editor;
-use evaluator::Object;
-// use parser::NodeType;
 
 mod parser;
 mod lexer;
