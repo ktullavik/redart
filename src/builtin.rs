@@ -3,6 +3,7 @@
 //use std::path::Path;
 use evaluator::Object;
 use parser::Node;
+use parser::NodeType;
 
 
 pub fn has_function(name: &str) -> bool {
@@ -20,16 +21,27 @@ pub fn call(name: &str, args: &Vec<Node>) -> Object {
                 panic!("Argument expected by print().");
             }
 
-            let arg_node = &args[0];
-            let a = &arg_node.children[0];
+            let paramlist = &args[0];
+            let a1 = &paramlist.children[0];
+
+            let t: &NodeType = &a1.nodetype;
 //            let unpacked :Vec<String> = Vec::new();
 //
 //            for i in 0 .. args.len() {
 //                unpacked.push();
 //            }
+            match t {
+                NodeType::STRING(s) => {
+                    println!("{}", s);
+                }
+                _ => {
+                    println!("Illegal arg for print: {}", t);
+                    panic!("Illegal argument for print")
+                }
+            }
 
-
-            println!("{}", args[0]);
+            // println!("{}", args[0]);
+            // println!("{}", a);
 
         }
 

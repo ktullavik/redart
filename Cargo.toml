@@ -4,5 +4,5 @@ version = "0.1.0"
 authors = ["kt <ktullavik@gmail.com>"]
 
 [dependencies]
-rustyline = "2.1.0"
+rustyline = "11.0.0"
 

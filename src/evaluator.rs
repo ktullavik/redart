@@ -6,13 +6,14 @@ use builtin;
 
 
 #[derive(Debug)]
+#[derive(Clone)]
 pub enum Object {
 
     NUM(i32),
     STRING(String),
     NAME(String),
     ASSIGN(String),
-    FUNCTION(String),
+    FUNCTION(String, Node),
     EFFECT(String),
     VOID
 }
@@ -30,15 +31,19 @@ pub fn eval(node: &Node, symtable: &mut HashMap<String, Object>) -> Object {
                 NodeType::NAME(ref s1) => {
 
                     let right_obj = eval(&node.children[1], symtable);
+                    symtable.insert(String::from(s1.clone()), right_obj);
+                    return Object::VOID;
 
-                    match &right_obj {
+                    // return Object::ASSIGN(String::from(s1.clone()));
 
-                        Object::NUM(ref s2) => {
-                            symtable.insert(String::from(s1.clone()), Object::NUM(*s2));
-                            return Object::ASSIGN(String::from(s1.clone()));
-                        }
-                        _ => panic!("Illegal value for assignment: {:?}", &right_obj)
-                    }
+                    // match &right_obj {
+                    //
+                    //     Object::NUM(ref s2) => {
+                    //         symtable.insert(String::from(s1.clone()), Object::NUM(*s2));
+                    //         return Object::ASSIGN(String::from(s1.clone()));
+                    //     }
+                    //     _ => panic!("Illegal value for assignment: {:?}", &right_obj)
+                    // }
                 },
                 _ => panic!("Illegal name for assignment: {}", &node.children[0].nodetype)
             }
@@ -115,7 +120,8 @@ pub fn eval(node: &Node, symtable: &mut HashMap<String, Object>) -> Object {
 
         NodeType::STRING(s) => {
             println!("NodeType::STRING");
-            Object::STRING(s.parse().unwrap())
+            // Object::STRING(s.parse().unwrap())
+            Object::STRING(s.clone())
         },
 
         NodeType::NAME(s) => {
@@ -146,6 +152,24 @@ pub fn eval(node: &Node, symtable: &mut HashMap<String, Object>) -> Object {
                 return res;
             }
 
+            if symtable.contains_key(s) {
+                let funcobj = symtable[s].clone();
+                match funcobj {
+                    Object::FUNCTION(name, body) => {
+                        return eval(&body, symtable);
+                    }
+                    _ => panic!("Called a non function object")
+                }
+            }
+
+            if s == "main" {
+                let params = &node.children[0];
+                let body = &node.children[1];
+                println!("params: {}", params);
+                println!("body: {}", body);
+                return eval(body, symtable);
+            }
+
             panic!("Unknown function: {}", s)
         }
 
@@ -153,7 +177,8 @@ pub fn eval(node: &Node, symtable: &mut HashMap<String, Object>) -> Object {
             println!("NodeType::FUNDEF");
 
             let params = &node.children[0];
-            let body = &node.children[1];
+            // let body = &node.children[1];
+            let body = node.children[1].clone();
 
             if params.nodetype != NodeType::PARAMLIST {
                 panic!("Expected paramlist for FUNDEF in eval.");
@@ -165,9 +190,16 @@ pub fn eval(node: &Node, symtable: &mut HashMap<String, Object>) -> Object {
                 args.push(eval(&params.children[i], symtable));
             }
 
-            let obj = Object::FUNCTION(s.to_string());
+            let obj = Object::FUNCTION(s.to_string(), body);
 
             symtable.insert(s.to_string(), obj);
+            return Object::VOID;
+        }
+
+        NodeType::BLOCK => {
+            for s in &node.children {
+                eval(s, symtable);
+            }
             return Object::VOID;
         }
 

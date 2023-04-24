@@ -31,7 +31,9 @@ pub enum Token {
 }
 
 
+#[derive(Debug)]
 #[derive(PartialEq)]
+#[derive(Clone)]
 pub enum NodeType {
     ADD,
     SUB,
@@ -71,6 +73,7 @@ impl fmt::Display for Token {
             Token::KEYWORD(s) => write!(f, "{}", s),
             Token::NUM(s)     => write!(f, "{}", s),
             Token::STRING(s)  => write!(f, "\"{}\"", s),
+            // Token::STRING(s)  => write!(f, "{}", s),
             Token::NAME(s)    => write!(f, "{}", s),
             Token::PAREN1     => write!(f, "("),
             Token::PAREN2     => write!(f, ")"),
@@ -98,6 +101,7 @@ impl fmt::Display for NodeType {
             NodeType::KEYWORD(s)                    => write!(f, "{}", s),
             NodeType::NUM(s)                        => write!(f, "{}", s),
             NodeType::STRING(s)                     => write!(f, "\"{}\"", s),
+            // NodeType::STRING(s)                     => write!(f, "{}", s),
             NodeType::NAME(s)                       => write!(f, "{}", s),
             NodeType::TYPEDVAR(tp, name)            => write!(f, "{}:{}", name, tp),
             NodeType::FUNDEF(s)                     => write!(f, "{}() {{}}", s),
@@ -117,6 +121,8 @@ impl fmt::Display for NodeType {
 }
 
 
+#[derive(Debug)]
+#[derive(Clone)]
 pub struct Node {
     pub nodetype: NodeType,
     pub children: Vec<Node>
@@ -127,8 +133,8 @@ impl Node {
 
     pub fn new(nodetype: NodeType) -> Node {
         Node {
+            nodetype,
             children: Vec::new(),
-            nodetype
         }
     }
 
@@ -695,7 +701,10 @@ fn term(tokens: &Vec<Token>, pos: usize) -> Result<(Node, usize), String> {
         }
 
         &Token::STRING(ref s) => {
-            let mut node = Node::new(NodeType::STRING(t.to_string()));
+
+
+            // let mut node = Node::new(NodeType::STRING(t.to_string()));
+            let mut node = Node::new(NodeType::STRING(s.clone()));
             Ok((node, pos+1))
         }
 
