@@ -191,6 +191,9 @@ impl fmt::Display for Node {
 
 
 pub fn parse(tokens: &Vec<Token>) -> Result<Node, String> {
+    println!(" ");
+    println!("PARSE");
+    println!(" ");
 
     let mut root = Node::new(NodeType::MODULE);
     let directive_node = directives(tokens, 0)?;

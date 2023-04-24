@@ -106,7 +106,11 @@ fn read_word(tokens: &mut Vec<parser::Token>, chars: &[char], start: usize) -> u
 
 
 
-pub fn tokenize(input: &str) -> Vec<parser::Token> {
+pub fn lex(input: &str) -> Vec<parser::Token> {
+
+    println!(" ");
+    println!("LEX");
+    println!(" ");
 
     let mut tokens: Vec<parser::Token> = Vec::new();
     let chars: Vec<char> = input.chars().collect();
