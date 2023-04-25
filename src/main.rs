@@ -14,6 +14,11 @@ mod utils;
 use parser::Node;
 use parser::NodeType;
 
+
+static TESTPATH: &str = "/usr/home/kt/devel/redart/test/";
+
+
+
 fn main() {
 
     let args: Vec<String> = env::args().collect();
@@ -34,11 +39,19 @@ fn main() {
             let a2 : &String =  &args[2];
             match a2.as_str() {
                 "1" => {
-                    let mut f = File::open("/usr/home/kt/devel/redart/test/1.hello.dart").expect("file not found");
+                    let mut f = File::open(format!("{}1.hello.dart", TESTPATH,)).expect("file not found");
+                    f.read_to_string(&mut input).expect("Test file not found.");
+                }
+                "2" => {
+                    let mut f = File::open(format!("{}2.variable.dart", TESTPATH)).expect("file not found");
+                    f.read_to_string(&mut input).expect("Test file not found.");
+                }
+                "3" => {
+                    let mut f = File::open(format!("{}3.addition.dart", TESTPATH)).expect("file not found");
                     f.read_to_string(&mut input).expect("Test file not found.");
                 }
                 "14" => {
-                    let mut f = File::open("/usr/home/kt/devel/redart/test/14.list_replace.dart").expect("file not found");
+                    let mut f = File::open(format!("{}14.list_replace.dart", TESTPATH)).expect("file not found");
                     f.read_to_string(&mut input).expect("Test file not found.");
                 }
                 _ => panic!("Test not found!")
@@ -56,11 +69,19 @@ fn main() {
 
             match a2.as_str() {
                 "1" => {
-                    let mut f = File::open("/usr/home/kt/devel/redart/test/1.hello.dart").expect("file not found");
+                    let mut f = File::open(format!("{}1.hello.dart", TESTPATH,)).expect("file not found");
+                    f.read_to_string(&mut input).expect("Test file not found.");
+                }
+                "2" => {
+                    let mut f = File::open(format!("{}2.variable.dart", TESTPATH)).expect("file not found");
+                    f.read_to_string(&mut input).expect("Test file not found.");
+                }
+                "3" => {
+                    let mut f = File::open(format!("{}3.addition.dart", TESTPATH)).expect("file not found");
                     f.read_to_string(&mut input).expect("Test file not found.");
                 }
                 "14" => {
-                    let mut f = File::open("/usr/home/kt/devel/redart/test/14.list_replace.dart").expect("file not found");
+                    let mut f = File::open(format!("{}14.list_replace.dart", TESTPATH)).expect("file not found");
                     f.read_to_string(&mut input).expect("Test file not found.");
                 }
                 _ => panic!("Test not found!")
@@ -78,14 +99,20 @@ fn main() {
 
             match a2.as_str() {
                 "1" => {
-                    let mut f = File::open("/usr/home/kt/devel/redart/test/1.hello.dart").expect("file not found");
-                    f.read_to_string(&mut input)
-                        .expect("Test file not found.");
+                    let mut f = File::open(format!("{}1.hello.dart", TESTPATH,)).expect("file not found");
+                    f.read_to_string(&mut input).expect("Test file not found.");
+                }
+                "2" => {
+                    let mut f = File::open(format!("{}2.variable.dart", TESTPATH)).expect("file not found");
+                    f.read_to_string(&mut input).expect("Test file not found.");
+                }
+                "3" => {
+                    let mut f = File::open(format!("{}3.addition.dart", TESTPATH)).expect("file not found");
+                    f.read_to_string(&mut input).expect("Test file not found.");
                 }
                 "14" => {
-                    let mut f = File::open("/usr/home/kt/devel/redart/test/14.list_replace.dart").expect("file not found");
-                    f.read_to_string(&mut input)
-                        .expect("Test file not found.");
+                    let mut f = File::open(format!("{}14.list_replace.dart", TESTPATH)).expect("file not found");
+                    f.read_to_string(&mut input).expect("Test file not found.");
                 }
                 _ => panic!("Test not found!")
             }

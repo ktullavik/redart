@@ -1,6 +1,4 @@
-//use std::io;
-//use std::fs::{self, DirEntry};
-//use std::path::Path;
+use std::collections::HashMap;
 use evaluator::Object;
 use parser::Node;
 use parser::NodeType;
@@ -14,7 +12,7 @@ pub fn has_function(name: &str) -> bool {
 }
 
 
-pub fn call(name: &str, args: &Vec<Node>) -> Object {
+pub fn call(name: &str, args: &Vec<Node>, symtable: &HashMap<String, Object>) -> Object {
     match name {
         "print" => {
             if args.len() < 1 {
@@ -34,6 +32,39 @@ pub fn call(name: &str, args: &Vec<Node>) -> Object {
                 NodeType::STRING(s) => {
                     println!("{}", s);
                 }
+                NodeType::NUM(s) => {
+                    println!("{}", s);
+                }
+                NodeType::NAME(s) => {
+                    let o = &symtable[s];
+                    match o {
+                        Object::NUM(v) => {
+                            println!("{}", v);
+                        }
+                        Object::STRING(s) => {
+                            println!("{}", s);
+                        }
+                        _ => {
+                            println!("Illegal name arg for print: {}", t);
+                            panic!("Illegal name argument for print")
+                        }
+                    }
+                }
+                // NodeType::TYPEDVAR(t, s) => {
+                //     let o = &symtable[s];
+                //     match o {
+                //         Object::NUM(v) => {
+                //             println!("{}", v);
+                //         }
+                //         Object::STRING(s) => {
+                //             println!("{}", s);
+                //         }
+                //         _ => {
+                //             println!("Illegal typedvar arg for print: {}", t);
+                //             panic!("Illegal typedvar argument for print")
+                //         }
+                //     }
+                // }
                 _ => {
                     println!("Illegal arg for print: {}", t);
                     panic!("Illegal argument for print")

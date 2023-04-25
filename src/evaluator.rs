@@ -33,22 +33,15 @@ pub fn eval(node: &Node, symtable: &mut HashMap<String, Object>) -> Object {
             utils::dprint(String::from("Eval: NodeType::ASSIGN"));
             match &node.children[0].nodetype {
                 NodeType::NAME(ref s1) => {
-
                     let right_obj = eval(&node.children[1], symtable);
-                    symtable.insert(String::from(s1.clone()), right_obj);
+                    symtable.insert(s1.clone(), right_obj);
                     return Object::VOID;
-
-                    // return Object::ASSIGN(String::from(s1.clone()));
-
-                    // match &right_obj {
-                    //
-                    //     Object::NUM(ref s2) => {
-                    //         symtable.insert(String::from(s1.clone()), Object::NUM(*s2));
-                    //         return Object::ASSIGN(String::from(s1.clone()));
-                    //     }
-                    //     _ => panic!("Illegal value for assignment: {:?}", &right_obj)
-                    // }
-                },
+                }
+                NodeType::TYPEDVAR(tp, ref s1) => {
+                    let right_obj = eval(&node.children[1], symtable);
+                    symtable.insert(s1.clone(), right_obj);
+                    return Object::VOID;
+                }
                 _ => panic!("Illegal name for assignment: {}", &node.children[0].nodetype)
             }
         },
@@ -152,7 +145,7 @@ pub fn eval(node: &Node, symtable: &mut HashMap<String, Object>) -> Object {
             utils::dprint(String::from("Eval: NodeType::FUNCALL"));
 
             if builtin::has_function(s) {
-                let res: Object = builtin::call(s, &node.children);
+                let res: Object = builtin::call(s, &node.children, symtable);
                 return res;
             }
 
