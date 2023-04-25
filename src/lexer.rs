@@ -7,56 +7,6 @@ fn is_legal_namechar(c: char) -> bool {
     c.is_alphabetic() || c.is_digit(10) || (c == '_')
 }
 
-//
-//fn read_keyword(tokens: &mut Vec<parser::Token>, input: &str, i: usize) -> usize {
-//    let keywords: [&str; 6] = [
-//        "true",
-//        "false",
-//        "if",
-//        "else",
-//        "class",
-//        "get"
-//    ];
-//
-//    for k in keywords.iter() {
-//        let maybe = input.get(i..(i+k.len()));
-//
-//        if i + k.len() >= input.len() {
-//            return 0;
-//        }
-//
-//        let part = maybe.expect("Lexer slice out of range.");
-//
-//        let mut no: bool = false;
-//
-//
-//        for c in (**k).chars() {
-//            for c2 in part.chars() {
-//                if c != c2 {
-//                    no = true;
-//                    break;
-//                }
-//            }
-//        }
-//
-//        if !no {
-//            if input.len() > i + k.len() {
-//                let abort_check = input.get(i + k.len()..(i+k.len() + 1));
-//                let abort = abort_check.expect("Lexer slice out of range 2.");
-//                let next_char_maybe: Option<char> = abort.chars().next();
-//                let next_char = next_char_maybe.expect("Lexer slice out of range 3.");
-//                if is_legal_namechar(next_char) {
-//                    return 0;
-//                }
-//            }
-//
-//            tokens.push(parser::Token::KEYWORD(String::from(*k)));
-//            return (*k).len();
-//        }
-//    }
-//    return 0;
-//}
-
 
 fn is_keyword(s: &str) -> bool {
     match s {
@@ -71,7 +21,6 @@ fn is_keyword(s: &str) -> bool {
 }
 
 
-//fn read_name(tokens: &mut Vec<parser::Token>, input: &str, start: usize) -> usize {
 fn read_word(tokens: &mut Vec<parser::Token>, chars: &[char], start: usize) -> usize {
     let mut len: usize = 0;
     let mut sym = String::from("");
@@ -150,6 +99,26 @@ pub fn lex(input: &str) -> Vec<parser::Token> {
                 }
                 tokens.push(parser::Token::STRING(s));
                 i += k;
+                continue;
+            }
+
+            '/' => {
+                i = i + 1;
+                if inp_length > i {
+                    if chars[i] == '/' {
+                        i += 1;
+                        while i < inp_length  {
+                            if chars[i] == '\n' {
+                                i += 1;
+                                break;
+                            }
+                            i += 1;
+                        }
+                    }
+                }
+                else {
+                    panic!("Unexpected end of input: '/'");
+                }
                 continue;
             }
 
