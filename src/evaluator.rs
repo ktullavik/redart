@@ -14,7 +14,6 @@ pub enum Object {
     NAME(String),
     ASSIGN(String),
     FUNCTION(String, Node),
-    EFFECT(String),
     VOID
 }
 
@@ -37,7 +36,7 @@ pub fn eval(node: &Node, symtable: &mut HashMap<String, Object>) -> Object {
                     symtable.insert(s1.clone(), right_obj);
                     return Object::VOID;
                 }
-                NodeType::TYPEDVAR(tp, ref s1) => {
+                NodeType::TYPEDVAR(_, ref s1) => {
                     let right_obj = eval(&node.children[1], symtable);
                     symtable.insert(s1.clone(), right_obj);
                     return Object::VOID;

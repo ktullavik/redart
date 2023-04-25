@@ -25,7 +25,6 @@ pub enum Token {
     BLOCK2,
     BRACK1,
     BRACK2,
-    NEWLINE,
     ENDST,
     END
 }
@@ -81,7 +80,6 @@ impl fmt::Display for Token {
             Token::BLOCK2     => write!(f, "}}"),
             Token::BRACK1     => write!(f, "["),
             Token::BRACK2     => write!(f, "]"),
-            Token::NEWLINE    => write!(f, "NEWLINE"),
             Token::ENDST      => write!(f, "ENDST"),
             Token::END        => write!(f, "END"),
         }
