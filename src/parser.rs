@@ -12,6 +12,7 @@ pub enum Token {
     ADD,
     SUB,
     MUL,
+    DIV,
     ACCESS,
     COMMA,
     ASSIGN,
@@ -37,6 +38,7 @@ pub enum NodeType {
     ADD,
     SUB,
     MUL,
+    DIV,
     ACCESS,
     ASSIGN,
     KEYWORD(String),
@@ -67,6 +69,7 @@ impl fmt::Display for Token {
             Token::ADD        => write!(f, "+"),
             Token::SUB        => write!(f, "-"),
             Token::MUL        => write!(f, "*"),
+            Token::DIV        => write!(f, "/"),
             Token::ACCESS     => write!(f, "."),
             Token::COMMA      => write!(f, ","),
             Token::KEYWORD(s) => write!(f, "{}", s),
@@ -95,6 +98,7 @@ impl fmt::Display for NodeType {
             NodeType::ADD                           => write!(f, "+"),
             NodeType::SUB                           => write!(f, "-"),
             NodeType::MUL                           => write!(f, "*"),
+            NodeType::DIV                           => write!(f, "/"),
             NodeType::ACCESS                        => write!(f, "."),
             NodeType::KEYWORD(s)                    => write!(f, "{}", s),
             NodeType::NUM(s)                        => write!(f, "{}", s),
@@ -678,9 +682,9 @@ fn product(tokens: &Vec<Token>, pos: usize) -> Result<(Node, usize), String> {
     println!("product: {}", tokens[pos]);
 
     let (left, mut i) = term(tokens, pos)?;
-    let c: &Token = tokens.get(i).unwrap();
+    let t: &Token = tokens.get(i).unwrap();
 
-    match c {
+    match t {
         Token::MUL => {
             let mut prod = Node::new(NodeType::MUL);
             prod.children.push(left);
@@ -690,6 +694,16 @@ fn product(tokens: &Vec<Token>, pos: usize) -> Result<(Node, usize), String> {
             let (right, i) = product(tokens, i)?;
             prod.children.push(right);
             Ok((prod, i))
+        }
+        Token::DIV => {
+            let mut div = Node::new(NodeType::DIV);
+            div.children.push(left);
+
+            i += 1;
+
+            let (right, i) = product(tokens, i)?;
+            div.children.push(right);
+            Ok((div, i))
         }
 
         _ => {

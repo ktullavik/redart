@@ -115,6 +115,9 @@ pub fn lex(input: &str) -> Vec<parser::Token> {
                             i += 1;
                         }
                     }
+                    else {
+                        tokens.push(parser::Token::DIV);
+                    }
                 }
                 else {
                     panic!("Unexpected end of input: '/'");

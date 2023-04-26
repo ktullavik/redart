@@ -9,7 +9,8 @@ use utils;
 #[derive(Clone)]
 pub enum Object {
 
-    NUM(i32),
+    INT(i64),
+    NUM(f64),
     STRING(String),
     NAME(String),
     ASSIGN(String),
@@ -106,6 +107,27 @@ pub fn eval(node: &Node, symtable: &mut HashMap<String, Object>) -> Object {
                     }
                 },
                 _ => panic!("Illegal left operand for multiplication: {:?}", &left_obj)
+            }
+        },
+
+        NodeType::DIV => {
+            utils::dprint(String::from("Eval: NodeType::DIV"));
+
+            let left_obj = eval(&node.children[0], symtable);
+
+            match &left_obj {
+                Object::NUM(s1) => {
+
+                    let right_obj = eval(&node.children[1], symtable);
+
+                    match &right_obj {
+                        Object::NUM(s2) => {
+                            Object::NUM(*s1 as f64 / *s2 as f64)
+                        }
+                        _ => panic!("Illegal right operand for division: {:?}", &right_obj)
+                    }
+                },
+                _ => panic!("Illegal left operand for division: {:?}", &left_obj)
             }
         },
 

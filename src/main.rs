@@ -36,20 +36,18 @@ fn main() {
                 println!("Please specify file ...");
                 return;
             }
-            let mut f = File::open(&args[2]).expect("file not found");
-            f.read_to_string(&mut input).expect("Test file not found.");
 
+            input = read_inputfile(&args[2]);
             let tokens = lexer::lex(&input);
-            println!("tokens: \n{:?}\n", tokens);
+            println!("\n{:?}\n", tokens);
         }
         "parse" => {
             if args.len() < 3 {
                 println!("Please specify file...");
                 return;
             }
-            let mut f = File::open(&args[2]).expect("file not found");
-            f.read_to_string(&mut input).expect("Test file not found.");
 
+            input = read_inputfile(&args[2]);
             let tokens = lexer::lex(&input);
             let tree = parser::parse(&tokens).unwrap();
             println!("\n{}\n", tree);
@@ -63,47 +61,27 @@ fn main() {
             let a2 : &String =  &args[2];
             let mut action = "eval";
             let testfile: &str;
+            let nextarg: &String;
 
             match a2.as_str() {
-                "1" => {
-                    testfile = "1.hello.dart";
-                }
-                "2" => {
-                    testfile = "2.variable.dart";
-                }
-                "3" => {
-                    testfile = "3.addition.dart";
-                }
-                "14" => {
-                    testfile = "14.list_replace.dart";
-                }
                 "lex" => {
                     action = "lex";
-                    if args.len() < 4 {
-                        println!("Please specify filename...");
-                    }
-                    testfile = &args[4];
+                    nextarg = &args[3];
                 }
                 "parse" => {
                     action = "parse";
-                    if args.len() < 4 {
-                        println!("Please specify filename...");
-                    }
-                    testfile = &args[4];
+                    nextarg = &args[3];
                 }
                 "eval" => {
-                    if args.len() < 4 {
-                        println!("Please specify filename...");
-                    }
-                    testfile = &args[4];
+                    nextarg = &args[3];
                 }
-                x => {
-                    testfile = x;
+                _ => {
+                    nextarg = &args[2];
                 }
             }
 
-            let mut f = File::open(format!("{}{}", TESTPATH, testfile)).expect("file not found");
-            f.read_to_string(&mut input).expect("Test file not found.");
+            input = read_inputfile(nextarg);
+
 
             if action == "lex" {
                 let tokens = lexer::lex(&input);
@@ -146,6 +124,43 @@ fn main() {
                 }
             }
         }
+    }
+
+
+    fn read_inputfile(s: &str) -> String {
+        let testfile: &str;
+
+        match s {
+            "1" => {
+                testfile = "1.hello.dart";
+            }
+            "2" => {
+                testfile = "2.variable.dart";
+            }
+            "3" => {
+                testfile = "3.addition.dart";
+            }
+            "4" => {
+                testfile = "4.subtraction.dart";
+            }
+            "5" => {
+                testfile = "5.multiplication.dart";
+            }
+            "6" => {
+                testfile = "6.division.dart";
+            }
+            "14" => {
+                testfile = "14.list_replace.dart";
+            }
+            s => {
+                testfile = s;
+            }
+        }
+
+        let mut input = String::new();
+        let mut f = File::open(format!("{}{}", TESTPATH, testfile)).expect("file not found");
+        f.read_to_string(&mut input).expect("Test file not found.");
+        return input;
     }
 
 }
