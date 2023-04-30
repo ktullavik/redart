@@ -13,6 +13,7 @@ mod utils;
 
 use parser::Node;
 use parser::NodeType;
+use evaluator::Object;
 
 
 static TESTPATH: &str = "/usr/home/kt/devel/redart/test/";
@@ -111,17 +112,16 @@ fn main() {
 
         let mut symtable :HashMap<String, evaluator::Object> = HashMap::new();
 
-        for node in tree.children {
-            match node.nodetype {
-                NodeType::FUNDEF(ref fname) => {
-                    if fname == "main" {
-                        let maincall: Node = Node { nodetype: NodeType::FUNCALL(String::from("main")), children: node.children };
-                        evaluator::eval(&maincall, &mut symtable);
-                    }
-                }
-                _ => {
-                    println!("not main: {}", node);
-                }
+        evaluator::preval(&tree, &mut symtable);
+
+        let mainfunc = &symtable.remove("main").unwrap();
+
+        match mainfunc {
+            Object::FUNCTION(s, n, v) => {
+                evaluator::eval(n, &mut symtable);
+            }
+            x => {
+                panic!("Unexpected type of 'main': {:?}", x)
             }
         }
     }
@@ -148,6 +148,9 @@ fn main() {
             }
             "6" => {
                 testfile = "6.division.dart";
+            }
+            "7" => {
+                testfile = "7.funcall.dart";
             }
             "14" => {
                 testfile = "14.list_replace.dart";

@@ -14,12 +14,62 @@ pub enum Object {
     STRING(String),
     NAME(String),
     ASSIGN(String),
-    FUNCTION(String, Node),
+    FUNCTION(String, Node, Vec<String>),
     VOID
 }
 
 
+pub fn preval(node: &Node, symtable: &mut HashMap<String, Object>) {
+    println!(" ");
+    println!("PREVAL");
+    println!(" ");
+
+
+    for n in &node.children {
+        let t: &NodeType = &n.nodetype;
+
+        match t {
+            NodeType::FUNDEF(s) => {
+                utils::dprint(String::from(format!("Preval: NodeType::FUNDEF '{}'", s)));
+
+                let params = &n.children[0];
+                utils::dprint(String::from(format!("{}", params)));
+
+                let body = n.children[1].clone();
+
+                if params.nodetype != NodeType::PARAMLIST {
+                    panic!("Expected paramlist for FUNDEF in preeval.");
+                }
+
+                let mut args: Vec<String> = Vec::new();
+
+                for i in 0..params.children.len() {
+                    let p = &params.children[i];
+                    match &p.nodetype {
+                        NodeType::NAME(s) => {
+                            args.push(s.clone());
+                        }
+                        x => panic!("Invalid parameter: {}", x)
+                    }
+                }
+
+                let obj = Object::FUNCTION(s.to_string(), body, args);
+
+                symtable.insert(s.to_string(), obj);
+                utils::dprint(String::from(format!("Inserted to symtable: {}", s)));
+            }
+            x => {
+                println!("Preval considering node {}", x);
+                // Object::VOID
+            }
+        }
+    }
+}
+
+
+
 pub fn eval(node: &Node, symtable: &mut HashMap<String, Object>) -> Object {
+
     println!(" ");
     println!("EVAL");
     println!(" ");
@@ -163,7 +213,7 @@ pub fn eval(node: &Node, symtable: &mut HashMap<String, Object>) -> Object {
         }
 
         NodeType::FUNCALL(s) => {
-            utils::dprint(String::from("Eval: NodeType::FUNCALL"));
+            utils::dprint(format!("Eval: NodeType::FUNCALL({})", s));
 
             if builtin::has_function(s) {
                 let res: Object = builtin::call(s, &node.children, symtable);
@@ -173,7 +223,7 @@ pub fn eval(node: &Node, symtable: &mut HashMap<String, Object>) -> Object {
             if symtable.contains_key(s) {
                 let funcobj = symtable[s].clone();
                 match funcobj {
-                    Object::FUNCTION(_, body) => {
+                    Object::FUNCTION(_, body, params) => {
                         return eval(&body, symtable);
                     }
                     _ => panic!("Called a non function object")
@@ -199,13 +249,19 @@ pub fn eval(node: &Node, symtable: &mut HashMap<String, Object>) -> Object {
                 panic!("Expected paramlist for FUNDEF in eval.");
             }
 
-            let mut args: Vec<Object> = Vec::new();
+            let mut args: Vec<String> = Vec::new();
 
             for i in 0 .. params.children.len() {
-                args.push(eval(&params.children[i], symtable));
+                let p = &params.children[i];
+                match &p.nodetype {
+                    NodeType::NAME(s) => {
+                        args.push(s.clone());
+                    }
+                    x => panic!("Invalid parameter: {}", x)
+                }
             }
 
-            let obj = Object::FUNCTION(s.to_string(), body);
+            let obj = Object::FUNCTION(s.to_string(), body, args);
 
             symtable.insert(s.to_string(), obj);
             return Object::VOID;

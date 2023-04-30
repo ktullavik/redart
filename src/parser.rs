@@ -199,11 +199,17 @@ pub fn parse(tokens: &Vec<Token>) -> Result<Node, String> {
 
     let mut root = Node::new(NodeType::MODULE);
     let directive_node = directives(tokens, 0)?;
-    let i = directive_node.1;
+    let mut i = directive_node.1;
     root.children.push(directive_node.0);
 
-    let (funnode, i) = fundef(tokens, i).unwrap();
-    root.children.push(funnode);
+
+    while i < tokens.len() - 1 {
+        let (funnode, readindex) = fundef(tokens, i).unwrap();
+        root.children.push(funnode);
+
+        println!("read len. {}", readindex);
+        i = readindex;
+    }
 
     if i < tokens.len() - 1 {
         return Err(format!("Expected end of input, found {:?} at {}", tokens[i], i))

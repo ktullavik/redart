@@ -1,7 +1,7 @@
 
 
 pub fn dprint(s: String) {
-    let debug = false;
+    let debug = true;
 
     if debug {
         println!("{}", s.as_str());
