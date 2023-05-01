@@ -57,9 +57,9 @@ fn read_word(tokens: &mut Vec<parser::Token>, chars: &[char], start: usize) -> u
 
 pub fn lex(input: &str) -> Vec<parser::Token> {
 
-    utils::dprint(String::from(" "));
-    utils::dprint(String::from("LEX"));
-    utils::dprint(String::from(" "));
+    utils::dprint(" ");
+    utils::dprint("LEX");
+    utils::dprint(" ");
 
     let mut tokens: Vec<parser::Token> = Vec::new();
     let chars: Vec<char> = input.chars().collect();

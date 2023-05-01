@@ -17,9 +17,9 @@ pub enum Object {
 
 
 pub fn preval(node: &Node, symtable: &mut HashMap<String, Object>) {
-    utils::dprint(String::from(" "));
-    utils::dprint(String::from("PREVAL"));
-    utils::dprint(String::from(" "));
+    utils::dprint(" ");
+    utils::dprint("PREVAL");
+    utils::dprint(" ");
 
 
     for n in &node.children {
@@ -27,10 +27,10 @@ pub fn preval(node: &Node, symtable: &mut HashMap<String, Object>) {
 
         match t {
             NodeType::FUNDEF(fname) => {
-                utils::dprint(String::from(format!("Preval: NodeType::FUNDEF '{}'", fname)));
+                utils::dprint(format!("Preval: NodeType::FUNDEF '{}'", fname));
 
                 let params = &n.children[0];
-                utils::dprint(String::from(format!("{}", params)));
+                utils::dprint(format!("{}", params));
 
                 let body = n.children[1].clone();
 
@@ -53,11 +53,10 @@ pub fn preval(node: &Node, symtable: &mut HashMap<String, Object>) {
                 let obj = Object::FUNCTION(fname.to_string(), body, args);
 
                 symtable.insert(fname.to_string(), obj);
-                utils::dprint(String::from(format!("Inserted to symtable: {}", fname)));
+                utils::dprint(format!("Inserted to symtable: {}", fname));
             }
             x => {
-                utils::dprint(String::from(format!("Preval considering node {}", x)));
-                // Object::VOID
+                utils::dprint(format!("Preval considering node {}", x));
             }
         }
     }
@@ -67,14 +66,14 @@ pub fn preval(node: &Node, symtable: &mut HashMap<String, Object>) {
 
 pub fn eval(node: &Node, symtable: &mut HashMap<String, Object>) -> Object {
 
-    utils::dprint(String::from(format!("eval node: {}", node)));
+    utils::dprint(format!("eval node: {}", node));
 
     let t: &NodeType = &node.nodetype;
 
     match t {
 
         NodeType::ASSIGN => {
-            utils::dprint(String::from("Eval: NodeType::ASSIGN"));
+            utils::dprint("Eval: NodeType::ASSIGN");
             match &node.children[0].nodetype {
                 NodeType::NAME(ref s1) => {
                     let right_obj = eval(&node.children[1], symtable);
@@ -91,7 +90,7 @@ pub fn eval(node: &Node, symtable: &mut HashMap<String, Object>) -> Object {
         },
 
         NodeType::ADD => {
-            utils::dprint(String::from("Eval: NodeType::ADD"));
+            utils::dprint("Eval: NodeType::ADD");
 
             let left_obj = eval(&node.children[0], symtable);
 
@@ -112,7 +111,7 @@ pub fn eval(node: &Node, symtable: &mut HashMap<String, Object>) -> Object {
         },
 
         NodeType::SUB => {
-            utils::dprint(String::from("Eval: NodeType::SUB"));
+            utils::dprint("Eval: NodeType::SUB");
 
             let left_obj = eval(&node.children[0], symtable);
 
@@ -134,7 +133,7 @@ pub fn eval(node: &Node, symtable: &mut HashMap<String, Object>) -> Object {
 
 
         NodeType::MUL => {
-            utils::dprint(String::from("Eval: NodeType::MUL"));
+            utils::dprint("Eval: NodeType::MUL");
 
             let left_obj = eval(&node.children[0], symtable);
 
@@ -155,7 +154,7 @@ pub fn eval(node: &Node, symtable: &mut HashMap<String, Object>) -> Object {
         },
 
         NodeType::DIV => {
-            utils::dprint(String::from("Eval: NodeType::DIV"));
+            utils::dprint("Eval: NodeType::DIV");
 
             let left_obj = eval(&node.children[0], symtable);
 
@@ -176,18 +175,18 @@ pub fn eval(node: &Node, symtable: &mut HashMap<String, Object>) -> Object {
         },
 
         NodeType::NUM(s) => {
-            utils::dprint(String::from("Eval: NodeType::NUM"));
+            utils::dprint("Eval: NodeType::NUM");
             Object::NUM(s.parse().unwrap())
         },
 
         NodeType::STRING(s) => {
-            utils::dprint(String::from("Eval: NodeType::STRING"));
+            utils::dprint("Eval: NodeType::STRING");
             // Object::STRING(s.parse().unwrap())
             Object::STRING(s.clone())
         },
 
         NodeType::NAME(s) => {
-            utils::dprint(String::from("NodeType::NAME"));
+            utils::dprint("Eval: NodeType::NAME");
             if symtable.contains_key(s) {
                 match symtable.get(s).unwrap() {
                     &Object::NUM(ref v) => {
@@ -256,7 +255,7 @@ pub fn eval(node: &Node, symtable: &mut HashMap<String, Object>) -> Object {
         }
 
         NodeType::FUNDEF(s) => {
-            utils::dprint(String::from("Eval: NodeType::FUNDEF"));
+            utils::dprint("Eval: NodeType::FUNDEF");
 
             let params = &node.children[0];
             let body = node.children[1].clone();
@@ -291,7 +290,7 @@ pub fn eval(node: &Node, symtable: &mut HashMap<String, Object>) -> Object {
         }
 
         NodeType::MODULE => {
-            utils::dprint(String::from("Eval: NodeType::MODULE"));
+            utils::dprint("Eval: NodeType::MODULE");
 
             eval(&node.children[1], symtable)
         }

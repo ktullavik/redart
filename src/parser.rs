@@ -192,9 +192,9 @@ impl fmt::Display for Node {
 
 
 pub fn parse(tokens: &Vec<Token>) -> Result<Node, String> {
-    utils::dprint(String::from((" ")));
-    utils::dprint(String::from(("PARSE")));
-    utils::dprint(String::from((" ")));
+    utils::dprint(" ");
+    utils::dprint("PARSE");
+    utils::dprint(" ");
 
     let mut root = Node::new(NodeType::MODULE);
     let directive_node = directives(tokens, 0)?;
@@ -206,7 +206,7 @@ pub fn parse(tokens: &Vec<Token>) -> Result<Node, String> {
         let (funnode, readindex) = fundef(tokens, i).unwrap();
         root.children.push(funnode);
 
-        utils::dprint(String::from((format!("Parse: read len: {}", readindex))));
+        utils::dprint(format!("Parse: read len: {}", readindex));
         i = readindex;
     }
 
@@ -297,7 +297,7 @@ fn fundef(tokens: &Vec<Token>, pos: usize) -> Result<(Node, usize), String>  {
                             let (body, new_pos) = block(tokens, i).unwrap();
                             node.children.push(body);
                             i = new_pos;
-                            utils::dprint(String::from(format!("fundef parsed to {}", new_pos)));
+                            utils::dprint(format!("fundef parsed to {}", new_pos));
                             Ok((node, i))
                         }
 
@@ -468,7 +468,7 @@ fn block(tokens: &Vec<Token>, pos: usize) -> Result<(Node, usize), String> {
     let mut i = pos;
 
     while i < tokens.len() {
-        utils::dprint(String::from(format!("Parse: block loop at: {}, token: {}", i, &tokens[i])));
+        utils::dprint(format!("Parse: block loop at: {}, token: {}", i, &tokens[i]));
 
         if tokens[i] == Token::BLOCK2 {
             utils::dprint(String::from("token is end-block, breaking."));
@@ -501,7 +501,7 @@ fn block(tokens: &Vec<Token>, pos: usize) -> Result<(Node, usize), String> {
 
 fn statement(tokens: &Vec<Token>, pos: usize) -> Result<(Node, usize), String> {
 
-    utils::dprint(String::from(format!("statement: {}", &tokens[pos])));
+    utils::dprint(format!("statement: {}", &tokens[pos]));
 
     // Can be
     // assignment: var i = 2
@@ -532,7 +532,7 @@ fn statement(tokens: &Vec<Token>, pos: usize) -> Result<(Node, usize), String> {
                             ass_node.children.push(typed_var);
                             let (right_node, i) = expression(tokens, i)?;
                             ass_node.children.push(right_node);
-                            utils::dprint(String::from(format!("returning statement at token {}", i)));
+                            utils::dprint(format!("returning statement at token {}", i));
                             return Ok((ass_node, i))
                         }
 
@@ -608,7 +608,7 @@ fn statement(tokens: &Vec<Token>, pos: usize) -> Result<(Node, usize), String> {
 
 fn expression(tokens: &Vec<Token>, pos: usize) -> Result<(Node, usize), String> {
 
-    utils::dprint(String::from(format!("Parse: expression: {}", &tokens[pos])));
+    utils::dprint(format!("Parse: expression: {}", &tokens[pos]));
 
     let mut next_pos: usize;
 
@@ -640,7 +640,7 @@ fn expression(tokens: &Vec<Token>, pos: usize) -> Result<(Node, usize), String> 
         }
 
         _ => {
-            utils::dprint(String::from(format!("Parse: returning expression at token {}", next_pos)));
+            utils::dprint(format!("Parse: returning expression at token {}", next_pos));
             return Ok((left, next_pos));
         }
     }
@@ -649,7 +649,7 @@ fn expression(tokens: &Vec<Token>, pos: usize) -> Result<(Node, usize), String> 
 
 fn sum(tokens: &Vec<Token>, pos: usize) -> Result<(Node, usize), String> {
 
-    utils::dprint(String::from(format!("Parse: sum: {}", &tokens[pos])));
+    utils::dprint(format!("Parse: sum: {}", &tokens[pos]));
 
     let (left, next_pos) = product(tokens, pos)?;
     let c: &Token = tokens.get(next_pos).unwrap();
@@ -662,7 +662,7 @@ fn sum(tokens: &Vec<Token>, pos: usize) -> Result<(Node, usize), String> {
             let (right, i) = expression(tokens, next_pos + 1)?;
             sum.children.push(right);
 
-            utils::dprint(String::from(format!("Parse: assembled sum: {}", &sum)));
+            utils::dprint(format!("Parse: assembled sum: {}", &sum));
             Ok((sum, i))
         },
 
@@ -673,7 +673,7 @@ fn sum(tokens: &Vec<Token>, pos: usize) -> Result<(Node, usize), String> {
             let (right, i) = expression(tokens, next_pos + 1)?;
             sum.children.push(right);
 
-            utils::dprint(String::from(format!("Parse: assembled sum: {}", &sum)));
+            utils::dprint(format!("Parse: assembled sum: {}", &sum));
             Ok((sum, i))
         }
 
@@ -684,7 +684,7 @@ fn sum(tokens: &Vec<Token>, pos: usize) -> Result<(Node, usize), String> {
 
 fn product(tokens: &Vec<Token>, pos: usize) -> Result<(Node, usize), String> {
 
-    utils::dprint(String::from(format!("Parse: product: {}", &tokens[pos])));
+    utils::dprint(format!("Parse: product: {}", &tokens[pos]));
 
     let (left, mut i) = term(tokens, pos)?;
     let t: &Token = tokens.get(i).unwrap();
@@ -720,7 +720,7 @@ fn product(tokens: &Vec<Token>, pos: usize) -> Result<(Node, usize), String> {
 
 fn term(tokens: &Vec<Token>, pos: usize) -> Result<(Node, usize), String> {
 
-    utils::dprint(String::from(format!("Parse: term: {}", &tokens[pos])));
+    utils::dprint(format!("Parse: term: {}", &tokens[pos]));
 
     let t: &Token = tokens.get(pos).expect("No token for term!");
 
