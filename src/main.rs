@@ -119,9 +119,9 @@ fn main() {
 
         match mainfunc {
             Object::FUNCTION(s, n, v) => {
-                utils::dprint(String::from(" "));
-                utils::dprint(String::from("EVALUATE"));
-                utils::dprint(String::from(" "));
+                utils::dprint(" ");
+                utils::dprint("EVALUATE");
+                utils::dprint(" ");
                 evaluator::eval(n, &mut symtable);
             }
             x => {
