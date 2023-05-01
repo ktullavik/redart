@@ -8,12 +8,9 @@ use utils;
 #[derive(Debug)]
 #[derive(Clone)]
 pub enum Object {
-
     INT(i64),
     NUM(f64),
     STRING(String),
-    NAME(String),
-    ASSIGN(String),
     FUNCTION(String, Node, Vec<String>),
     VOID
 }
