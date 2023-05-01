@@ -108,10 +108,6 @@ fn main() {
 
     fn evaluate(input: &String) {
 
-        utils::dprint(String::from(" "));
-        utils::dprint(String::from("EVALUATE"));
-        utils::dprint(String::from(" "));
-
         let tokens = lexer::lex(&input);
         let tree = parser::parse(&tokens).unwrap();
 
@@ -123,6 +119,9 @@ fn main() {
 
         match mainfunc {
             Object::FUNCTION(s, n, v) => {
+                utils::dprint(String::from(" "));
+                utils::dprint(String::from("EVALUATE"));
+                utils::dprint(String::from(" "));
                 evaluator::eval(n, &mut symtable);
             }
             x => {
