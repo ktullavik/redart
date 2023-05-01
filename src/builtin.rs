@@ -1,7 +1,4 @@
-use std::collections::HashMap;
 use evaluator::Object;
-use parser::Node;
-use parser::NodeType;
 
 
 pub fn has_function(name: &str) -> bool {
@@ -12,7 +9,7 @@ pub fn has_function(name: &str) -> bool {
 }
 
 
-pub fn call(name: &str, args: &Vec<Object>, symtable: &HashMap<String, Object>) -> Object {
+pub fn call(name: &str, args: &Vec<Object>) -> Object {
     match name {
         "print" => {
             if args.len() < 1 {

@@ -43,7 +43,6 @@ pub enum NodeType {
     DIV,
     ACCESS,
     ASSIGN,
-    KEYWORD(String),
     NUM(String),
     STRING(String),
     BOOL(bool),
@@ -104,7 +103,6 @@ impl fmt::Display for NodeType {
             NodeType::MUL                           => write!(f, "*"),
             NodeType::DIV                           => write!(f, "/"),
             NodeType::ACCESS                        => write!(f, "."),
-            NodeType::KEYWORD(s)                    => write!(f, "{}", s),
             NodeType::NUM(s)                        => write!(f, "{}", s),
             NodeType::STRING(s)                     => write!(f, "\"{}\"", s),
             NodeType::BOOL(v)                        => write!(f, "{}", v),
@@ -223,7 +221,7 @@ pub fn parse(tokens: &Vec<Token>) -> Result<Node, String> {
         return Err(format!("Index returned beyond end of token array. Index: {}, len: {}", i, tokens.len()))
     }
 
-    utils::dprint(String::from((format!("Parse: finished at index: {}", i))));
+    utils::dprint(String::from(format!("Parse: finished at index: {}", i)));
     Ok(root)
 }
 
@@ -657,9 +655,7 @@ fn statement(tokens: &Vec<Token>, pos: usize) -> Result<(Node, usize), String> {
 
         }
         _ => {
-            let (node, new_pos) = expression(tokens, pos)?;
-            let mut i = new_pos;
-            return Ok((node, i))
+            return expression(tokens, pos);
         }
     };
 }
@@ -787,10 +783,8 @@ fn term(tokens: &Vec<Token>, pos: usize) -> Result<(Node, usize), String> {
             let mut i = pos + 1;
             let mut list_node = Node::new(NodeType::LIST);
             let mut expect_sep = false;
-            let mut closed = false;
 
             if tokens[i] == Token::BRACK2 {
-                closed = true;
                 return Ok((list_node, i + 1))
             }
 
@@ -809,7 +803,6 @@ fn term(tokens: &Vec<Token>, pos: usize) -> Result<(Node, usize), String> {
                         }
 
                         Token::BRACK2 => {
-                            closed = true;
                             i += 1;
                             break;
                         }

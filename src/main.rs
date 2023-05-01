@@ -11,8 +11,6 @@ mod evaluator;
 mod builtin;
 mod utils;
 
-use parser::Node;
-use parser::NodeType;
 use evaluator::Object;
 
 
@@ -29,7 +27,6 @@ fn main() {
     }
 
     let a1 = &args[1];
-    let mut input = String::new();
 
     match a1.as_str() {
         "lex" => {
@@ -38,7 +35,7 @@ fn main() {
                 return;
             }
 
-            input = read_inputfile(&args[2]);
+            let input = read_inputfile(&args[2]);
             let tokens = lexer::lex(&input);
             println!("\n{:?}\n", tokens);
         }
@@ -48,7 +45,7 @@ fn main() {
                 return;
             }
 
-            input = read_inputfile(&args[2]);
+            let input = read_inputfile(&args[2]);
             let tokens = lexer::lex(&input);
             let tree = parser::parse(&tokens).unwrap();
             println!("\n{}\n", tree);
@@ -61,7 +58,6 @@ fn main() {
             }
             let a2 : &String =  &args[2];
             let mut action = "eval";
-            let testfile: &str;
             let nextarg: &String;
 
             match a2.as_str() {
@@ -81,7 +77,7 @@ fn main() {
                 }
             }
 
-            input = read_inputfile(nextarg);
+            let input = read_inputfile(nextarg);
 
 
             if action == "lex" {
@@ -118,7 +114,7 @@ fn main() {
         let mainfunc = &symtable.remove("main").unwrap();
 
         match mainfunc {
-            Object::FUNCTION(s, n, v) => {
+            Object::FUNCTION(_, n, _) => {
                 utils::dprint(" ");
                 utils::dprint("EVALUATE");
                 utils::dprint(" ");

@@ -251,7 +251,7 @@ pub fn eval(node: &Node, symtable: &mut HashMap<String, Object>) -> Object {
                     args.push(eval(&argtree, symtable));
                 }
 
-                let res: Object = builtin::call(s, &args, symtable);
+                let res: Object = builtin::call(s, &args);
                 return res;
             }
 
