@@ -113,7 +113,7 @@ impl fmt::Display for NodeType {
 //            NodeType::PAREN2                        => write!(f, ")"),
             NodeType::LIST                          => write!(f, "[]"),
             NodeType::PARAMLIST                     => write!(f, "PARAMLIST"),
-            NodeType::ARGLIST                       => write!(f, "PARAMLIST"),
+            NodeType::ARGLIST                       => write!(f, "ARGLIST"),
             NodeType::BLOCK                         => write!(f, "BLOCK"),
             NodeType::MODULE                        => write!(f, "MODULE"),
             NodeType::DIRECTIVE                     => write!(f, "DIRECTIVE"),

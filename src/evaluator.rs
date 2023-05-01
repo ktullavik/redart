@@ -29,8 +29,8 @@ pub fn preval(node: &Node, symtable: &mut HashMap<String, Object>) {
         let t: &NodeType = &n.nodetype;
 
         match t {
-            NodeType::FUNDEF(s) => {
-                utils::dprint(String::from(format!("Preval: NodeType::FUNDEF '{}'", s)));
+            NodeType::FUNDEF(fname) => {
+                utils::dprint(String::from(format!("Preval: NodeType::FUNDEF '{}'", fname)));
 
                 let params = &n.children[0];
                 utils::dprint(String::from(format!("{}", params)));
@@ -53,10 +53,10 @@ pub fn preval(node: &Node, symtable: &mut HashMap<String, Object>) {
                     }
                 }
 
-                let obj = Object::FUNCTION(s.to_string(), body, args);
+                let obj = Object::FUNCTION(fname.to_string(), body, args);
 
-                symtable.insert(s.to_string(), obj);
-                utils::dprint(String::from(format!("Inserted to symtable: {}", s)));
+                symtable.insert(fname.to_string(), obj);
+                utils::dprint(String::from(format!("Inserted to symtable: {}", fname)));
             }
             x => {
                 println!("Preval considering node {}", x);
@@ -70,10 +70,7 @@ pub fn preval(node: &Node, symtable: &mut HashMap<String, Object>) {
 
 pub fn eval(node: &Node, symtable: &mut HashMap<String, Object>) -> Object {
 
-    println!(" ");
-    println!("EVAL");
-    println!(" ");
-
+    utils::dprint(String::from(format!("eval node: {}", node)));
 
     let t: &NodeType = &node.nodetype;
 
@@ -215,19 +212,41 @@ pub fn eval(node: &Node, symtable: &mut HashMap<String, Object>) -> Object {
         NodeType::FUNCALL(s) => {
             utils::dprint(format!("Eval: NodeType::FUNCALL({})", s));
 
-            if builtin::has_function(s) {
-                let res: Object = builtin::call(s, &node.children, symtable);
-                return res;
-            }
 
             if symtable.contains_key(s) {
                 let funcobj = symtable[s].clone();
                 match funcobj {
                     Object::FUNCTION(_, body, params) => {
-                        return eval(&body, symtable);
+
+                        let argslist = &node.children[0];
+
+                        for i in 0 .. params.len() {
+
+                            let argtree = &argslist.children[i];
+                            let argobj = eval(argtree, symtable);
+
+                            symtable.insert(params[i].clone(), argobj);
+                        }
+
+                        // for argtree in argslist.children {
+                        //     symtable[]
+                        // }
+                        let result = eval(&body, symtable);
+
+                        for i in 0 .. params.len() {
+                            symtable.remove(params[i].as_str());
+                        }
+
+                        // return eval(&body, symtable);
+                        return result;
                     }
                     _ => panic!("Called a non function object")
                 }
+            }
+
+            if builtin::has_function(s) {
+                let res: Object = builtin::call(s, &node.children, symtable);
+                return res;
             }
 
             if s == "main" {

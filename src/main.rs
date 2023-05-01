@@ -107,6 +107,11 @@ fn main() {
 
 
     fn evaluate(input: &String) {
+
+        utils::dprint(String::from(" "));
+        utils::dprint(String::from("EVALUATE"));
+        utils::dprint(String::from(" "));
+
         let tokens = lexer::lex(&input);
         let tree = parser::parse(&tokens).unwrap();
 
@@ -151,6 +156,9 @@ fn main() {
             }
             "7" => {
                 testfile = "7.funcall.dart";
+            }
+            "8" => {
+                testfile = "8.argpass.dart";
             }
             "14" => {
                 testfile = "14.list_replace.dart";
