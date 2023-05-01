@@ -208,7 +208,6 @@ pub fn eval(node: &Node, symtable: &mut HashMap<String, Object>) -> Object {
         NodeType::FUNCALL(s) => {
             utils::dprint(format!("Eval: NodeType::FUNCALL({})", s));
 
-
             if symtable.contains_key(s) {
                 let funcobj = symtable[s].clone();
                 match funcobj {
@@ -224,16 +223,12 @@ pub fn eval(node: &Node, symtable: &mut HashMap<String, Object>) -> Object {
                             symtable.insert(params[i].clone(), argobj);
                         }
 
-                        // for argtree in argslist.children {
-                        //     symtable[]
-                        // }
                         let result = eval(&body, symtable);
 
                         for i in 0 .. params.len() {
                             symtable.remove(params[i].as_str());
                         }
 
-                        // return eval(&body, symtable);
                         return result;
                     }
                     _ => panic!("Called a non function object")
@@ -294,8 +289,6 @@ pub fn eval(node: &Node, symtable: &mut HashMap<String, Object>) -> Object {
 
             eval(&node.children[1], symtable)
         }
-
-
 
         _ => panic!("Unknown node type: {}", t)
     }

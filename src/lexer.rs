@@ -33,15 +33,6 @@ fn read_word(tokens: &mut Vec<parser::Token>, chars: &[char], start: usize) -> u
             continue;
         }
         break;
-
-//        let nc_slice = input.get((i + nl)..(i + nl + 1)).unwrap();
-//        let nc = nc_slice.chars().next().expect("Lexer out of range when reading name 2.");
-//        if is_legal_namechar(nc) {
-//            nl += 1;
-//            sym.push(nc);
-//            continue;
-//        }
-//        break;
     }
 
     if is_keyword(&sym) {
@@ -124,7 +115,6 @@ pub fn lex(input: &str) -> Vec<parser::Token> {
                 }
                 continue;
             }
-
 
             '\'' => {
                 let mut k = 1;
@@ -233,15 +223,11 @@ pub fn lex(input: &str) -> Vec<parser::Token> {
             }
 
             x if x.is_alphabetic() => {
-//                let keylen: usize = read_keyword(&mut tokens, input, i);
-//                let keylen: usize = read_keyword(&mut tokens, &chars, i);
                 let word_len: usize = read_word(&mut tokens, &chars, i);
                 if word_len > 0 {
                     i += word_len;
                     continue;
                 }
-//                i += read_name(&mut tokens, &chars, i);
-//                continue;
             }
 
             _ => {
