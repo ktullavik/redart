@@ -66,8 +66,6 @@ pub fn preval(node: &Node, symtable: &mut HashMap<String, Object>) {
 
 pub fn eval(node: &Node, symtable: &mut HashMap<String, Object>) -> Object {
 
-    utils::dprint(format!("eval node: {}", node));
-
     let t: &NodeType = &node.nodetype;
 
     match t {
