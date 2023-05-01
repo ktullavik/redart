@@ -20,9 +20,9 @@ pub enum Object {
 
 
 pub fn preval(node: &Node, symtable: &mut HashMap<String, Object>) {
-    println!(" ");
-    println!("PREVAL");
-    println!(" ");
+    utils::dprint(String::from(" "));
+    utils::dprint(String::from("PREVAL"));
+    utils::dprint(String::from(" "));
 
 
     for n in &node.children {
@@ -59,7 +59,7 @@ pub fn preval(node: &Node, symtable: &mut HashMap<String, Object>) {
                 utils::dprint(String::from(format!("Inserted to symtable: {}", fname)));
             }
             x => {
-                println!("Preval considering node {}", x);
+                utils::dprint(String::from(format!("Preval considering node {}", x)));
                 // Object::VOID
             }
         }

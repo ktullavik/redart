@@ -1,5 +1,5 @@
 use parser;
-
+use utils;
 
 
 /// Not applicable for first char in name, where only letters are allowed
@@ -57,9 +57,9 @@ fn read_word(tokens: &mut Vec<parser::Token>, chars: &[char], start: usize) -> u
 
 pub fn lex(input: &str) -> Vec<parser::Token> {
 
-    println!(" ");
-    println!("LEX");
-    println!(" ");
+    utils::dprint(String::from(" "));
+    utils::dprint(String::from("LEX"));
+    utils::dprint(String::from(" "));
 
     let mut tokens: Vec<parser::Token> = Vec::new();
     let chars: Vec<char> = input.chars().collect();
