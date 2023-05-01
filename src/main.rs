@@ -165,6 +165,9 @@ fn main() {
             "10" => {
                 testfile = "10.arithmetic.dart";
             }
+            "11" => {
+                testfile = "11.conditional.dart";
+            }
             "14" => {
                 testfile = "14.list_replace.dart";
             }

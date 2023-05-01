@@ -20,6 +20,7 @@ pub enum Token {
     KEYWORD(String),
     NUM(String),
     STRING(String),
+    BOOL(bool),
     NAME(String),
     PAREN1,
     PAREN2,
@@ -45,10 +46,12 @@ pub enum NodeType {
     KEYWORD(String),
     NUM(String),
     STRING(String),
+    BOOL(bool),
     NAME(String),
     TYPEDVAR(String, String),
 //    PAREN1,
 //    PAREN2,
+    CONDITIONAL,
     BLOCK,
     LIST,
     MODULE,
@@ -76,6 +79,7 @@ impl fmt::Display for Token {
             Token::KEYWORD(s) => write!(f, "{}", s),
             Token::NUM(s)     => write!(f, "{}", s),
             Token::STRING(s)  => write!(f, "\"{}\"", s),
+            Token::BOOL(v)     => write!(f, "{}", v),
             Token::NAME(s)    => write!(f, "{}", s),
             Token::PAREN1     => write!(f, "("),
             Token::PAREN2     => write!(f, ")"),
@@ -103,8 +107,9 @@ impl fmt::Display for NodeType {
             NodeType::KEYWORD(s)                    => write!(f, "{}", s),
             NodeType::NUM(s)                        => write!(f, "{}", s),
             NodeType::STRING(s)                     => write!(f, "\"{}\"", s),
+            NodeType::BOOL(v)                        => write!(f, "{}", v),
             NodeType::NAME(s)                       => write!(f, "{}", s),
-            NodeType::TYPEDVAR(tp, name)            => write!(f, "{}:{}", name, tp),
+            NodeType::TYPEDVAR(tp, name)  => write!(f, "{}:{}", name, tp),
             NodeType::FUNDEF(s)                     => write!(f, "{}() {{}}", s),
             NodeType::FUNCALL(s)                    => write!(f, "{}()", s),
             NodeType::METHODCALL(objname, methname) => write!(f, "{}.{}()", objname, methname),
@@ -113,6 +118,7 @@ impl fmt::Display for NodeType {
             NodeType::LIST                          => write!(f, "[]"),
             NodeType::PARAMLIST                     => write!(f, "PARAMLIST"),
             NodeType::ARGLIST                       => write!(f, "ARGLIST"),
+            NodeType::CONDITIONAL                   => write!(f, "CONDITIONAL"),
             NodeType::BLOCK                         => write!(f, "BLOCK"),
             NodeType::MODULE                        => write!(f, "MODULE"),
             NodeType::DIRECTIVE                     => write!(f, "DIRECTIVE"),
@@ -471,8 +477,12 @@ fn block(tokens: &Vec<Token>, pos: usize) -> Result<(Node, usize), String> {
         utils::dprint(format!("Parse: block loop at: {}, token: {}", i, &tokens[i]));
 
         if tokens[i] == Token::BLOCK2 {
-            utils::dprint(String::from("Parse: token is end-block, breaking."));
+            utils::dprint(String::from("Parse: token is end-of-block, breaking."));
             i += 1;
+            break;
+        }
+        if tokens[i] == Token::END {
+            utils::dprint(String::from("Parse: token is end, breaking."));
             break;
         }
 
@@ -483,15 +493,16 @@ fn block(tokens: &Vec<Token>, pos: usize) -> Result<(Node, usize), String> {
 
         match &tokens[i] {
 
+            Token::BLOCK2 => {
+                i += 1;
+                continue;
+            }
             Token::ENDST => {
                 // ENDST should be consumed by statement?
                 i += 1;
                 continue;
             }
-            Token::NAME(_) => {
-                continue;
-            }
-            _ => return Err(format!("Unexpected token at pos {} when parsing block: {}", i, &tokens[i]))
+            _ => continue
         }
     }
 
@@ -505,14 +516,14 @@ fn statement(tokens: &Vec<Token>, pos: usize) -> Result<(Node, usize), String> {
 
     // Can be
     // assignment: var i = 2
-    //
-    let (node, new_pos) = expression(tokens, pos)?;
-    let mut i = new_pos;
 
-    match &node.nodetype {
+    let mut i = pos;
 
-        NodeType::NAME(s) => {
+    match &tokens[i] {
 
+        Token::NAME(s) => {
+
+            i = i + 1;
             let t2 = &tokens[i];
 
             match t2 {
@@ -597,11 +608,59 @@ fn statement(tokens: &Vec<Token>, pos: usize) -> Result<(Node, usize), String> {
                         }
                     }
                 }
-                _ => panic!("Unexpected token in statement: {}", t2)
+                _ => return expression(tokens, pos)
             }
         }
 
-        _ => return Err(String::from("Unexpected token when reading statement"))
+        Token::KEYWORD(s) => {
+
+            if s == "if" {
+
+                utils::dprint(format!("Parse: keyword: {}", s));
+
+                i += 1;
+
+                match tokens[i] {
+                    Token::PAREN1 => {
+                        i += 1;
+                        let (boolnode, new_pos) = expression(tokens, i).unwrap();
+
+                        match tokens[new_pos] {
+                            Token::PAREN2 => {
+                                i = new_pos + 1;
+
+                                match tokens[i] {
+                                    Token::BLOCK1 => {
+
+                                        i += 1;
+                                        let (bodynode, new_pos) = block(tokens, i).unwrap();
+                                        i = new_pos;
+
+                                        let mut condnode = Node::new(NodeType::CONDITIONAL);
+                                        condnode.children.push(boolnode);
+                                        condnode.children.push(bodynode);
+                                        return Ok((condnode, i))
+
+                                    }
+                                    _ => panic!("Expected body of conditional")
+                                }
+
+                            }
+                            _ => panic!("Expected closing paren after conditional expression")
+                        }
+
+                    }
+                    _ => panic!("Unexpected token after 'if'")
+                }
+            }
+            return Err(String::from("Error when parsing conditional"));
+
+        }
+        _ => {
+            let (node, new_pos) = expression(tokens, pos)?;
+            let mut i = new_pos;
+            return Ok((node, i))
+        }
     };
 }
 
@@ -610,40 +669,7 @@ fn expression(tokens: &Vec<Token>, pos: usize) -> Result<(Node, usize), String> 
 
     utils::dprint(format!("Parse: expression: {}", &tokens[pos]));
 
-    let mut next_pos: usize;
-
-    let (left, i) = sum(tokens, pos)?;
-    next_pos = i;
-
-    let c: &Token = tokens.get(next_pos).unwrap();
-    match c {
-        Token::ASSIGN => {
-
-            match &left.nodetype {
-
-                NodeType::NAME(name) => {
-
-                    let mut assigment = Node::new(NodeType::ASSIGN);
-                    let name_node = Node::new(NodeType::NAME(name.to_string()));
-
-                    assigment.children.push(name_node);
-
-                    let (right, i) = expression(tokens, next_pos + 1)?;
-                    next_pos = i;
-
-                    assigment.children.push(right);
-
-                    return Ok((assigment, next_pos));
-                },
-                _ => panic!("Invalid name for assignment: {}", left.nodetype)
-            }
-        }
-
-        _ => {
-            utils::dprint(format!("Parse: returning expression at token {}", next_pos));
-            return Ok((left, next_pos));
-        }
-    }
+    sum(tokens, pos)
 }
 
 
@@ -732,6 +758,11 @@ fn term(tokens: &Vec<Token>, pos: usize) -> Result<(Node, usize), String> {
 
         &Token::STRING(ref s) => {
             let node = Node::new(NodeType::STRING(s.clone()));
+            Ok((node, pos+1))
+        }
+
+        &Token::BOOL(v) => {
+            let node = Node::new(NodeType::BOOL(v));
             Ok((node, pos+1))
         }
 

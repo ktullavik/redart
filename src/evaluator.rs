@@ -10,6 +10,7 @@ use utils;
 pub enum Object {
     INT(i64),
     NUM(f64),
+    BOOL(bool),
     STRING(String),
     FUNCTION(String, Node, Vec<String>),
     VOID
@@ -177,6 +178,16 @@ pub fn eval(node: &Node, symtable: &mut HashMap<String, Object>) -> Object {
             Object::NUM(s.parse().unwrap())
         },
 
+        NodeType::BOOL(v) => {
+            utils::dprint("Eval: NodeType::BOOL");
+            if *v {
+                Object::BOOL(true)
+            }
+            else {
+                Object::BOOL(false)
+            }
+        },
+
         NodeType::STRING(s) => {
             utils::dprint("Eval: NodeType::STRING");
             // Object::STRING(s.parse().unwrap())
@@ -272,6 +283,25 @@ pub fn eval(node: &Node, symtable: &mut HashMap<String, Object>) -> Object {
             let obj = Object::FUNCTION(s.to_string(), body, args);
 
             symtable.insert(s.to_string(), obj);
+            return Object::VOID;
+        }
+
+        NodeType::CONDITIONAL => {
+
+            let boolnode = &node.children[0];
+            let bodynode = &node.children[1];
+
+            let res = eval(&boolnode, symtable);
+            match res {
+
+                Object::BOOL(v) => {
+                    if v {
+                        return eval(&bodynode, symtable);
+                    }
+                }
+                _ => panic!("Expected bool in conditional")
+            }
+
             return Object::VOID;
         }
 
