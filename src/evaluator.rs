@@ -234,14 +234,14 @@ pub fn eval(node: &Node, symtable: &mut HashMap<String, Object>) -> Object {
             }
 
             if builtin::has_function(s) {
-                let res: Object = builtin::call(s, &node.children, symtable);
-                return res;
-            }
+                let mut args: Vec<Object> = Vec::new();
 
-            if s == "main" {
-                let params = &node.children[0];
-                let body = &node.children[1];
-                return eval(body, symtable);
+                for argtree in &node.children[0].children {
+                    args.push(eval(&argtree, symtable));
+                }
+
+                let res: Object = builtin::call(s, &args, symtable);
+                return res;
             }
 
             panic!("Unknown function: {}", s)

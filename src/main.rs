@@ -159,6 +159,12 @@ fn main() {
             "8" => {
                 testfile = "8.argpass.dart";
             }
+            "9" => {
+                testfile = "9.evaled_argpass.dart";
+            }
+            "10" => {
+                testfile = "10.arithmetic.dart";
+            }
             "14" => {
                 testfile = "14.list_replace.dart";
             }

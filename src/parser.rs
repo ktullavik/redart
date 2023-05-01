@@ -297,7 +297,7 @@ fn fundef(tokens: &Vec<Token>, pos: usize) -> Result<(Node, usize), String>  {
                             let (body, new_pos) = block(tokens, i).unwrap();
                             node.children.push(body);
                             i = new_pos;
-                            utils::dprint(format!("fundef parsed to {}", new_pos));
+                            utils::dprint(format!("Parse: fundef parsed to {}", new_pos));
                             Ok((node, i))
                         }
 
@@ -471,7 +471,7 @@ fn block(tokens: &Vec<Token>, pos: usize) -> Result<(Node, usize), String> {
         utils::dprint(format!("Parse: block loop at: {}, token: {}", i, &tokens[i]));
 
         if tokens[i] == Token::BLOCK2 {
-            utils::dprint(String::from("token is end-block, breaking."));
+            utils::dprint(String::from("Parse: token is end-block, breaking."));
             i += 1;
             break;
         }
@@ -501,7 +501,7 @@ fn block(tokens: &Vec<Token>, pos: usize) -> Result<(Node, usize), String> {
 
 fn statement(tokens: &Vec<Token>, pos: usize) -> Result<(Node, usize), String> {
 
-    utils::dprint(format!("statement: {}", &tokens[pos]));
+    utils::dprint(format!("Parse: statement: {}", &tokens[pos]));
 
     // Can be
     // assignment: var i = 2
@@ -532,7 +532,7 @@ fn statement(tokens: &Vec<Token>, pos: usize) -> Result<(Node, usize), String> {
                             ass_node.children.push(typed_var);
                             let (right_node, i) = expression(tokens, i)?;
                             ass_node.children.push(right_node);
-                            utils::dprint(format!("returning statement at token {}", i));
+                            utils::dprint(format!("Parse: returning statement at token {}", i));
                             return Ok((ass_node, i))
                         }
 
