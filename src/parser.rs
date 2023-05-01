@@ -18,7 +18,8 @@ pub enum Token {
     COMMA,
     ASSIGN,
     KEYWORD(String),
-    NUM(String),
+    INT(String),
+    DOUBLE(String),
     STRING(String),
     BOOL(bool),
     NAME(String),
@@ -43,13 +44,12 @@ pub enum NodeType {
     DIV,
     ACCESS,
     ASSIGN,
-    NUM(String),
+    INT(String),
+    DOUBLE(String),
     STRING(String),
     BOOL(bool),
     NAME(String),
     TYPEDVAR(String, String),
-//    PAREN1,
-//    PAREN2,
     CONDITIONAL,
     BLOCK,
     LIST,
@@ -76,7 +76,8 @@ impl fmt::Display for Token {
             Token::ACCESS     => write!(f, "."),
             Token::COMMA      => write!(f, ","),
             Token::KEYWORD(s) => write!(f, "{}", s),
-            Token::NUM(s)     => write!(f, "{}", s),
+            Token::INT(s)     => write!(f, "{}", s),
+            Token::DOUBLE(s)     => write!(f, "{}", s),
             Token::STRING(s)  => write!(f, "\"{}\"", s),
             Token::BOOL(v)     => write!(f, "{}", v),
             Token::NAME(s)    => write!(f, "{}", s),
@@ -103,7 +104,8 @@ impl fmt::Display for NodeType {
             NodeType::MUL                           => write!(f, "*"),
             NodeType::DIV                           => write!(f, "/"),
             NodeType::ACCESS                        => write!(f, "."),
-            NodeType::NUM(s)                        => write!(f, "{}", s),
+            NodeType::INT(s)                        => write!(f, "{}", s),
+            NodeType::DOUBLE(s)                     => write!(f, "{}", s),
             NodeType::STRING(s)                     => write!(f, "\"{}\"", s),
             NodeType::BOOL(v)                        => write!(f, "{}", v),
             NodeType::NAME(s)                       => write!(f, "{}", s),
@@ -111,8 +113,6 @@ impl fmt::Display for NodeType {
             NodeType::FUNDEF(s)                     => write!(f, "{}() {{}}", s),
             NodeType::FUNCALL(s)                    => write!(f, "{}()", s),
             NodeType::METHODCALL(objname, methname) => write!(f, "{}.{}()", objname, methname),
-//            NodeType::PAREN1                        => write!(f, "("),
-//            NodeType::PAREN2                        => write!(f, ")"),
             NodeType::LIST                          => write!(f, "[]"),
             NodeType::PARAMLIST                     => write!(f, "PARAMLIST"),
             NodeType::ARGLIST                       => write!(f, "ARGLIST"),
@@ -417,7 +417,8 @@ fn arglist(tokens: &Vec<Token>, pos: usize) -> Result<(Node, usize), String> {
 
                         Token::NAME(_)   |
                         Token::STRING(_) |
-                        Token::NUM(_)
+                        Token::INT(_)    |
+                        Token::DOUBLE(_)
                         => {
                             let (arg, new_pos) = expression(tokens, j)?;
 
@@ -747,8 +748,18 @@ fn term(tokens: &Vec<Token>, pos: usize) -> Result<(Node, usize), String> {
     let t: &Token = tokens.get(pos).expect("No token for term!");
 
     match t {
-        &Token::NUM(ref s) => {
-            let node = Node::new(NodeType::NUM(s.clone()));
+        // &Token::NUM(ref s) => {
+        //     let node = Node::new(NodeType::NUM(s.clone()));
+        //     Ok((node, pos+1))
+        // }
+
+        &Token::INT(ref s) => {
+            let node = Node::new(NodeType::INT(s.clone()));
+            Ok((node, pos+1))
+        }
+
+        &Token::DOUBLE(ref s) => {
+            let node = Node::new(NodeType::DOUBLE(s.clone()));
             Ok((node, pos+1))
         }
 

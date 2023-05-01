@@ -9,7 +9,7 @@ use utils;
 #[derive(Clone)]
 pub enum Object {
     INT(i64),
-    NUM(f64),
+    DOUBLE(f64),
     BOOL(bool),
     STRING(String),
     FUNCTION(String, Node, Vec<String>),
@@ -94,17 +94,33 @@ pub fn eval(node: &Node, symtable: &mut HashMap<String, Object>) -> Object {
             let left_obj = eval(&node.children[0], symtable);
 
             match &left_obj {
-                Object::NUM(s1) => {
+                Object::INT(s1) => {
 
                     let right_obj = eval(&node.children[1], symtable);
 
                     match &right_obj {
-                        Object::NUM(s2) => {
-                            Object::NUM(s1 + s2)
+                        Object::INT(s2) => {
+                            Object::INT(s1 + s2)
+                        }
+                        Object::DOUBLE(s2) => {
+                            Object::DOUBLE(*s1 as f64 + s2)
                         }
                         _ => panic!("Illegal right operand for addition: {:?}", &right_obj)
                     }
                 },
+                Object::DOUBLE(s1) => {
+                    let right_obj = eval(&node.children[1], symtable);
+
+                    match &right_obj {
+                        Object::INT(s2) => {
+                            Object::DOUBLE(s1 + *s2 as f64)
+                        }
+                        Object::DOUBLE(s2) => {
+                            Object::DOUBLE(s1 + s2)
+                        }
+                        _ => panic!("Illegal right operand for addition: {:?}", &right_obj)
+                    }
+                }
                 _ => panic!("Illegal left operand for addition: {:?}", &left_obj)
             }
         },
@@ -115,17 +131,33 @@ pub fn eval(node: &Node, symtable: &mut HashMap<String, Object>) -> Object {
             let left_obj = eval(&node.children[0], symtable);
 
             match &left_obj {
-                Object::NUM(s1) => {
+                Object::INT(s1) => {
 
                     let right_obj = eval(&node.children[1], symtable);
 
                     match &right_obj {
-                        Object::NUM(s2) => {
-                            Object::NUM(s1 - s2)
+                        Object::INT(s2) => {
+                            Object::INT(s1 - s2)
+                        }
+                        Object::DOUBLE(s2) => {
+                            Object::DOUBLE(*s1 as f64 - s2)
                         }
                         _ => panic!("Illegal right operand for subtraction: {:?}", &right_obj)
                     }
                 },
+                Object::DOUBLE(s1) => {
+                    let right_obj = eval(&node.children[1], symtable);
+
+                    match &right_obj {
+                        Object::INT(s2) => {
+                            Object::DOUBLE(s1 - *s2 as f64)
+                        }
+                        Object::DOUBLE(s2) => {
+                            Object::DOUBLE(s1 - s2)
+                        }
+                        _ => panic!("Illegal right operand for subtraction: {:?}", &right_obj)
+                    }
+                }
                 _ => panic!("Illegal left operand for subtraction: {:?}", &left_obj)
             }
         },
@@ -137,17 +169,33 @@ pub fn eval(node: &Node, symtable: &mut HashMap<String, Object>) -> Object {
             let left_obj = eval(&node.children[0], symtable);
 
             match &left_obj {
-                Object::NUM(s1) => {
+                Object::INT(s1) => {
 
                     let right_obj = eval(&node.children[1], symtable);
 
                     match &right_obj {
-                        Object::NUM(s2) => {
-                            Object::NUM(s1 * s2)
+                        Object::INT(s2) => {
+                            Object::INT(s1 * s2)
+                        }
+                        Object::DOUBLE(s2) => {
+                            Object::DOUBLE(*s1 as f64 * s2)
                         }
                         _ => panic!("Illegal right operand for multiplication: {:?}", &right_obj)
                     }
                 },
+                Object::DOUBLE(s1) => {
+                    let right_obj = eval(&node.children[1], symtable);
+
+                    match &right_obj {
+                        Object::INT(s2) => {
+                            Object::DOUBLE(s1 * *s2 as f64)
+                        }
+                        Object::DOUBLE(s2) => {
+                            Object::DOUBLE(s1 * s2)
+                        }
+                        _ => panic!("Illegal right operand for multiplication: {:?}", &right_obj)
+                    }
+                }
                 _ => panic!("Illegal left operand for multiplication: {:?}", &left_obj)
             }
         },
@@ -158,13 +206,30 @@ pub fn eval(node: &Node, symtable: &mut HashMap<String, Object>) -> Object {
             let left_obj = eval(&node.children[0], symtable);
 
             match &left_obj {
-                Object::NUM(s1) => {
+                Object::INT(s1) => {
 
                     let right_obj = eval(&node.children[1], symtable);
 
                     match &right_obj {
-                        Object::NUM(s2) => {
-                            Object::NUM(*s1 as f64 / *s2 as f64)
+                        Object::INT(s2) => {
+                            Object::DOUBLE(*s1 as f64 / *s2 as f64)
+                        }
+                        Object::DOUBLE(s2) => {
+                            Object::DOUBLE(*s1 as f64 / *s2)
+                        }
+                        _ => panic!("Illegal right operand for division: {:?}", &right_obj)
+                    }
+                },
+                Object::DOUBLE(s1) => {
+
+                    let right_obj = eval(&node.children[1], symtable);
+
+                    match &right_obj {
+                        Object::INT(s2) => {
+                            Object::DOUBLE(*s1 as f64 / *s2 as f64)
+                        }
+                        Object::DOUBLE(s2) => {
+                            Object::DOUBLE(*s1 as f64 / *s2)
                         }
                         _ => panic!("Illegal right operand for division: {:?}", &right_obj)
                     }
@@ -173,9 +238,15 @@ pub fn eval(node: &Node, symtable: &mut HashMap<String, Object>) -> Object {
             }
         },
 
-        NodeType::NUM(s) => {
-            utils::dprint("Eval: NodeType::NUM");
-            Object::NUM(s.parse().unwrap())
+        NodeType::INT(s) => {
+            utils::dprint("Eval: NodeType::INT");
+            Object::INT(s.parse().unwrap())
+        },
+
+        NodeType::DOUBLE(s) => {
+            utils::dprint("Eval: NodeType::INT");
+            // Object::DOUBLE(s.parse().unwrap())
+            Object::DOUBLE((s.as_str()).parse::<f64>().unwrap())
         },
 
         NodeType::BOOL(v) => {
@@ -198,8 +269,11 @@ pub fn eval(node: &Node, symtable: &mut HashMap<String, Object>) -> Object {
             utils::dprint("Eval: NodeType::NAME");
             if symtable.contains_key(s) {
                 match symtable.get(s).unwrap() {
-                    &Object::NUM(ref v) => {
-                        Object::NUM(*v)
+                    &Object::INT(ref v) => {
+                        Object::INT(*v)
+                    },
+                    &Object::DOUBLE(ref v) => {
+                        Object::DOUBLE(*v)
                     },
                     &Object::STRING(ref v) => {
                         Object::STRING(String::from(v.clone()))

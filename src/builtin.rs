@@ -23,7 +23,10 @@ pub fn call(name: &str, args: &Vec<Object>) -> Object {
                 Object::STRING(s) => {
                     println!("{}", s);
                 }
-                Object::NUM(x) => {
+                Object::INT(n) => {
+                    println!("{}", n);
+                }
+                Object::DOUBLE(x) => {
                     println!("{}", x);
                 }
                 _ => {

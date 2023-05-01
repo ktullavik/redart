@@ -223,7 +223,12 @@ pub fn lex(input: &str) -> Vec<parser::Token> {
                 }
 
                 let val: &str = input.get(i .. i + nl).unwrap();
-                tokens.push(parser::Token::NUM(String::from(val)));
+                if is_int {
+                    tokens.push(parser::Token::INT(String::from(val)));
+                }
+                else {
+                    tokens.push(parser::Token::DOUBLE(String::from(val)));
+                }
                 i += nl;
                 continue;
             }
