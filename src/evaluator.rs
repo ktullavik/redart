@@ -280,7 +280,6 @@ pub fn eval(node: &Node, store: &mut Stack) -> Object {
                         for i in 0 .. params.len() {
                             let argtree = &argslist.children[i];
                             let argobj = eval(argtree, store);
-                            // symtable.insert(params[i].clone(), argobj);
                             store.add(params[i].as_str(), argobj);
                         }
 
