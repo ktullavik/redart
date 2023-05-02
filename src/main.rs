@@ -3,15 +3,16 @@ extern crate rustyline;
 use std::io::prelude::*;
 use std::env;
 use std::fs::File;
-use std::collections::HashMap;
 
 mod parser;
 mod lexer;
 mod evaluator;
 mod builtin;
 mod utils;
+mod stack;
 
 use evaluator::Object;
+use stack::Stack;
 
 
 static TESTPATH: &str = "/usr/home/kt/devel/redart/test/";
@@ -107,18 +108,18 @@ fn main() {
         let tokens = lexer::lex(&input);
         let tree = parser::parse(&tokens).unwrap();
 
-        let mut symtable :HashMap<String, evaluator::Object> = HashMap::new();
+        let mut store = Stack::new();
 
-        evaluator::preval(&tree, &mut symtable);
+        evaluator::preval(&tree, &mut store);
 
-        let mainfunc = &symtable.remove("main").unwrap();
+        let mainfunc = &store.get("main").clone();
 
         match mainfunc {
             Object::FUNCTION(_, n, _) => {
                 utils::dprint(" ");
                 utils::dprint("EVALUATE");
                 utils::dprint(" ");
-                evaluator::eval(n, &mut symtable);
+                evaluator::eval(n, &mut store);
             }
             x => {
                 panic!("Unexpected type of 'main': {:?}", x)

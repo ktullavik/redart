@@ -1,8 +1,8 @@
-use std::collections::HashMap;
 use parser::Node;
 use parser::NodeType;
 use builtin;
 use utils::dprint;
+use stack::Stack;
 
 
 #[derive(Debug)]
@@ -17,11 +17,12 @@ pub enum Object {
 }
 
 
-pub fn preval(node: &Node, symtable: &mut HashMap<String, Object>) {
+pub fn preval(node: &Node, store: &mut Stack) {
     dprint(" ");
     dprint("PREVAL");
     dprint(" ");
 
+    store.push();
 
     for n in &node.children {
         let t: &NodeType = &n.nodetype;
@@ -52,8 +53,8 @@ pub fn preval(node: &Node, symtable: &mut HashMap<String, Object>) {
                 }
 
                 let obj = Object::FUNCTION(fname.to_string(), body, args);
+                store.add(fname, obj);
 
-                symtable.insert(fname.to_string(), obj);
                 dprint(format!("Inserted to symtable: {}", fname));
             }
             x => {
@@ -65,7 +66,7 @@ pub fn preval(node: &Node, symtable: &mut HashMap<String, Object>) {
 
 
 
-pub fn eval(node: &Node, symtable: &mut HashMap<String, Object>) -> Object {
+pub fn eval(node: &Node, store: &mut Stack) -> Object {
 
     let t: &NodeType = &node.nodetype;
 
@@ -75,13 +76,14 @@ pub fn eval(node: &Node, symtable: &mut HashMap<String, Object>) -> Object {
             dprint("Eval: NodeType::ASSIGN");
             match &node.children[0].nodetype {
                 NodeType::NAME(ref s1) => {
-                    let right_obj = eval(&node.children[1], symtable);
-                    symtable.insert(s1.clone(), right_obj);
+                    let right_obj = eval(&node.children[1], store);
+                    store.add(s1.as_str(), right_obj);
                     return Object::VOID;
                 }
                 NodeType::TYPEDVAR(_, ref s1) => {
-                    let right_obj = eval(&node.children[1], symtable);
-                    symtable.insert(s1.clone(), right_obj);
+                    let right_obj = eval(&node.children[1], store);
+                    // symtable.insert(s1.clone(), right_obj);
+                    store.add(s1.as_str(), right_obj);
                     return Object::VOID;
                 }
                 _ => panic!("Illegal name for assignment: {}", &node.children[0].nodetype)
@@ -91,12 +93,12 @@ pub fn eval(node: &Node, symtable: &mut HashMap<String, Object>) -> Object {
         NodeType::ADD => {
             dprint("Eval: NodeType::ADD");
 
-            let left_obj = eval(&node.children[0], symtable);
+            let left_obj = eval(&node.children[0], store);
 
             match &left_obj {
                 Object::INT(s1) => {
 
-                    let right_obj = eval(&node.children[1], symtable);
+                    let right_obj = eval(&node.children[1], store);
 
                     match &right_obj {
                         Object::INT(s2) => {
@@ -109,7 +111,7 @@ pub fn eval(node: &Node, symtable: &mut HashMap<String, Object>) -> Object {
                     }
                 },
                 Object::DOUBLE(s1) => {
-                    let right_obj = eval(&node.children[1], symtable);
+                    let right_obj = eval(&node.children[1], store);
 
                     match &right_obj {
                         Object::INT(s2) => {
@@ -128,12 +130,12 @@ pub fn eval(node: &Node, symtable: &mut HashMap<String, Object>) -> Object {
         NodeType::SUB => {
             dprint("Eval: NodeType::SUB");
 
-            let left_obj = eval(&node.children[0], symtable);
+            let left_obj = eval(&node.children[0], store);
 
             match &left_obj {
                 Object::INT(s1) => {
 
-                    let right_obj = eval(&node.children[1], symtable);
+                    let right_obj = eval(&node.children[1], store);
 
                     match &right_obj {
                         Object::INT(s2) => {
@@ -146,7 +148,7 @@ pub fn eval(node: &Node, symtable: &mut HashMap<String, Object>) -> Object {
                     }
                 },
                 Object::DOUBLE(s1) => {
-                    let right_obj = eval(&node.children[1], symtable);
+                    let right_obj = eval(&node.children[1], store);
 
                     match &right_obj {
                         Object::INT(s2) => {
@@ -166,12 +168,12 @@ pub fn eval(node: &Node, symtable: &mut HashMap<String, Object>) -> Object {
         NodeType::MUL => {
             dprint("Eval: NodeType::MUL");
 
-            let left_obj = eval(&node.children[0], symtable);
+            let left_obj = eval(&node.children[0], store);
 
             match &left_obj {
                 Object::INT(s1) => {
 
-                    let right_obj = eval(&node.children[1], symtable);
+                    let right_obj = eval(&node.children[1], store);
 
                     match &right_obj {
                         Object::INT(s2) => {
@@ -184,7 +186,7 @@ pub fn eval(node: &Node, symtable: &mut HashMap<String, Object>) -> Object {
                     }
                 },
                 Object::DOUBLE(s1) => {
-                    let right_obj = eval(&node.children[1], symtable);
+                    let right_obj = eval(&node.children[1], store);
 
                     match &right_obj {
                         Object::INT(s2) => {
@@ -203,12 +205,12 @@ pub fn eval(node: &Node, symtable: &mut HashMap<String, Object>) -> Object {
         NodeType::DIV => {
             dprint("Eval: NodeType::DIV");
 
-            let left_obj = eval(&node.children[0], symtable);
+            let left_obj = eval(&node.children[0], store);
 
             match &left_obj {
                 Object::INT(s1) => {
 
-                    let right_obj = eval(&node.children[1], symtable);
+                    let right_obj = eval(&node.children[1], store);
 
                     match &right_obj {
                         Object::INT(s2) => {
@@ -222,7 +224,7 @@ pub fn eval(node: &Node, symtable: &mut HashMap<String, Object>) -> Object {
                 },
                 Object::DOUBLE(s1) => {
 
-                    let right_obj = eval(&node.children[1], symtable);
+                    let right_obj = eval(&node.children[1], store);
 
                     match &right_obj {
                         Object::INT(s2) => {
@@ -251,66 +253,40 @@ pub fn eval(node: &Node, symtable: &mut HashMap<String, Object>) -> Object {
 
         NodeType::BOOL(v) => {
             dprint("Eval: NodeType::BOOL");
-            if *v {
-                Object::BOOL(true)
-            }
-            else {
-                Object::BOOL(false)
-            }
+            Object::BOOL(*v)
         },
 
         NodeType::STRING(s) => {
             dprint("Eval: NodeType::STRING");
-            // Object::STRING(s.parse().unwrap())
             Object::STRING(s.clone())
         },
 
         NodeType::NAME(s) => {
             dprint("Eval: NodeType::NAME");
-            if symtable.contains_key(s) {
-                match symtable.get(s).unwrap() {
-                    &Object::INT(ref v) => {
-                        Object::INT(*v)
-                    },
-                    &Object::DOUBLE(ref v) => {
-                        Object::DOUBLE(*v)
-                    },
-                    &Object::STRING(ref v) => {
-                        Object::STRING(String::from(v.clone()))
-                    },
-                    _ => {
-                        panic!("Illegal value found in symbol table: {:?}", symtable.get(s))
-                    }
-                }
-            }
-            else {
-                panic!("Undefined variable: {}", s)
-            }
+            store.get(s).clone()
         }
 
         NodeType::FUNCALL(s) => {
             dprint(format!("Eval: NodeType::FUNCALL({})", s));
 
-            if symtable.contains_key(s) {
-                let funcobj = symtable[s].clone();
+            if store.has(s) {
+                let funcobj = store.get(s).clone();
                 match funcobj {
                     Object::FUNCTION(_, body, params) => {
 
                         let argslist = &node.children[0];
 
+                        store.push();
                         for i in 0 .. params.len() {
-
                             let argtree = &argslist.children[i];
-                            let argobj = eval(argtree, symtable);
-
-                            symtable.insert(params[i].clone(), argobj);
+                            let argobj = eval(argtree, store);
+                            // symtable.insert(params[i].clone(), argobj);
+                            store.add(params[i].as_str(), argobj);
                         }
 
-                        let result = eval(&body, symtable);
+                        let result = eval(&body, store);
 
-                        for i in 0 .. params.len() {
-                            symtable.remove(params[i].as_str());
-                        }
+                        store.pop();
 
                         return result;
                     }
@@ -322,7 +298,7 @@ pub fn eval(node: &Node, symtable: &mut HashMap<String, Object>) -> Object {
                 let mut args: Vec<Object> = Vec::new();
 
                 for argtree in &node.children[0].children {
-                    args.push(eval(&argtree, symtable));
+                    args.push(eval(&argtree, store));
                 }
 
                 let res: Object = builtin::call(s, &args);
@@ -356,7 +332,7 @@ pub fn eval(node: &Node, symtable: &mut HashMap<String, Object>) -> Object {
 
             let obj = Object::FUNCTION(s.to_string(), body, args);
 
-            symtable.insert(s.to_string(), obj);
+            store.add(s, obj);
             return Object::VOID;
         }
 
@@ -365,12 +341,12 @@ pub fn eval(node: &Node, symtable: &mut HashMap<String, Object>) -> Object {
             let boolnode = &node.children[0];
             let bodynode = &node.children[1];
 
-            let res = eval(&boolnode, symtable);
+            let res = eval(&boolnode, store);
             match res {
 
                 Object::BOOL(v) => {
                     if v {
-                        return eval(&bodynode, symtable);
+                        return eval(&bodynode, store);
                     }
                 }
                 _ => panic!("Expected bool in conditional")
@@ -381,7 +357,7 @@ pub fn eval(node: &Node, symtable: &mut HashMap<String, Object>) -> Object {
 
         NodeType::BLOCK => {
             for s in &node.children {
-                eval(s, symtable);
+                eval(s, store);
             }
             return Object::VOID;
         }
@@ -389,7 +365,7 @@ pub fn eval(node: &Node, symtable: &mut HashMap<String, Object>) -> Object {
         NodeType::MODULE => {
             dprint("Eval: NodeType::MODULE");
 
-            eval(&node.children[1], symtable)
+            eval(&node.children[1], store)
         }
 
         _ => panic!("Unknown node type: {}", t)
