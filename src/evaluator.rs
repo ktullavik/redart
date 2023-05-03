@@ -337,18 +337,34 @@ pub fn eval(node: &Node, store: &mut Stack) -> Object {
 
         NodeType::CONDITIONAL => {
 
-            let boolnode = &node.children[0];
-            let bodynode = &node.children[1];
+            for condnode in &node.children {
 
-            let res = eval(&boolnode, store);
-            match res {
+                match condnode.nodetype {
 
-                Object::BOOL(v) => {
-                    if v {
+                    NodeType::IF |
+                    NodeType::ELSEIF => {
+                        let boolnode= &condnode.children[0];
+
+                        let res = eval(&boolnode, store);
+                        match res {
+
+                            Object::BOOL(v) => {
+                                if v {
+                                    let bodynode= &condnode.children[1];
+                                    return eval(&bodynode, store);
+                                }
+                            }
+                            _ => panic!("Expected bool in conditional")
+                        }
+                    }
+
+                    NodeType::ELSE => {
+                        let bodynode= &condnode.children[0];
                         return eval(&bodynode, store);
                     }
+                    _ => panic!("Invalid node in conditional!")
+
                 }
-                _ => panic!("Expected bool in conditional")
             }
 
             return Object::VOID;

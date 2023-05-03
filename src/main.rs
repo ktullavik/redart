@@ -165,8 +165,20 @@ fn main() {
             "11" => {
                 testfile = "11.conditional.dart";
             }
+            "12" => {
+                testfile = "12.conditional2.dart";
+            }
+            "13" => {
+                testfile = "13.conditional3.dart";
+            }
             "14" => {
-                testfile = "14.list_replace.dart";
+                testfile = "14.conditional4.dart";
+            }
+            "15" => {
+                testfile = "15.conditional5.dart";
+            }
+            "34" => {
+                testfile = "34.list_replace.dart";
             }
             s => {
                 testfile = s;

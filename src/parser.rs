@@ -51,6 +51,9 @@ pub enum NodeType {
     NAME(String),
     TYPEDVAR(String, String),
     CONDITIONAL,
+    IF,
+    ELSEIF,
+    ELSE,
     BLOCK,
     LIST,
     MODULE,
@@ -117,6 +120,9 @@ impl fmt::Display for NodeType {
             NodeType::PARAMLIST                     => write!(f, "PARAMLIST"),
             NodeType::ARGLIST                       => write!(f, "ARGLIST"),
             NodeType::CONDITIONAL                   => write!(f, "CONDITIONAL"),
+            NodeType::IF                            => write!(f, "IF"),
+            NodeType::ELSEIF                        => write!(f, "ELSEIF"),
+            NodeType::ELSE                          => write!(f, "ELSE"),
             NodeType::BLOCK                         => write!(f, "BLOCK"),
             NodeType::MODULE                        => write!(f, "MODULE"),
             NodeType::DIRECTIVE                     => write!(f, "DIRECTIVE"),
@@ -493,7 +499,7 @@ fn block(tokens: &Vec<Token>, pos: usize) -> Result<(Node, usize), String> {
         match &tokens[i] {
 
             Token::BLOCK2 => {
-                i += 1;
+                // i += 1;
                 continue;
             }
             Token::ENDST => {
@@ -617,6 +623,69 @@ fn statement(tokens: &Vec<Token>, pos: usize) -> Result<(Node, usize), String> {
 
                 dprint(format!("Parse: keyword: {}", s));
 
+                let mut condnode = Node::new(NodeType::CONDITIONAL);
+
+                let (condpart, next_pos) = conditional(tokens, i).unwrap();
+                condnode.children.push(condpart);
+                i = next_pos;
+
+                // Skip BRACK2
+                // i += 1;
+
+                println!("Token after if parsing: {}", tokens[i]);
+
+
+                loop {
+
+                    let next_token = &tokens[i];
+
+                    match next_token {
+                        Token::KEYWORD(s1) => {
+
+                            if s1 == "else" {
+                                println!("Parsing an if-else");
+                                let (lastcond, last_pos) = conditional(tokens, i).unwrap();
+                                condnode.children.push(lastcond);
+                                i = last_pos;
+                            }
+                            else {
+                                return Ok((condnode, i));
+                            }
+                        }
+
+                        _ => {
+                            println!("next token was not keyword: {}", next_token);
+                            return Ok((condnode, i));
+                        }
+                    }
+                }
+                return Ok((condnode, i))
+
+            }
+            else {
+                return Err(String::from(format!("Unexpected keyword: {}", s)));
+            }
+        }
+
+        _ => {
+            return expression(tokens, pos);
+        }
+    };
+}
+
+
+fn conditional(tokens: &Vec<Token>, pos: usize) -> Result<(Node, usize), String> {
+
+    println!("conditional on {}", tokens[pos]);
+
+    let mut i = pos;
+
+    match &tokens[i] {
+
+        Token::KEYWORD(s) => {
+
+            if s == "if" {
+
                 i += 1;
 
                 match tokens[i] {
@@ -630,35 +699,99 @@ fn statement(tokens: &Vec<Token>, pos: usize) -> Result<(Node, usize), String> {
 
                                 match tokens[i] {
                                     Token::BLOCK1 => {
-
                                         i += 1;
                                         let (bodynode, new_pos) = block(tokens, i).unwrap();
+
                                         i = new_pos;
 
-                                        let mut condnode = Node::new(NodeType::CONDITIONAL);
-                                        condnode.children.push(boolnode);
-                                        condnode.children.push(bodynode);
-                                        return Ok((condnode, i))
+                                        let mut ifnode = Node::new(NodeType::IF);
+                                        ifnode.children.push(boolnode);
+                                        ifnode.children.push(bodynode);
 
+                                        println!("Parsed plain if, returning on: {}", tokens[i]);
+
+                                        return Ok((ifnode, i))
                                     }
                                     _ => panic!("Expected body of conditional")
                                 }
-
                             }
                             _ => panic!("Expected closing paren after conditional expression")
                         }
-
                     }
                     _ => panic!("Unexpected token after 'if'")
                 }
             }
-            return Err(String::from("Error when parsing conditional"));
+            else if s == "else" {
 
+                i += 1;
+
+                match &tokens[i] {
+
+                    Token::KEYWORD(s1) => {
+                        if s1 == "if" {
+
+                            println!("Conditional catching else-if");
+
+                            i += 1;
+
+                            match tokens[i] {
+                                Token::PAREN1 => {
+                                    i += 1;
+                                    let (boolnode, new_pos) = expression(tokens, i).unwrap();
+
+                                    match tokens[new_pos] {
+                                        Token::PAREN2 => {
+                                            i = new_pos + 1;
+
+                                            match tokens[i] {
+                                                Token::BLOCK1 => {
+                                                    i += 1;
+                                                    let (bodynode, new_pos) = block(tokens, i).unwrap();
+                                                    i = new_pos;
+
+                                                    let mut elseifnode = Node::new(NodeType::ELSEIF);
+                                                    elseifnode.children.push(boolnode);
+                                                    elseifnode.children.push(bodynode);
+
+                                                    return Ok((elseifnode, i))
+                                                }
+                                                _ => panic!("Expected body of conditional")
+                                            }
+                                        }
+                                        _ => panic!("Expected closing paren after conditional expression")
+                                    }
+                                }
+                                _ => panic!("Unexpected token after 'if'")
+                            }
+                        }
+                    }
+
+                    Token::BLOCK1 => {
+
+                        println!("Conditional catching else");
+
+                        i += 1;
+
+                        let (bodynode, new_pos) = block(tokens, i).unwrap();
+                        i = new_pos;
+
+                        let mut elsenode = Node::new(NodeType::ELSE);
+                        elsenode.children.push(bodynode);
+
+                        return Ok((elsenode, i))
+                    }
+
+                    x => {
+                        panic!("Unexpeced token afer 'else': {}", x)
+                    }
+                }
+
+            }
         }
-        _ => {
-            return expression(tokens, pos);
-        }
-    };
+
+        _ => {}
+    }
+    return Err(String::from("Expected conditional"));
 }
 
 
