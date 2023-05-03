@@ -557,6 +557,19 @@ fn statement(tokens: &Vec<Token>, pos: usize) -> Result<(Node, usize), String> {
                     }
                 }
 
+                Token::ASSIGN => {
+                    i += 1;
+                    let mut ass_node = Node::new(NodeType::ASSIGN);
+
+                    let var = Node::new(NodeType::NAME(s.to_string()));
+                    let (right_node, i) = expression(tokens, i)?;
+
+                    ass_node.children.push(var);
+                    ass_node.children.push(right_node);
+
+                    return Ok((ass_node, i));
+                }
+
                 Token::PAREN1 => {
                     // Function call.
                     let (args_node, new_pos) = arglist(tokens, i)?;

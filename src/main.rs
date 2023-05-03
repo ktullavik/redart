@@ -177,6 +177,9 @@ fn main() {
             "15" => {
                 testfile = "15.conditional5.dart";
             }
+            "16" => {
+                testfile = "16.mutate.dart";
+            }
             "34" => {
                 testfile = "34.list_replace.dart";
             }
