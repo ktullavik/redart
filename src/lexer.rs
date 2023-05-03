@@ -37,6 +37,9 @@ fn read_word(tokens: &mut Vec<parser::Token>, chars: &[char], start: usize) -> u
     else if &sym == "else" {
         tokens.push(parser::Token::ELSE);
     }
+    else if &sym == "return" {
+        tokens.push(parser::Token::RETURN);
+    }
     else {
         tokens.push(parser::Token::NAME(sym));
     }

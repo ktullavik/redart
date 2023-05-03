@@ -32,6 +32,7 @@ pub enum Token {
     BLOCK2,
     BRACK1,
     BRACK2,
+    RETURN,
     IMPORT,
     ENDST,
     END
@@ -70,6 +71,7 @@ pub enum NodeType {
     METHODCALL(String, String),
     PARAMLIST,
     ARGLIST,
+    RETURN,
     DIRECTIVES,
     DIRECTIVE,
 }
@@ -101,6 +103,7 @@ impl fmt::Display for Token {
             Token::BLOCK2     => write!(f, "}}"),
             Token::BRACK1     => write!(f, "["),
             Token::BRACK2     => write!(f, "]"),
+            Token::RETURN     => write!(f, "return"),
             Token::IMPORT     => write!(f, "import"),
             Token::ENDST      => write!(f, "ENDST"),
             Token::END        => write!(f, "END"),
@@ -140,6 +143,7 @@ impl fmt::Display for NodeType {
             NodeType::ELSEIF                        => write!(f, "ELSEIF"),
             NodeType::ELSE                          => write!(f, "ELSE"),
             NodeType::BLOCK                         => write!(f, "BLOCK"),
+            NodeType::RETURN                        => write!(f, "RETURN"),
             NodeType::MODULE                        => write!(f, "MODULE"),
             NodeType::DIRECTIVE                     => write!(f, "DIRECTIVE"),
             NodeType::DIRECTIVES                    => write!(f, "DIRECTIVES"),
@@ -581,6 +585,7 @@ fn statement(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
 
                 Token::PAREN1 => {
                     // Function call.
+                    // These are also handled in term. Maybe we can just pass this along?
                     let (args_node, new_pos) = arglist(tokens, i);
                     i = new_pos;
                     let mut funcall_node = Node::new(NodeType::FUNCALL(s.to_string()));
@@ -670,6 +675,13 @@ fn statement(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
                 }
             }
             return (condnode, i)
+        }
+
+        Token::RETURN => {
+            let (val, new_pos) = expression(tokens, i + 1);
+            let mut ret = Node::new(NodeType::RETURN);
+            ret.children.push(val);
+            return (ret, new_pos);
         }
 
         _ => {
@@ -909,6 +921,18 @@ fn term(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
                 decnode.children.push(node);
                 return (decnode, pos + 2);
             }
+
+
+            if let Token::PAREN1 = tokens[pos+1] {
+                // Function call.
+                let (args_node, new_pos) = arglist(tokens, pos + 1);
+                let mut funcall_node = Node::new(NodeType::FUNCALL(s.to_string()));
+                funcall_node.nodetype = NodeType::FUNCALL(s.to_string());
+                funcall_node.children.push(args_node);
+                return (funcall_node, new_pos)
+            }
+
+
 
             let node = Node::new(NodeType::NAME(s.clone()));
             return (node, pos+1)

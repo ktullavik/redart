@@ -195,6 +195,9 @@ fn main() {
             "21" => {
                 testfile = "21.pre_decrement.dart";
             }
+            "22" => {
+                testfile = "22.returnvalue.dart";
+            }
             "34" => {
                 testfile = "34.list_replace.dart";
             }

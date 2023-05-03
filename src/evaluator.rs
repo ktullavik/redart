@@ -350,6 +350,10 @@ pub fn eval(node: &Node, store: &mut Stack) -> Object {
             store.get(s).clone()
         }
 
+        NodeType::RETURN => {
+            return eval(&node.children[0], store);
+        }
+
         NodeType::FUNCALL(s) => {
             dprint(format!("Eval: NodeType::FUNCALL({})", s));
 
@@ -455,10 +459,11 @@ pub fn eval(node: &Node, store: &mut Stack) -> Object {
         }
 
         NodeType::BLOCK => {
+            let mut ret = Object::VOID;
             for s in &node.children {
-                eval(s, store);
+                ret = eval(s, store);
             }
-            return Object::VOID;
+            return ret;
         }
 
         NodeType::MODULE => {
