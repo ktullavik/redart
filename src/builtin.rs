@@ -30,8 +30,7 @@ pub fn call(name: &str, args: &Vec<Object>) -> Object {
                     println!("{}", x);
                 }
                 _ => {
-                    // println!("Illegal arg for print: {}", a0);
-                    panic!("Illegal argument for print")
+                    panic!("Illegal argument for print: {:?}", a0)
                 }
             }
         }
