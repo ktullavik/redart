@@ -459,6 +459,12 @@ pub fn eval(node: &Node, store: &mut Stack) -> Object {
         }
 
         NodeType::BLOCK => {
+            // I think this ends up with
+            // whatever last expression in a function
+            // being passed as a return value.
+            // BLOCK should probably only propagate
+            // values that are wrapped in a RETURN object...
+            // or something like that.
             let mut ret = Object::VOID;
             for s in &node.children {
                 ret = eval(s, store);
