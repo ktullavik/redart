@@ -10,10 +10,6 @@ fn is_legal_namechar(c: char) -> bool {
 
 fn is_keyword(s: &str) -> bool {
     match s {
-        // "true" |
-        // "false" |
-        "if" |
-        "else" |
         "class" |
         "get" => true,
         _ => false
@@ -40,6 +36,12 @@ fn read_word(tokens: &mut Vec<parser::Token>, chars: &[char], start: usize) -> u
     }
     else if &sym == "false" {
         tokens.push(parser::Token::BOOL(false));
+    }
+    else if &sym == "if" {
+        tokens.push(parser::Token::IF);
+    }
+    else if &sym == "else" {
+        tokens.push(parser::Token::ELSE);
     }
     else if is_keyword(&sym) {
         tokens.push(parser::Token::KEYWORD(sym));
