@@ -17,7 +17,6 @@ pub enum Token {
     ACCESS,
     COMMA,
     ASSIGN,
-    KEYWORD(String),
     IF,
     ELSE,
     INT(String),
@@ -31,6 +30,7 @@ pub enum Token {
     BLOCK2,
     BRACK1,
     BRACK2,
+    IMPORT,
     ENDST,
     END
 }
@@ -80,7 +80,6 @@ impl fmt::Display for Token {
             Token::DIV        => write!(f, "/"),
             Token::ACCESS     => write!(f, "."),
             Token::COMMA      => write!(f, ","),
-            Token::KEYWORD(s) => write!(f, "{}", s),
             Token::IF         => write!(f, "if"),
             Token::ELSE       => write!(f, "else"),
             Token::INT(s)     => write!(f, "{}", s),
@@ -94,6 +93,7 @@ impl fmt::Display for Token {
             Token::BLOCK2     => write!(f, "}}"),
             Token::BRACK1     => write!(f, "["),
             Token::BRACK2     => write!(f, "]"),
+            Token::IMPORT     => write!(f, "import"),
             Token::ENDST      => write!(f, "ENDST"),
             Token::END        => write!(f, "END"),
         }
@@ -244,36 +244,33 @@ fn directives(tokens: &Vec<Token>, pos: usize) -> Result<(Node, usize), String> 
     while i < tokens.len() {
 
         match &tokens[i] {
-            Token::KEYWORD(s) => match s.as_str() {
-                "import" => {
+            Token::IMPORT => {
 
-                    let mut node = Node::new(NodeType::DIRECTIVE);
-                    let mut j = i + 1;
+                let mut node = Node::new(NodeType::DIRECTIVE);
+                let mut j = i + 1;
 
-                    while j < tokens.len() {
+                while j < tokens.len() {
 
-                        match &tokens[j] {
-                            Token::ENDST => {
-                                i = j+1;
-                                break;
-                            }
-                            Token::END => {
-                                i = j;
-                                break;
-                            }
-                            Token::NAME(s2) => {
-                                let child_node = Node::new(NodeType::NAME(s2.to_string()));
-                                node.children.push(child_node);
-                                j += 1;
-                            }
-                            _ => {
-                                panic!("Unknown token in directive: {}", &tokens[j])
-                            }
+                    match &tokens[j] {
+                        Token::ENDST => {
+                            i = j+1;
+                            break;
+                        }
+                        Token::END => {
+                            i = j;
+                            break;
+                        }
+                        Token::NAME(s2) => {
+                            let child_node = Node::new(NodeType::NAME(s2.to_string()));
+                            node.children.push(child_node);
+                            j += 1;
+                        }
+                        _ => {
+                            panic!("Unknown token in directive: {}", &tokens[j])
                         }
                     }
-                    continue;
                 }
-                _ => break
+                continue;
             }
             _  => break
         }

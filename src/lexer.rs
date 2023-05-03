@@ -8,15 +8,6 @@ fn is_legal_namechar(c: char) -> bool {
 }
 
 
-fn is_keyword(s: &str) -> bool {
-    match s {
-        "class" |
-        "get" => true,
-        _ => false
-    }
-}
-
-
 fn read_word(tokens: &mut Vec<parser::Token>, chars: &[char], start: usize) -> usize {
     let mut len: usize = 0;
     let mut sym = String::from("");
@@ -31,7 +22,10 @@ fn read_word(tokens: &mut Vec<parser::Token>, chars: &[char], start: usize) -> u
         break;
     }
 
-    if &sym == "true" {
+    if &sym == "import" {
+        tokens.push(parser::Token::IMPORT);
+    }
+    else if &sym == "true" {
         tokens.push(parser::Token::BOOL(true));
     }
     else if &sym == "false" {
@@ -42,9 +36,6 @@ fn read_word(tokens: &mut Vec<parser::Token>, chars: &[char], start: usize) -> u
     }
     else if &sym == "else" {
         tokens.push(parser::Token::ELSE);
-    }
-    else if is_keyword(&sym) {
-        tokens.push(parser::Token::KEYWORD(sym));
     }
     else {
         tokens.push(parser::Token::NAME(sym));
