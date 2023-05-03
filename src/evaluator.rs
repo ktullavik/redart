@@ -240,6 +240,90 @@ pub fn eval(node: &Node, store: &mut Stack) -> Object {
             }
         },
 
+        NodeType::PREINCREMENT => {
+            let valnode = &node.children[0];
+
+            match valnode.nodetype {
+                NodeType::NAME(ref s) => {
+
+                    let oldval = store.get(s).clone();
+
+                    match oldval {
+                        Object::INT(n) => {
+                            let newval = Object::INT(n+1);
+                            store.add(s.as_str(), newval.clone());
+                            return newval;
+                        }
+                        _ => panic!("Illegal operand for increment.")
+                    }
+                }
+                _ => panic!("Illegal operand for increment: {}", valnode)
+            }
+        },
+
+        NodeType::PREDECREMENT => {
+            let valnode = &node.children[0];
+
+            match valnode.nodetype {
+                NodeType::NAME(ref s) => {
+
+                    let oldval = store.get(s).clone();
+
+                    match oldval {
+                        Object::INT(n) => {
+                            let newval = Object::INT(n-1);
+                            store.add(s.as_str(), newval.clone());
+                            return newval;
+                        }
+                        _ => panic!("Illegal operand for increment.")
+                    }
+                }
+                _ => panic!("Illegal operand for increment: {}", valnode)
+            }
+        },
+
+        NodeType::POSTINCREMENT => {
+            let valnode = &node.children[0];
+
+            match valnode.nodetype {
+                NodeType::NAME(ref s) => {
+
+                    let oldval = store.get(s).clone();
+
+                    match oldval {
+                        Object::INT(n) => {
+                            let newval = Object::INT(n+1);
+                            store.add(s.as_str(), newval);
+                            return oldval;
+                        }
+                        _ => panic!("Illegal operand for increment.")
+                    }
+                }
+                _ => panic!("Illegal operand for increment: {}", valnode)
+            }
+        },
+
+        NodeType::POSTDECREMENT => {
+            let valnode = &node.children[0];
+
+            match valnode.nodetype {
+                NodeType::NAME(ref s) => {
+
+                    let oldval = store.get(s).clone();
+
+                    match oldval {
+                        Object::INT(n) => {
+                            let newval = Object::INT(n-1);
+                            store.add(s.as_str(), newval);
+                            return oldval;
+                        }
+                        _ => panic!("Illegal operand for decrement.")
+                    }
+                }
+                _ => panic!("Illegal operand for decrement: {}", valnode)
+            }
+        },
+
         NodeType::INT(s) => {
             dprint("Eval: NodeType::INT");
             Object::INT(s.parse().unwrap())

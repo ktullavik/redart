@@ -180,6 +180,21 @@ fn main() {
             "16" => {
                 testfile = "16.mutate.dart";
             }
+            "17" => {
+                testfile = "17.mutate_self.dart";
+            }
+            "18" => {
+                testfile = "18.post_increment.dart";
+            }
+            "19" => {
+                testfile = "19.post_decrement.dart";
+            }
+            "20" => {
+                testfile = "20.pre_increment.dart";
+            }
+            "21" => {
+                testfile = "21.pre_decrement.dart";
+            }
             "34" => {
                 testfile = "34.list_replace.dart";
             }

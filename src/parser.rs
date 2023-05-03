@@ -14,6 +14,8 @@ pub enum Token {
     SUB,
     MUL,
     DIV,
+    INCREMENT,
+    DECREMENT,
     ACCESS,
     COMMA,
     ASSIGN,
@@ -44,6 +46,10 @@ pub enum NodeType {
     SUB,
     MUL,
     DIV,
+    PREINCREMENT,
+    POSTINCREMENT,
+    PREDECREMENT,
+    POSTDECREMENT,
     ACCESS,
     ASSIGN,
     INT(String),
@@ -78,6 +84,8 @@ impl fmt::Display for Token {
             Token::SUB        => write!(f, "-"),
             Token::MUL        => write!(f, "*"),
             Token::DIV        => write!(f, "/"),
+            Token::INCREMENT  => write!(f, "++"),
+            Token::DECREMENT  => write!(f, "--"),
             Token::ACCESS     => write!(f, "."),
             Token::COMMA      => write!(f, ","),
             Token::IF         => write!(f, "if"),
@@ -110,6 +118,10 @@ impl fmt::Display for NodeType {
             NodeType::SUB                           => write!(f, "-"),
             NodeType::MUL                           => write!(f, "*"),
             NodeType::DIV                           => write!(f, "/"),
+            NodeType::PREINCREMENT |
+            NodeType::POSTINCREMENT                 => write!(f, "++"),
+            NodeType::PREDECREMENT |
+            NodeType::POSTDECREMENT                 => write!(f, "--"),
             NodeType::ACCESS                        => write!(f, "."),
             NodeType::INT(s)                        => write!(f, "{}", s),
             NodeType::DOUBLE(s)                     => write!(f, "{}", s),
@@ -882,8 +894,52 @@ fn term(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
         }
 
         &Token::NAME(ref s) => {
+
+            // Postfixed inc/dec should be bound tightly, so handle
+            // it here rather than in expression.
+            if let Token::INCREMENT = tokens[pos+1] {
+                let mut incnode = Node::new(NodeType::POSTINCREMENT);
+                let node = Node::new(NodeType::NAME(s.clone()));
+                incnode.children.push(node);
+                return (incnode, pos + 2);
+            }
+            if let Token::DECREMENT = tokens[pos+1] {
+                let mut decnode = Node::new(NodeType::POSTDECREMENT);
+                let node = Node::new(NodeType::NAME(s.clone()));
+                decnode.children.push(node);
+                return (decnode, pos + 2);
+            }
+
             let node = Node::new(NodeType::NAME(s.clone()));
             return (node, pos+1)
+        }
+
+        &Token::INCREMENT => {
+
+            let next = &tokens[pos+1];
+            return match next {
+                Token::NAME(s) => {
+                    let namenode = Node::new(NodeType::NAME(s.clone()));
+                    let mut incnode = Node::new(NodeType::PREINCREMENT);
+                    incnode.children.push(namenode);
+                    (incnode, pos + 2)
+                }
+                _ => panic!("Invalid operand for increment: {}", next)
+            }
+        }
+
+        &Token::DECREMENT => {
+
+            let next = &tokens[pos+1];
+            return match next {
+                Token::NAME(s) => {
+                    let namenode = Node::new(NodeType::NAME(s.clone()));
+                    let mut incnode = Node::new(NodeType::PREDECREMENT);
+                    incnode.children.push(namenode);
+                    (incnode, pos + 2)
+                }
+                _ => panic!("Invalid operand for decrement: {}", next)
+            }
         }
 
         &Token::PAREN1 => {

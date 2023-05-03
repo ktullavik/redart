@@ -182,10 +182,20 @@ pub fn lex(input: &str) -> Vec<parser::Token> {
             }
 
             '+' => {
+                if chars[i+1] == '+' {
+                    tokens.push(parser::Token::INCREMENT);
+                    i += 2;
+                    continue;
+                }
                 tokens.push(parser::Token::ADD);
             }
 
             '-' => {
+                if chars[i+1] == '-' {
+                    tokens.push(parser::Token::DECREMENT);
+                    i += 2;
+                    continue;
+                }
                 tokens.push(parser::Token::SUB);
             }
 
