@@ -595,7 +595,7 @@ fn statement(tokens: &Vec<Token>, pos: usize) -> Result<(Node, usize), String> {
                                     }
                                     i += 1;
 
-                                    return Ok((methcall_node, i));
+                                    Ok((methcall_node, i))
                                 }
 
                                 _ => {
@@ -604,13 +604,14 @@ fn statement(tokens: &Vec<Token>, pos: usize) -> Result<(Node, usize), String> {
                                     let member_node = Node::new(NodeType::NAME(acc_name.to_string()));
                                     acc_node.children.push(obj_node);
                                     acc_node.children.push(member_node);
-                                    return Ok((acc_node, i));
+
+                                    Ok((acc_node, i))
                                 }
                             }
                         }
 
                         _ => {
-                            return Err(format!("Unexpected token following '.': {}", t3));
+                            Err(format!("Unexpected token following '.': {}", t3))
                         }
                     }
                 }
