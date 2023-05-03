@@ -520,9 +520,6 @@ fn statement(tokens: &Vec<Token>, pos: usize) -> Result<(Node, usize), String> {
 
     dprint(format!("Parse: statement: {}", &tokens[pos]));
 
-    // Can be
-    // assignment: var i = 2
-
     let mut i = pos;
 
     match &tokens[i] {
