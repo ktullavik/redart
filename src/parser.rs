@@ -590,8 +590,7 @@ fn statement(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
                             i += 1;
                             let t4 = &tokens[i];
 
-                            match t4 {
-
+                            return match t4 {
                                 Token::PAREN1 => {
 
                                     // method call
@@ -605,7 +604,7 @@ fn statement(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
                                     }
                                     i += 1;
 
-                                    return (methcall_node, i)
+                                    (methcall_node, i)
                                 }
 
                                 _ => {
@@ -615,7 +614,7 @@ fn statement(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
                                     acc_node.children.push(obj_node);
                                     acc_node.children.push(member_node);
 
-                                    return (acc_node, i)
+                                    (acc_node, i)
                                 }
                             }
                         }
@@ -790,7 +789,7 @@ fn sum(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
     let (left, next_pos) = product(tokens, pos);
     let c: &Token = tokens.get(next_pos).unwrap();
 
-    match c {
+    return match c {
         Token::ADD => {
             let mut sum = Node::new(NodeType::ADD);
             sum.children.push(left);
@@ -799,7 +798,7 @@ fn sum(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
             sum.children.push(right);
 
             dprint(format!("Parse: assembled sum: {}", &sum));
-            return (sum, i)
+            (sum, i)
         },
 
         Token::SUB => {
@@ -810,10 +809,10 @@ fn sum(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
             sum.children.push(right);
 
             dprint(format!("Parse: assembled sum: {}", &sum));
-            return (sum, i)
+            (sum, i)
         }
 
-        _ => return (left, next_pos)
+        _ => (left, next_pos)
     }
 }
 
@@ -825,7 +824,7 @@ fn product(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
     let (left, mut i) = term(tokens, pos);
     let t: &Token = tokens.get(i).unwrap();
 
-    match t {
+    return match t {
         Token::MUL => {
             let mut prod = Node::new(NodeType::MUL);
             prod.children.push(left);
@@ -834,7 +833,7 @@ fn product(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
 
             let (right, i) = product(tokens, i);
             prod.children.push(right);
-            return (prod, i)
+            (prod, i)
         }
         Token::DIV => {
             let mut div = Node::new(NodeType::DIV);
@@ -844,11 +843,11 @@ fn product(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
 
             let (right, i) = product(tokens, i);
             div.children.push(right);
-            return (div, i)
+            (div, i)
         }
 
         _ => {
-            return (left, i)
+            (left, i)
         }
     }
 }
