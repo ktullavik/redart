@@ -29,6 +29,9 @@ pub fn call(name: &str, args: &Vec<Object>) -> Object {
                 Object::DOUBLE(x) => {
                     println!("{}", x);
                 }
+                Object::BOOL(b) => {
+                    println!("{}", b);
+                }
                 _ => {
                     panic!("Illegal argument for print: {:?}", a0)
                 }
