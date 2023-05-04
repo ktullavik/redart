@@ -1057,6 +1057,19 @@ fn term(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
             return (node, pos+1)
         }
 
+        &Token::Add => {
+            // As Dart.
+            panic!("Error: '+' is not a prefix operator.")
+        }
+
+        &Token::Sub => {
+            // This handles unary minus.
+            let mut unary = Node::new(NodeType::Sub);
+            let (next, new_pos) = term(tokens, pos+1);
+            unary.children.push(next);
+            return (unary, new_pos)
+        }
+
         &Token::Str(ref s) => {
             let node = Node::new(NodeType::Str(s.clone()));
             return (node, pos+1)

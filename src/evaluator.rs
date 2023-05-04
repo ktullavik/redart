@@ -383,6 +383,18 @@ pub fn eval(node: &Node, store: &mut Stack) -> Object {
 
             let left_obj = eval(&node.children[0], store);
 
+            if node.children.len() == 1 {
+                return match &left_obj {
+                    Object::INT(n) => {
+                        Object::INT(-*n)
+                    }
+                    Object::DOUBLE(x) => {
+                        Object::DOUBLE(-*x)
+                    }
+                    _ => panic!("Illegal operand unary minus: {:?}", &left_obj)
+                }
+            }
+
             match &left_obj {
                 Object::INT(s1) => {
 
