@@ -181,6 +181,11 @@ pub fn lex(input: &str) -> Vec<parser::Token> {
             }
 
             '=' => {
+                if chars[i+1] == '=' {
+                    tokens.push(parser::Token::Equal);
+                    i += 2;
+                    continue;
+                }
                 tokens.push(parser::Token::Assign);
             }
 

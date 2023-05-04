@@ -219,6 +219,15 @@ fn main() {
             "29" => {
                 testfile = "29.greater_or_equal.dart";
             }
+            "30" => {
+                testfile = "30.equality.dart";
+            }
+            "31" => {
+                testfile = "31.equality2.dart";
+            }
+            "32" => {
+                testfile = "32.equality3.dart";
+            }
             "34" => {
                 testfile = "34.list_replace.dart";
             }

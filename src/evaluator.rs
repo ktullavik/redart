@@ -292,6 +292,54 @@ pub fn eval(node: &Node, store: &mut Stack) -> Object {
             }
         }
 
+        NodeType::Equal => {
+            let left_obj = eval(&node.children[0], store);
+            let right_obj = eval(&node.children[1], store);
+
+            match left_obj {
+
+                Object::INT(n1) => {
+                    return match right_obj {
+                        Object::INT(n2) => {
+                            Object::BOOL(n1 == n2)
+                        }
+                        Object::DOUBLE(x2) => {
+                            Object::BOOL((n1 as f64) == x2)
+                        }
+                        _ => Object::BOOL(false)
+                    }
+                }
+                Object::DOUBLE(x1) => {
+                    return match right_obj {
+                        Object::INT(n2) => {
+                            Object::BOOL(x1 == (n2 as f64))
+                        }
+                        Object::DOUBLE(x2) => {
+                            Object::BOOL(x1 == x2)
+                        }
+                        _ => Object::BOOL(false)
+                    }
+                }
+                Object::BOOL(b1) => {
+                    return match right_obj {
+                        Object::BOOL(b2) => {
+                            Object::BOOL(b1 == b2)
+                        }
+                        _ => Object::BOOL(false)
+                    }
+
+                }
+                Object::STRING(s1) => {
+                    return match right_obj {
+                        Object::STRING(s2) => {
+                            Object::BOOL(s1 == s2)
+                        }
+                        _ => Object::BOOL(false)
+                    }
+                }
+                x => panic!("Equality not implemented for object: {:?}", x)
+            }
+        }
 
         NodeType::Add => {
             dprint("Eval: NodeType::ADD");

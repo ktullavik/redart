@@ -27,6 +27,7 @@ pub enum Token {
     GreaterThan,
     LessOrEq,
     GreaterOrEq,
+    Equal,
     Access,
     Comma,
     Assign,
@@ -71,6 +72,7 @@ pub enum NodeType {
     GreaterThan,
     LessOrEq,
     GreaterOrEq,
+    Equal,
     Access,
     Assign,
     Int(String),
@@ -119,6 +121,7 @@ impl fmt::Display for Token {
             Token::GreaterThan => write!(f, ">"),
             Token::LessOrEq    => write!(f, "<="),
             Token::GreaterOrEq => write!(f, ">="),
+            Token::Equal => write!(f, "=="),
             Token::Access => write!(f, "."),
             Token::Comma => write!(f, ","),
             Token::If => write!(f, "if"),
@@ -164,6 +167,7 @@ impl fmt::Display for NodeType {
             NodeType::GreaterThan => write!(f, ">"),
             NodeType::LessOrEq => write!(f, "<="),
             NodeType::GreaterOrEq => write!(f, ">="),
+            NodeType::Equal => write!(f, "=="),
             NodeType::Access => write!(f, "."),
             NodeType::Int(s)                        => write!(f, "{}", s),
             NodeType::Double(s)                     => write!(f, "{}", s),
@@ -480,7 +484,8 @@ fn arglist(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
                         Token::Name(_)   |
                         Token::Str(_) |
                         Token::Int(_)    |
-                        Token::Double(_)
+                        Token::Double(_) |
+                        Token::Bool(_)
                         => {
                             let (arg, new_pos) = expression(tokens, j);
 
@@ -841,9 +846,30 @@ fn expression(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
 
     dprint(format!("Parse: expression: {}", &tokens[pos]));
 
-    disjunction(tokens, pos)
+    // disjunction(tokens, pos)
+    equality(tokens, pos)
 }
 
+
+fn equality(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
+    let (left, next_pos) = disjunction(tokens, pos);
+    let t: &Token = &tokens[next_pos];
+
+    return match t {
+        Token::Equal => {
+
+            let (right, i) = disjunction(tokens, next_pos + 1);
+
+            let mut eqnode = Node::new(NodeType::Equal);
+            eqnode.children.push(left);
+            eqnode.children.push(right);
+
+            (eqnode, i)
+        }
+
+        _ => (left, next_pos)
+    }
+}
 
 
 fn disjunction(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
