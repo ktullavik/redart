@@ -198,6 +198,15 @@ fn main() {
             "22" => {
                 testfile = "22.returnvalue.dart";
             }
+            "23" => {
+                testfile = "23.logical_or.dart";
+            }
+            "24" => {
+                testfile = "24.logical_and.dart";
+            }
+            "25" => {
+                testfile = "25.logical_expr.dart";
+            }
             "34" => {
                 testfile = "34.list_replace.dart";
             }
