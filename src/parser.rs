@@ -10,15 +10,22 @@ use utils::dprint;
 #[derive(Debug)]
 #[derive(PartialEq)]
 pub enum Token {
+    // Arithmetic
     ADD,
     SUB,
     MUL,
     DIV,
     INCREMENT,
     DECREMENT,
+    // Logical
+    LOG_OR,
+    LOG_AND,
+    BIN_OR,
+    BIN_AND,
     ACCESS,
     COMMA,
     ASSIGN,
+    // Keywords
     IF,
     ELSE,
     INT(String),
@@ -51,6 +58,10 @@ pub enum NodeType {
     POSTINCREMENT,
     PREDECREMENT,
     POSTDECREMENT,
+    LOG_OR,
+    LOG_AND,
+    BIN_OR,
+    BIN_AND,
     ACCESS,
     ASSIGN,
     INT(String),
@@ -82,12 +93,18 @@ impl fmt::Display for Token {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
             Token::ASSIGN     => write!(f, "="),
+            // Arithmetic
             Token::ADD        => write!(f, "+"),
             Token::SUB        => write!(f, "-"),
             Token::MUL        => write!(f, "*"),
             Token::DIV        => write!(f, "/"),
             Token::INCREMENT  => write!(f, "++"),
             Token::DECREMENT  => write!(f, "--"),
+            // Logical
+            Token::LOG_OR     => write!(f, "||"),
+            Token::LOG_AND    => write!(f, "&&"),
+            Token::BIN_OR     => write!(f, "|"),
+            Token::BIN_AND    => write!(f, "&"),
             Token::ACCESS     => write!(f, "."),
             Token::COMMA      => write!(f, ","),
             Token::IF         => write!(f, "if"),
@@ -125,6 +142,10 @@ impl fmt::Display for NodeType {
             NodeType::POSTINCREMENT                 => write!(f, "++"),
             NodeType::PREDECREMENT |
             NodeType::POSTDECREMENT                 => write!(f, "--"),
+            NodeType::LOG_OR                        => write!(f, "||"),
+            NodeType::LOG_AND                       => write!(f, "&&"),
+            NodeType::BIN_OR                        => write!(f, "|"),
+            NodeType::BIN_AND                       => write!(f, "&"),
             NodeType::ACCESS                        => write!(f, "."),
             NodeType::INT(s)                        => write!(f, "{}", s),
             NodeType::DOUBLE(s)                     => write!(f, "{}", s),
@@ -802,7 +823,51 @@ fn expression(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
 
     dprint(format!("Parse: expression: {}", &tokens[pos]));
 
-    sum(tokens, pos)
+    disjunction(tokens, pos)
+}
+
+
+fn disjunction(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
+
+    let (left, next_pos) = conjunction(tokens, pos);
+    let t: &Token = &tokens[next_pos];
+
+    return match t {
+        Token::LOG_OR => {
+
+            let (right, i) = disjunction(tokens, next_pos + 1);
+
+            let mut disnode = Node::new(NodeType::LOG_OR);
+            disnode.children.push(left);
+            disnode.children.push(right);
+
+            (disnode, i)
+        }
+
+        _ => (left, next_pos)
+    }
+}
+
+
+fn conjunction(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
+
+    let (left, next_pos) = sum(tokens, pos);
+    let t: &Token = &tokens[next_pos];
+
+    return match t {
+        Token::LOG_AND => {
+
+            let (right, i) = conjunction(tokens, next_pos + 1);
+
+            let mut connode = Node::new(NodeType::LOG_AND);
+            connode.children.push(left);
+            connode.children.push(right);
+
+            (connode, i)
+        }
+
+        _ => (left, next_pos)
+    }
 }
 
 
@@ -815,25 +880,25 @@ fn sum(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
 
     return match c {
         Token::ADD => {
-            let mut sum = Node::new(NodeType::ADD);
-            sum.children.push(left);
+            let mut sumnode = Node::new(NodeType::ADD);
+            sumnode.children.push(left);
 
-            let (right, i) = expression(tokens, next_pos + 1);
-            sum.children.push(right);
+            let (right, i) = sum(tokens, next_pos + 1);
+            sumnode.children.push(right);
 
-            dprint(format!("Parse: assembled sum: {}", &sum));
-            (sum, i)
+            dprint(format!("Parse: assembled sum: {}", &sumnode));
+            (sumnode, i)
         },
 
         Token::SUB => {
-            let mut sum = Node::new(NodeType::SUB);
-            sum.children.push(left);
+            let mut sumnode = Node::new(NodeType::SUB);
+            sumnode.children.push(left);
 
-            let (right, i) = expression(tokens, next_pos + 1);
-            sum.children.push(right);
+            let (right, i) = sum(tokens, next_pos + 1);
+            sumnode.children.push(right);
 
-            dprint(format!("Parse: assembled sum: {}", &sum));
-            (sum, i)
+            dprint(format!("Parse: assembled sum: {}", &sumnode));
+            (sumnode, i)
         }
 
         _ => (left, next_pos)

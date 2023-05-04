@@ -206,6 +206,24 @@ pub fn lex(input: &str) -> Vec<parser::Token> {
                 tokens.push(parser::Token::MUL);
             }
 
+            '|' => {
+                if chars[i+1] == '|' {
+                    tokens.push(parser::Token::LOG_OR);
+                    i += 2;
+                    continue;
+                }
+                tokens.push(parser::Token::BIN_OR);
+            }
+
+            '&' => {
+                if chars[i+1] == '&' {
+                    tokens.push(parser::Token::LOG_AND);
+                    i += 2;
+                    continue;
+                }
+                tokens.push(parser::Token::BIN_AND);
+            }
+
             x if x.is_digit(10) => {
                 let mut nl = 1;
                 let mut nc: char;

@@ -90,6 +90,52 @@ pub fn eval(node: &Node, store: &mut Stack) -> Object {
             }
         },
 
+        NodeType::LOG_OR => {
+            let left_obj = eval(&node.children[0], store);
+
+            match left_obj {
+
+                Object::BOOL(b1) => {
+
+                    let right_obj = eval(&node.children[1], store);
+
+                    match right_obj {
+
+                        Object::BOOL(b2) => {
+                            return Object::BOOL(b1 || b2)
+                        }
+
+                        _ => panic!("Illegal right operand for ||")
+                    }
+                }
+                _ => panic!("Illegal left operand for ||")
+
+            }
+        },
+
+        NodeType::LOG_AND => {
+            let left_obj = eval(&node.children[0], store);
+
+            match left_obj {
+
+                Object::BOOL(b1) => {
+
+                    let right_obj = eval(&node.children[1], store);
+
+                    match right_obj {
+
+                        Object::BOOL(b2) => {
+                            return Object::BOOL(b1 && b2)
+                        }
+
+                        _ => panic!("Illegal right operand for &&")
+                    }
+                }
+                _ => panic!("Illegal left operand for &&")
+
+            }
+        },
+
         NodeType::ADD => {
             dprint("Eval: NodeType::ADD");
 
