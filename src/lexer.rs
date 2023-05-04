@@ -206,6 +206,24 @@ pub fn lex(input: &str) -> Vec<parser::Token> {
                 tokens.push(parser::Token::Mul);
             }
 
+            '<' => {
+                if chars[i+1] == '=' {
+                    tokens.push(parser::Token::LessOrEq);
+                    i += 2;
+                    continue;
+                }
+                tokens.push(parser::Token::LessThan);
+            }
+
+            '>' => {
+                if chars[i+1] == '=' {
+                    tokens.push(parser::Token::GreaterOrEq);
+                    i += 2;
+                    continue;
+                }
+                tokens.push(parser::Token::GreaterThan);
+            }
+
             '|' => {
                 if chars[i+1] == '|' {
                     tokens.push(parser::Token::LogOr);

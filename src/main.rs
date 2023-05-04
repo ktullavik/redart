@@ -207,6 +207,18 @@ fn main() {
             "25" => {
                 testfile = "25.logical_expr.dart";
             }
+            "26" => {
+                testfile = "26.less_than.dart";
+            }
+            "27" => {
+                testfile = "27.greater_than.dart";
+            }
+            "28" => {
+                testfile = "28.less_or_equal.dart";
+            }
+            "29" => {
+                testfile = "29.greater_or_equal.dart";
+            }
             "34" => {
                 testfile = "34.list_replace.dart";
             }

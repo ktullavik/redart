@@ -22,6 +22,11 @@ pub enum Token {
     LogAnd,
     BinOr,
     BinAnd,
+    // Relational
+    LessThan,
+    GreaterThan,
+    LessOrEq,
+    GreaterOrEq,
     Access,
     Comma,
     Assign,
@@ -62,6 +67,10 @@ pub enum NodeType {
     LogAnd,
     BinOr,
     BinAnd,
+    LessThan,
+    GreaterThan,
+    LessOrEq,
+    GreaterOrEq,
     Access,
     Assign,
     Int(String),
@@ -105,6 +114,11 @@ impl fmt::Display for Token {
             Token::LogAnd => write!(f, "&&"),
             Token::BinOr => write!(f, "|"),
             Token::BinAnd => write!(f, "&"),
+            // Relational
+            Token::LessThan    => write!(f, "<"),
+            Token::GreaterThan => write!(f, ">"),
+            Token::LessOrEq    => write!(f, "<="),
+            Token::GreaterOrEq => write!(f, ">="),
             Token::Access => write!(f, "."),
             Token::Comma => write!(f, ","),
             Token::If => write!(f, "if"),
@@ -146,6 +160,10 @@ impl fmt::Display for NodeType {
             NodeType::LogAnd => write!(f, "&&"),
             NodeType::BinOr => write!(f, "|"),
             NodeType::BinAnd => write!(f, "&"),
+            NodeType::LessThan => write!(f, "<"),
+            NodeType::GreaterThan => write!(f, ">"),
+            NodeType::LessOrEq => write!(f, "<="),
+            NodeType::GreaterOrEq => write!(f, ">="),
             NodeType::Access => write!(f, "."),
             NodeType::Int(s)                        => write!(f, "{}", s),
             NodeType::Double(s)                     => write!(f, "{}", s),
@@ -827,6 +845,7 @@ fn expression(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
 }
 
 
+
 fn disjunction(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
 
     let (left, next_pos) = conjunction(tokens, pos);
@@ -851,7 +870,8 @@ fn disjunction(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
 
 fn conjunction(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
 
-    let (left, next_pos) = sum(tokens, pos);
+    // let (left, next_pos) = sum(tokens, pos);
+    let (left, next_pos) = comparison(tokens, pos);
     let t: &Token = &tokens[next_pos];
 
     return match t {
@@ -860,6 +880,57 @@ fn conjunction(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
             let (right, i) = conjunction(tokens, next_pos + 1);
 
             let mut connode = Node::new(NodeType::LogAnd);
+            connode.children.push(left);
+            connode.children.push(right);
+
+            (connode, i)
+        }
+
+        _ => (left, next_pos)
+    }
+}
+
+
+fn comparison(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
+    let (left, next_pos) = sum(tokens, pos);
+    let t: &Token = &tokens[next_pos];
+
+    return match t {
+        Token::LessThan => {
+
+            let (right, i) = sum(tokens, next_pos + 1);
+
+            let mut connode = Node::new(NodeType::LessThan);
+            connode.children.push(left);
+            connode.children.push(right);
+
+            (connode, i)
+        }
+        Token::GreaterThan => {
+
+            let (right, i) = sum(tokens, next_pos + 1);
+
+            let mut connode = Node::new(NodeType::GreaterThan);
+            connode.children.push(left);
+            connode.children.push(right);
+
+            (connode, i)
+        }
+        Token::LessOrEq => {
+
+            let (right, i) = sum(tokens, next_pos + 1);
+
+            let mut connode = Node::new(NodeType::LessOrEq);
+            connode.children.push(left);
+            connode.children.push(right);
+
+            (connode, i)
+        }
+        Token::GreaterOrEq => {
+
+            let (right, i) = sum(tokens, next_pos + 1);
+
+            let mut connode = Node::new(NodeType::GreaterOrEq);
             connode.children.push(left);
             connode.children.push(right);
 

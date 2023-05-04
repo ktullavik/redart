@@ -136,6 +136,163 @@ pub fn eval(node: &Node, store: &mut Stack) -> Object {
             }
         }
 
+        NodeType::LessThan => {
+            let left_obj = eval(&node.children[0], store);
+
+            match left_obj {
+
+                Object::INT(n1) => {
+
+                    let right_obj = eval(&node.children[1], store);
+
+                    match right_obj {
+
+                        Object::INT(n2) => {
+                            return Object::BOOL(n1 < n2)
+                        }
+                        Object::DOUBLE(x2) => {
+                            return Object::BOOL((n1 as f64) < x2)
+                        }
+                        _ => panic!("Illegal right operand for <")
+                    }
+                }
+
+                Object::DOUBLE(x1) => {
+                    let right_obj = eval(&node.children[1], store);
+
+                    match right_obj {
+
+                        Object::INT(n2) => {
+                            return Object::BOOL(x1 < (n2 as f64))
+                        }
+                        Object::DOUBLE(x2) => {
+                            return Object::BOOL(x1 < x2)
+                        }
+                        _ => panic!("Illegal right operand for <")
+                    }
+                }
+                _ => panic!("Illegal left operand for <")
+            }
+        }
+
+        NodeType::GreaterThan => {
+            let left_obj = eval(&node.children[0], store);
+
+            match left_obj {
+
+                Object::INT(n1) => {
+
+                    let right_obj = eval(&node.children[1], store);
+
+                    match right_obj {
+
+                        Object::INT(n2) => {
+                            return Object::BOOL(n1 > n2)
+                        }
+                        Object::DOUBLE(x2) => {
+                            return Object::BOOL((n1 as f64) > x2)
+                        }
+                        _ => panic!("Illegal right operand for >")
+                    }
+                }
+
+                Object::DOUBLE(x1) => {
+                    let right_obj = eval(&node.children[1], store);
+
+                    match right_obj {
+
+                        Object::INT(n2) => {
+                            return Object::BOOL(x1 > (n2 as f64))
+                        }
+                        Object::DOUBLE(x2) => {
+                            return Object::BOOL(x1 > x2)
+                        }
+                        _ => panic!("Illegal right operand for >")
+                    }
+                }
+                _ => panic!("Illegal left operand for >")
+            }
+        }
+
+        NodeType::LessOrEq => {
+            let left_obj = eval(&node.children[0], store);
+
+            match left_obj {
+
+                Object::INT(n1) => {
+
+                    let right_obj = eval(&node.children[1], store);
+
+                    match right_obj {
+
+                        Object::INT(n2) => {
+                            return Object::BOOL(n1 <= n2)
+                        }
+                        Object::DOUBLE(x2) => {
+                            return Object::BOOL((n1 as f64) <= x2)
+                        }
+                        _ => panic!("Illegal right operand for <=")
+                    }
+                }
+
+                Object::DOUBLE(x1) => {
+                    let right_obj = eval(&node.children[1], store);
+
+                    match right_obj {
+
+                        Object::INT(n2) => {
+                            return Object::BOOL(x1 <= (n2 as f64))
+                        }
+                        Object::DOUBLE(x2) => {
+                            return Object::BOOL(x1 <= x2)
+                        }
+                        _ => panic!("Illegal right operand for <=")
+                    }
+                }
+                _ => panic!("Illegal left operand for <=")
+            }
+        }
+
+        NodeType::GreaterOrEq => {
+            let left_obj = eval(&node.children[0], store);
+
+            match left_obj {
+
+                Object::INT(n1) => {
+
+                    let right_obj = eval(&node.children[1], store);
+
+                    match right_obj {
+
+                        Object::INT(n2) => {
+                            return Object::BOOL(n1 >= n2)
+                        }
+                        Object::DOUBLE(x2) => {
+                            return Object::BOOL((n1 as f64) >= x2)
+                        }
+                        _ => panic!("Illegal right operand for >=")
+                    }
+                }
+
+                Object::DOUBLE(x1) => {
+                    let right_obj = eval(&node.children[1], store);
+
+                    match right_obj {
+
+                        Object::INT(n2) => {
+                            return Object::BOOL(x1 >= (n2 as f64))
+                        }
+                        Object::DOUBLE(x2) => {
+                            return Object::BOOL(x1 >= x2)
+                        }
+                        _ => panic!("Illegal right operand for >=")
+                    }
+                }
+                _ => panic!("Illegal left operand for >=")
+            }
+        }
+
+
         NodeType::Add => {
             dprint("Eval: NodeType::ADD");
 
