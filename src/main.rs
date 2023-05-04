@@ -228,8 +228,14 @@ fn main() {
             "32" => {
                 testfile = "32.equality3.dart";
             }
+            "33" => {
+                testfile = "33.recursion.dart";
+            }
             "34" => {
-                testfile = "34.list_replace.dart";
+                testfile = "34.unary_minus.dart";
+            }
+            "70" => {
+                testfile = "70.list_replace.dart";
             }
             s => {
                 testfile = s;
