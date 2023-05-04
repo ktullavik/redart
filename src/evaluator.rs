@@ -28,7 +28,7 @@ pub fn preval(node: &Node, store: &mut Stack) {
         let t: &NodeType = &n.nodetype;
 
         match t {
-            NodeType::FUNDEF(fname) => {
+            NodeType::FunDef(fname) => {
                 dprint(format!("Preval: NodeType::FUNDEF '{}'", fname));
 
                 let params = &n.children[0];
@@ -36,7 +36,7 @@ pub fn preval(node: &Node, store: &mut Stack) {
 
                 let body = n.children[1].clone();
 
-                if params.nodetype != NodeType::PARAMLIST {
+                if params.nodetype != NodeType::ParamList {
                     panic!("Expected paramlist for FUNDEF in preeval.");
                 }
 
@@ -45,7 +45,7 @@ pub fn preval(node: &Node, store: &mut Stack) {
                 for i in 0..params.children.len() {
                     let p = &params.children[i];
                     match &p.nodetype {
-                        NodeType::NAME(s) => {
+                        NodeType::Name(s) => {
                             args.push(s.clone());
                         }
                         x => panic!("Invalid parameter: {}", x)
@@ -72,15 +72,15 @@ pub fn eval(node: &Node, store: &mut Stack) -> Object {
 
     match t {
 
-        NodeType::ASSIGN => {
+        NodeType::Assign => {
             dprint("Eval: NodeType::ASSIGN");
             match &node.children[0].nodetype {
-                NodeType::NAME(ref s1) => {
+                NodeType::Name(ref s1) => {
                     let right_obj = eval(&node.children[1], store);
                     store.add(s1.as_str(), right_obj);
                     return Object::VOID;
                 }
-                NodeType::TYPEDVAR(_, ref s1) => {
+                NodeType::TypedVar(_, ref s1) => {
                     let right_obj = eval(&node.children[1], store);
                     // symtable.insert(s1.clone(), right_obj);
                     store.add(s1.as_str(), right_obj);
@@ -88,9 +88,9 @@ pub fn eval(node: &Node, store: &mut Stack) -> Object {
                 }
                 _ => panic!("Illegal name for assignment: {}", &node.children[0].nodetype)
             }
-        },
+        }
 
-        NodeType::LOG_OR => {
+        NodeType::LogOr => {
             let left_obj = eval(&node.children[0], store);
 
             match left_obj {
@@ -111,9 +111,9 @@ pub fn eval(node: &Node, store: &mut Stack) -> Object {
                 _ => panic!("Illegal left operand for ||")
 
             }
-        },
+        }
 
-        NodeType::LOG_AND => {
+        NodeType::LogAnd => {
             let left_obj = eval(&node.children[0], store);
 
             match left_obj {
@@ -134,9 +134,9 @@ pub fn eval(node: &Node, store: &mut Stack) -> Object {
                 _ => panic!("Illegal left operand for &&")
 
             }
-        },
+        }
 
-        NodeType::ADD => {
+        NodeType::Add => {
             dprint("Eval: NodeType::ADD");
 
             let left_obj = eval(&node.children[0], store);
@@ -171,9 +171,9 @@ pub fn eval(node: &Node, store: &mut Stack) -> Object {
                 }
                 _ => panic!("Illegal left operand for addition: {:?}", &left_obj)
             }
-        },
+        }
 
-        NodeType::SUB => {
+        NodeType::Sub => {
             dprint("Eval: NodeType::SUB");
 
             let left_obj = eval(&node.children[0], store);
@@ -208,10 +208,10 @@ pub fn eval(node: &Node, store: &mut Stack) -> Object {
                 }
                 _ => panic!("Illegal left operand for subtraction: {:?}", &left_obj)
             }
-        },
+        }
 
 
-        NodeType::MUL => {
+        NodeType::Mul => {
             dprint("Eval: NodeType::MUL");
 
             let left_obj = eval(&node.children[0], store);
@@ -246,9 +246,9 @@ pub fn eval(node: &Node, store: &mut Stack) -> Object {
                 }
                 _ => panic!("Illegal left operand for multiplication: {:?}", &left_obj)
             }
-        },
+        }
 
-        NodeType::DIV => {
+        NodeType::Div => {
             dprint("Eval: NodeType::DIV");
 
             let left_obj = eval(&node.children[0], store);
@@ -284,13 +284,13 @@ pub fn eval(node: &Node, store: &mut Stack) -> Object {
                 },
                 _ => panic!("Illegal left operand for division: {:?}", &left_obj)
             }
-        },
+        }
 
-        NodeType::PREINCREMENT => {
+        NodeType::PreIncrement => {
             let valnode = &node.children[0];
 
             match valnode.nodetype {
-                NodeType::NAME(ref s) => {
+                NodeType::Name(ref s) => {
 
                     let oldval = store.get(s).clone();
 
@@ -305,13 +305,13 @@ pub fn eval(node: &Node, store: &mut Stack) -> Object {
                 }
                 _ => panic!("Illegal operand for increment: {}", valnode)
             }
-        },
+        }
 
-        NodeType::PREDECREMENT => {
+        NodeType::PreDecrement => {
             let valnode = &node.children[0];
 
             match valnode.nodetype {
-                NodeType::NAME(ref s) => {
+                NodeType::Name(ref s) => {
 
                     let oldval = store.get(s).clone();
 
@@ -326,13 +326,13 @@ pub fn eval(node: &Node, store: &mut Stack) -> Object {
                 }
                 _ => panic!("Illegal operand for increment: {}", valnode)
             }
-        },
+        }
 
-        NodeType::POSTINCREMENT => {
+        NodeType::PostIncrement => {
             let valnode = &node.children[0];
 
             match valnode.nodetype {
-                NodeType::NAME(ref s) => {
+                NodeType::Name(ref s) => {
 
                     let oldval = store.get(s).clone();
 
@@ -347,13 +347,13 @@ pub fn eval(node: &Node, store: &mut Stack) -> Object {
                 }
                 _ => panic!("Illegal operand for increment: {}", valnode)
             }
-        },
+        }
 
-        NodeType::POSTDECREMENT => {
+        NodeType::PostDecrement => {
             let valnode = &node.children[0];
 
             match valnode.nodetype {
-                NodeType::NAME(ref s) => {
+                NodeType::Name(ref s) => {
 
                     let oldval = store.get(s).clone();
 
@@ -368,39 +368,39 @@ pub fn eval(node: &Node, store: &mut Stack) -> Object {
                 }
                 _ => panic!("Illegal operand for decrement: {}", valnode)
             }
-        },
+        }
 
-        NodeType::INT(s) => {
+        NodeType::Int(s) => {
             dprint("Eval: NodeType::INT");
             Object::INT(s.parse().unwrap())
         },
 
-        NodeType::DOUBLE(s) => {
+        NodeType::Double(s) => {
             dprint("Eval: NodeType::INT");
             // Object::DOUBLE(s.parse().unwrap())
             Object::DOUBLE((s.as_str()).parse::<f64>().unwrap())
         },
 
-        NodeType::BOOL(v) => {
+        NodeType::Bool(v) => {
             dprint("Eval: NodeType::BOOL");
             Object::BOOL(*v)
         },
 
-        NodeType::STRING(s) => {
+        NodeType::Str(s) => {
             dprint("Eval: NodeType::STRING");
             Object::STRING(s.clone())
         },
 
-        NodeType::NAME(s) => {
+        NodeType::Name(s) => {
             dprint("Eval: NodeType::NAME");
             store.get(s).clone()
         }
 
-        NodeType::RETURN => {
+        NodeType::Return => {
             return eval(&node.children[0], store);
         }
 
-        NodeType::FUNCALL(s) => {
+        NodeType::FunCall(s) => {
             dprint(format!("Eval: NodeType::FUNCALL({})", s));
 
             if store.has(s) {
@@ -441,13 +441,13 @@ pub fn eval(node: &Node, store: &mut Stack) -> Object {
             panic!("Unknown function: {}", s)
         }
 
-        NodeType::FUNDEF(s) => {
+        NodeType::FunDef(s) => {
             dprint("Eval: NodeType::FUNDEF");
 
             let params = &node.children[0];
             let body = node.children[1].clone();
 
-            if params.nodetype != NodeType::PARAMLIST {
+            if params.nodetype != NodeType::ParamList {
                 panic!("Expected paramlist for FUNDEF in eval.");
             }
 
@@ -456,7 +456,7 @@ pub fn eval(node: &Node, store: &mut Stack) -> Object {
             for i in 0 .. params.children.len() {
                 let p = &params.children[i];
                 match &p.nodetype {
-                    NodeType::NAME(s) => {
+                    NodeType::Name(s) => {
                         args.push(s.clone());
                     }
                     x => panic!("Invalid parameter: {}", x)
@@ -469,14 +469,14 @@ pub fn eval(node: &Node, store: &mut Stack) -> Object {
             return Object::VOID;
         }
 
-        NodeType::CONDITIONAL => {
+        NodeType::Conditional => {
 
             for condnode in &node.children {
 
                 match condnode.nodetype {
 
-                    NodeType::IF |
-                    NodeType::ELSEIF => {
+                    NodeType::If |
+                    NodeType::ElseIf => {
                         let boolnode= &condnode.children[0];
 
                         let res = eval(&boolnode, store);
@@ -492,7 +492,7 @@ pub fn eval(node: &Node, store: &mut Stack) -> Object {
                         }
                     }
 
-                    NodeType::ELSE => {
+                    NodeType::Else => {
                         let bodynode= &condnode.children[0];
                         return eval(&bodynode, store);
                     }
@@ -504,7 +504,7 @@ pub fn eval(node: &Node, store: &mut Stack) -> Object {
             return Object::VOID;
         }
 
-        NodeType::BLOCK => {
+        NodeType::Block => {
             // I think this ends up with
             // whatever last expression in a function
             // being passed as a return value.
@@ -518,7 +518,7 @@ pub fn eval(node: &Node, store: &mut Stack) -> Object {
             return ret;
         }
 
-        NodeType::MODULE => {
+        NodeType::Module => {
             dprint("Eval: NodeType::MODULE");
 
             eval(&node.children[1], store)

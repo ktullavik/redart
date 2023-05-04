@@ -11,38 +11,38 @@ use utils::dprint;
 #[derive(PartialEq)]
 pub enum Token {
     // Arithmetic
-    ADD,
-    SUB,
-    MUL,
-    DIV,
-    INCREMENT,
-    DECREMENT,
+    Add,
+    Sub,
+    Mul,
+    Div,
+    Increment,
+    Decrement,
     // Logical
-    LOG_OR,
-    LOG_AND,
-    BIN_OR,
-    BIN_AND,
-    ACCESS,
-    COMMA,
-    ASSIGN,
+    LogOr,
+    LogAnd,
+    BinOr,
+    BinAnd,
+    Access,
+    Comma,
+    Assign,
     // Keywords
-    IF,
-    ELSE,
-    INT(String),
-    DOUBLE(String),
-    STRING(String),
-    BOOL(bool),
-    NAME(String),
-    PAREN1,
-    PAREN2,
-    BLOCK1,
-    BLOCK2,
-    BRACK1,
-    BRACK2,
-    RETURN,
-    IMPORT,
-    ENDST,
-    END
+    If,
+    Else,
+    Int(String),
+    Double(String),
+    Str(String),
+    Bool(bool),
+    Name(String),
+    Paren1,
+    Paren2,
+    Block1,
+    Block2,
+    Brack1,
+    Brack2,
+    Return,
+    Import,
+    EndSt,
+    End
 }
 
 
@@ -50,41 +50,41 @@ pub enum Token {
 #[derive(PartialEq)]
 #[derive(Clone)]
 pub enum NodeType {
-    ADD,
-    SUB,
-    MUL,
-    DIV,
-    PREINCREMENT,
-    POSTINCREMENT,
-    PREDECREMENT,
-    POSTDECREMENT,
-    LOG_OR,
-    LOG_AND,
-    BIN_OR,
-    BIN_AND,
-    ACCESS,
-    ASSIGN,
-    INT(String),
-    DOUBLE(String),
-    STRING(String),
-    BOOL(bool),
-    NAME(String),
-    TYPEDVAR(String, String),
-    CONDITIONAL,
-    IF,
-    ELSEIF,
-    ELSE,
-    BLOCK,
-    LIST,
-    MODULE,
-    FUNDEF(String),
-    FUNCALL(String),
-    METHODCALL(String, String),
-    PARAMLIST,
-    ARGLIST,
-    RETURN,
-    DIRECTIVES,
-    DIRECTIVE,
+    Add,
+    Sub,
+    Mul,
+    Div,
+    PreIncrement,
+    PostIncrement,
+    PreDecrement,
+    PostDecrement,
+    LogOr,
+    LogAnd,
+    BinOr,
+    BinAnd,
+    Access,
+    Assign,
+    Int(String),
+    Double(String),
+    Str(String),
+    Bool(bool),
+    Name(String),
+    TypedVar(String, String),
+    Conditional,
+    If,
+    ElseIf,
+    Else,
+    Block,
+    List,
+    Module,
+    FunDef(String),
+    FunCall(String),
+    MethodCall(String, String),
+    ParamList,
+    ArgList,
+    Return,
+    Directives,
+    Directive,
 }
 
 
@@ -92,38 +92,38 @@ impl fmt::Display for Token {
 
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            Token::ASSIGN     => write!(f, "="),
+            Token::Assign => write!(f, "="),
             // Arithmetic
-            Token::ADD        => write!(f, "+"),
-            Token::SUB        => write!(f, "-"),
-            Token::MUL        => write!(f, "*"),
-            Token::DIV        => write!(f, "/"),
-            Token::INCREMENT  => write!(f, "++"),
-            Token::DECREMENT  => write!(f, "--"),
+            Token::Add => write!(f, "+"),
+            Token::Sub => write!(f, "-"),
+            Token::Mul => write!(f, "*"),
+            Token::Div => write!(f, "/"),
+            Token::Increment => write!(f, "++"),
+            Token::Decrement => write!(f, "--"),
             // Logical
-            Token::LOG_OR     => write!(f, "||"),
-            Token::LOG_AND    => write!(f, "&&"),
-            Token::BIN_OR     => write!(f, "|"),
-            Token::BIN_AND    => write!(f, "&"),
-            Token::ACCESS     => write!(f, "."),
-            Token::COMMA      => write!(f, ","),
-            Token::IF         => write!(f, "if"),
-            Token::ELSE       => write!(f, "else"),
-            Token::INT(s)     => write!(f, "{}", s),
-            Token::DOUBLE(s)     => write!(f, "{}", s),
-            Token::STRING(s)  => write!(f, "\"{}\"", s),
-            Token::BOOL(v)     => write!(f, "{}", v),
-            Token::NAME(s)    => write!(f, "{}", s),
-            Token::PAREN1     => write!(f, "("),
-            Token::PAREN2     => write!(f, ")"),
-            Token::BLOCK1     => write!(f, "{{"),
-            Token::BLOCK2     => write!(f, "}}"),
-            Token::BRACK1     => write!(f, "["),
-            Token::BRACK2     => write!(f, "]"),
-            Token::RETURN     => write!(f, "return"),
-            Token::IMPORT     => write!(f, "import"),
-            Token::ENDST      => write!(f, "ENDST"),
-            Token::END        => write!(f, "END"),
+            Token::LogOr => write!(f, "||"),
+            Token::LogAnd => write!(f, "&&"),
+            Token::BinOr => write!(f, "|"),
+            Token::BinAnd => write!(f, "&"),
+            Token::Access => write!(f, "."),
+            Token::Comma => write!(f, ","),
+            Token::If => write!(f, "if"),
+            Token::Else => write!(f, "else"),
+            Token::Int(s)     => write!(f, "{}", s),
+            Token::Double(s)     => write!(f, "{}", s),
+            Token::Str(s)  => write!(f, "\"{}\"", s),
+            Token::Bool(v)     => write!(f, "{}", v),
+            Token::Name(s)    => write!(f, "{}", s),
+            Token::Paren1 => write!(f, "("),
+            Token::Paren2 => write!(f, ")"),
+            Token::Block1 => write!(f, "{{"),
+            Token::Block2 => write!(f, "}}"),
+            Token::Brack1 => write!(f, "["),
+            Token::Brack2 => write!(f, "]"),
+            Token::Return => write!(f, "return"),
+            Token::Import => write!(f, "import"),
+            Token::EndSt => write!(f, "ENDST"),
+            Token::End => write!(f, "END"),
         }
     }
 }
@@ -133,41 +133,41 @@ impl fmt::Display for NodeType {
 
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            NodeType::ASSIGN                        => write!(f, "="),
-            NodeType::ADD                           => write!(f, "+"),
-            NodeType::SUB                           => write!(f, "-"),
-            NodeType::MUL                           => write!(f, "*"),
-            NodeType::DIV                           => write!(f, "/"),
-            NodeType::PREINCREMENT |
-            NodeType::POSTINCREMENT                 => write!(f, "++"),
-            NodeType::PREDECREMENT |
-            NodeType::POSTDECREMENT                 => write!(f, "--"),
-            NodeType::LOG_OR                        => write!(f, "||"),
-            NodeType::LOG_AND                       => write!(f, "&&"),
-            NodeType::BIN_OR                        => write!(f, "|"),
-            NodeType::BIN_AND                       => write!(f, "&"),
-            NodeType::ACCESS                        => write!(f, "."),
-            NodeType::INT(s)                        => write!(f, "{}", s),
-            NodeType::DOUBLE(s)                     => write!(f, "{}", s),
-            NodeType::STRING(s)                     => write!(f, "\"{}\"", s),
-            NodeType::BOOL(v)                        => write!(f, "{}", v),
-            NodeType::NAME(s)                       => write!(f, "{}", s),
-            NodeType::TYPEDVAR(tp, name)  => write!(f, "{}:{}", name, tp),
-            NodeType::FUNDEF(s)                     => write!(f, "{}() {{}}", s),
-            NodeType::FUNCALL(s)                    => write!(f, "{}()", s),
-            NodeType::METHODCALL(objname, methname) => write!(f, "{}.{}()", objname, methname),
-            NodeType::LIST                          => write!(f, "[]"),
-            NodeType::PARAMLIST                     => write!(f, "PARAMLIST"),
-            NodeType::ARGLIST                       => write!(f, "ARGLIST"),
-            NodeType::CONDITIONAL                   => write!(f, "CONDITIONAL"),
-            NodeType::IF                            => write!(f, "IF"),
-            NodeType::ELSEIF                        => write!(f, "ELSEIF"),
-            NodeType::ELSE                          => write!(f, "ELSE"),
-            NodeType::BLOCK                         => write!(f, "BLOCK"),
-            NodeType::RETURN                        => write!(f, "RETURN"),
-            NodeType::MODULE                        => write!(f, "MODULE"),
-            NodeType::DIRECTIVE                     => write!(f, "DIRECTIVE"),
-            NodeType::DIRECTIVES                    => write!(f, "DIRECTIVES"),
+            NodeType::Assign => write!(f, "="),
+            NodeType::Add => write!(f, "+"),
+            NodeType::Sub => write!(f, "-"),
+            NodeType::Mul => write!(f, "*"),
+            NodeType::Div => write!(f, "/"),
+            NodeType::PreIncrement |
+            NodeType::PostIncrement => write!(f, "++"),
+            NodeType::PreDecrement |
+            NodeType::PostDecrement => write!(f, "--"),
+            NodeType::LogOr => write!(f, "||"),
+            NodeType::LogAnd => write!(f, "&&"),
+            NodeType::BinOr => write!(f, "|"),
+            NodeType::BinAnd => write!(f, "&"),
+            NodeType::Access => write!(f, "."),
+            NodeType::Int(s)                        => write!(f, "{}", s),
+            NodeType::Double(s)                     => write!(f, "{}", s),
+            NodeType::Str(s)                     => write!(f, "\"{}\"", s),
+            NodeType::Bool(v)                        => write!(f, "{}", v),
+            NodeType::Name(s)                       => write!(f, "{}", s),
+            NodeType::TypedVar(tp, name)  => write!(f, "{}:{}", name, tp),
+            NodeType::FunDef(s)                     => write!(f, "{}() {{}}", s),
+            NodeType::FunCall(s)                    => write!(f, "{}()", s),
+            NodeType::MethodCall(objname, methname) => write!(f, "{}.{}()", objname, methname),
+            NodeType::List => write!(f, "[]"),
+            NodeType::ParamList => write!(f, "PARAMLIST"),
+            NodeType::ArgList => write!(f, "ARGLIST"),
+            NodeType::Conditional => write!(f, "CONDITIONAL"),
+            NodeType::If => write!(f, "IF"),
+            NodeType::ElseIf => write!(f, "ELSEIF"),
+            NodeType::Else => write!(f, "ELSE"),
+            NodeType::Block => write!(f, "BLOCK"),
+            NodeType::Return => write!(f, "RETURN"),
+            NodeType::Module => write!(f, "MODULE"),
+            NodeType::Directive => write!(f, "DIRECTIVE"),
+            NodeType::Directives => write!(f, "DIRECTIVES"),
         }
     }
 }
@@ -247,7 +247,7 @@ pub fn parse(tokens: &Vec<Token>) -> Result<Node, String> {
     dprint("PARSE");
     dprint(" ");
 
-    let mut root = Node::new(NodeType::MODULE);
+    let mut root = Node::new(NodeType::Module);
     let directive_node = directives(tokens, 0);
     let mut i = directive_node.1;
     root.children.push(directive_node.0);
@@ -276,29 +276,29 @@ pub fn parse(tokens: &Vec<Token>) -> Result<Node, String> {
 fn directives(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
 
     let mut i = pos;
-    let directives_node = Node::new(NodeType::DIRECTIVES);
+    let directives_node = Node::new(NodeType::Directives);
 
     while i < tokens.len() {
 
         match &tokens[i] {
-            Token::IMPORT => {
+            Token::Import => {
 
-                let mut node = Node::new(NodeType::DIRECTIVE);
+                let mut node = Node::new(NodeType::Directive);
                 let mut j = i + 1;
 
                 while j < tokens.len() {
 
                     match &tokens[j] {
-                        Token::ENDST => {
+                        Token::EndSt => {
                             i = j+1;
                             break;
                         }
-                        Token::END => {
+                        Token::End => {
                             i = j;
                             break;
                         }
-                        Token::NAME(s2) => {
-                            let child_node = Node::new(NodeType::NAME(s2.to_string()));
+                        Token::Name(s2) => {
+                            let child_node = Node::new(NodeType::Name(s2.to_string()));
                             node.children.push(child_node);
                             j += 1;
                         }
@@ -324,15 +324,15 @@ fn fundef(tokens: &Vec<Token>, pos: usize) -> (Node, usize)  {
     i += 1;
 
     match t {
-        Token::NAME(_) => {
+        Token::Name(_) => {
 
             let t2: &Token = tokens.get(i).unwrap();
             i += 1;
 
             match t2 {
 
-                Token::NAME(fname) => {
-                    let mut node = Node::new(NodeType::FUNDEF(fname.to_string()));
+                Token::Name(fname) => {
+                    let mut node = Node::new(NodeType::FunDef(fname.to_string()));
                     let (params, new_pos) = paramlist(tokens, i);
                     i = new_pos;
                     node.children.push(params);
@@ -341,7 +341,7 @@ fn fundef(tokens: &Vec<Token>, pos: usize) -> (Node, usize)  {
                     i += 1;
 
                     match t3 {
-                        Token::BLOCK1 => {
+                        Token::Block1 => {
                             let (body, new_pos) = block(tokens, i);
                             node.children.push(body);
                             i = new_pos;
@@ -379,9 +379,9 @@ fn paramlist(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
 
         match t {
 
-            Token::PAREN1 => {
+            Token::Paren1 => {
 
-                let mut node = Node::new(NodeType::PARAMLIST);
+                let mut node = Node::new(NodeType::ParamList);
                 let mut expect_comma = false;
                 let mut j: usize = i;
 
@@ -391,14 +391,14 @@ fn paramlist(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
 
                     match p {
 
-                        Token::NAME(s) => {
-                            let paramnode= Node::new(NodeType::NAME(s.to_string()));
+                        Token::Name(s) => {
+                            let paramnode= Node::new(NodeType::Name(s.to_string()));
                             node.children.push(paramnode);
                             expect_comma = true;
                             j += 1;
                         }
 
-                        Token::COMMA => {
+                        Token::Comma => {
                             if !expect_comma {
                                 panic!("Unexpected token when reading parameter list: ,");
                             }
@@ -407,7 +407,7 @@ fn paramlist(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
                             continue;
                         }
 
-                        Token::PAREN2 => {
+                        Token::Paren2 => {
                             j += 1;
                             break;
                         }
@@ -440,9 +440,9 @@ fn arglist(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
 
         match t {
 
-            Token::PAREN1 => {
+            Token::Paren1 => {
 
-                let mut node = Node::new(NodeType::ARGLIST);
+                let mut node = Node::new(NodeType::ArgList);
                 let mut expect_comma = false;
                 let mut j: usize = i + 1;
 
@@ -450,7 +450,7 @@ fn arglist(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
 
                     match &tokens[j] {
 
-                        Token::COMMA => {
+                        Token::Comma => {
                             if !expect_comma {
                                 panic!("Unexpected token when reading arg list: ,");
                             }
@@ -459,10 +459,10 @@ fn arglist(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
                             continue;
                         }
 
-                        Token::NAME(_)   |
-                        Token::STRING(_) |
-                        Token::INT(_)    |
-                        Token::DOUBLE(_)
+                        Token::Name(_)   |
+                        Token::Str(_) |
+                        Token::Int(_)    |
+                        Token::Double(_)
                         => {
                             let (arg, new_pos) = expression(tokens, j);
 
@@ -472,10 +472,10 @@ fn arglist(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
                             continue;
                         }
 
-                        Token::ADD       |
-                        Token::SUB       |
-                        Token::MUL       |
-                        Token::BRACK1
+                        Token::Add |
+                        Token::Sub |
+                        Token::Mul |
+                        Token::Brack1
                         => {
                             let (arg, new_pos) = expression(tokens, j);
 
@@ -485,7 +485,7 @@ fn arglist(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
                             continue;
                         }
 
-                        Token::PAREN2 => {
+                        Token::Paren2 => {
                             j += 1;
                             break;
                         }
@@ -513,18 +513,18 @@ fn arglist(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
 /// Consumes the end-block token }.
 fn block(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
 
-    let mut node = Node::new(NodeType::BLOCK);
+    let mut node = Node::new(NodeType::Block);
     let mut i = pos;
 
     while i < tokens.len() {
         dprint(format!("Parse: block loop at: {}, token: {}", i, &tokens[i]));
 
-        if tokens[i] == Token::BLOCK2 {
+        if tokens[i] == Token::Block2 {
             dprint(String::from("Parse: token is end-of-block, breaking."));
             i += 1;
             break;
         }
-        if tokens[i] == Token::END {
+        if tokens[i] == Token::End {
             dprint(String::from("Parse: token is end, breaking."));
             break;
         }
@@ -536,11 +536,11 @@ fn block(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
 
         match &tokens[i] {
 
-            Token::BLOCK2 => {
+            Token::Block2 => {
                 // i += 1;
                 continue;
             }
-            Token::ENDST => {
+            Token::EndSt => {
                 // ENDST should be consumed by statement?
                 i += 1;
                 continue;
@@ -561,25 +561,25 @@ fn statement(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
 
     match &tokens[i] {
 
-        Token::NAME(s) => {
+        Token::Name(s) => {
 
             i = i + 1;
             let t2 = &tokens[i];
 
             match t2 {
 
-                Token::NAME(name) => {
+                Token::Name(name) => {
                     // Two names in a row indicate a typed variable or function definition.
                     i += 1;
                     let t3 = &tokens[i];
                     i += 1;
 
 
-                    let typed_var = Node::new(NodeType::TYPEDVAR(s.to_string(), name.to_string()));
+                    let typed_var = Node::new(NodeType::TypedVar(s.to_string(), name.to_string()));
 
                     match t3 {
-                        Token::ASSIGN => {
-                            let mut ass_node = Node::new(NodeType::ASSIGN);
+                        Token::Assign => {
+                            let mut ass_node = Node::new(NodeType::Assign);
                             ass_node.children.push(typed_var);
                             let (right_node, i) = expression(tokens, i);
                             ass_node.children.push(right_node);
@@ -591,11 +591,11 @@ fn statement(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
                     }
                 }
 
-                Token::ASSIGN => {
+                Token::Assign => {
                     i += 1;
-                    let mut ass_node = Node::new(NodeType::ASSIGN);
+                    let mut ass_node = Node::new(NodeType::Assign);
 
-                    let var = Node::new(NodeType::NAME(s.to_string()));
+                    let var = Node::new(NodeType::Name(s.to_string()));
                     let (right_node, i) = expression(tokens, i);
 
                     ass_node.children.push(var);
@@ -604,40 +604,40 @@ fn statement(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
                     return (ass_node, i)
                 }
 
-                Token::PAREN1 => {
+                Token::Paren1 => {
                     // Function call.
                     // These are also handled in term. Maybe we can just pass this along?
                     let (args_node, new_pos) = arglist(tokens, i);
                     i = new_pos;
-                    let mut funcall_node = Node::new(NodeType::FUNCALL(s.to_string()));
-                    funcall_node.nodetype = NodeType::FUNCALL(s.to_string());
+                    let mut funcall_node = Node::new(NodeType::FunCall(s.to_string()));
+                    funcall_node.nodetype = NodeType::FunCall(s.to_string());
                     funcall_node.children.push(args_node);
                     return (funcall_node, i)
                 }
 
-                Token::ACCESS => {
+                Token::Access => {
 
                     i += 1;
                     let t3 = &tokens[i];
 
                     match t3 {
 
-                        Token::NAME(acc_name) => {
+                        Token::Name(acc_name) => {
 
 
                             i += 1;
                             let t4 = &tokens[i];
 
                             return match t4 {
-                                Token::PAREN1 => {
+                                Token::Paren1 => {
 
                                     // method call
                                     let (args, new_pos) = arglist(tokens, i);
                                     i = new_pos;
-                                    let mut methcall_node = Node::new(NodeType::METHODCALL(s.to_string(), acc_name.to_string()));
+                                    let mut methcall_node = Node::new(NodeType::MethodCall(s.to_string(), acc_name.to_string()));
                                     methcall_node.children.push(args);
 
-                                    if tokens[i] != Token::ENDST {
+                                    if tokens[i] != Token::EndSt {
                                         panic!("Unexpected token at pos {}: {}", i, tokens[i]);
                                     }
                                     i += 1;
@@ -646,9 +646,9 @@ fn statement(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
                                 }
 
                                 _ => {
-                                    let mut acc_node = Node::new(NodeType::ACCESS);
-                                    let obj_node = Node::new(NodeType::NAME(s.to_string()));
-                                    let member_node = Node::new(NodeType::NAME(acc_name.to_string()));
+                                    let mut acc_node = Node::new(NodeType::Access);
+                                    let obj_node = Node::new(NodeType::Name(s.to_string()));
+                                    let member_node = Node::new(NodeType::Name(acc_name.to_string()));
                                     acc_node.children.push(obj_node);
                                     acc_node.children.push(member_node);
 
@@ -666,10 +666,10 @@ fn statement(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
             }
         }
 
-        Token::IF => {
+        Token::If => {
             dprint("Parse: if");
 
-            let mut condnode = Node::new(NodeType::CONDITIONAL);
+            let mut condnode = Node::new(NodeType::Conditional);
 
             let (condpart, next_pos) = conditional(tokens, i);
             condnode.children.push(condpart);
@@ -682,7 +682,7 @@ fn statement(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
 
                 match next_token {
 
-                    Token::ELSE => {
+                    Token::Else => {
                         dprint("Parse: if-else");
 
                         let (lastcond, last_pos) = conditional(tokens, i);
@@ -698,9 +698,9 @@ fn statement(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
             return (condnode, i)
         }
 
-        Token::RETURN => {
+        Token::Return => {
             let (val, new_pos) = expression(tokens, i + 1);
-            let mut ret = Node::new(NodeType::RETURN);
+            let mut ret = Node::new(NodeType::Return);
             ret.children.push(val);
             return (ret, new_pos);
         }
@@ -718,27 +718,27 @@ fn conditional(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
 
     match &tokens[i] {
 
-        Token::IF => {
+        Token::If => {
 
             i += 1;
 
             match tokens[i] {
-                Token::PAREN1 => {
+                Token::Paren1 => {
                     i += 1;
                     let (boolnode, new_pos) = expression(tokens, i);
 
                     match tokens[new_pos] {
-                        Token::PAREN2 => {
+                        Token::Paren2 => {
                             i = new_pos + 1;
 
                             match tokens[i] {
-                                Token::BLOCK1 => {
+                                Token::Block1 => {
                                     i += 1;
                                     let (bodynode, new_pos) = block(tokens, i);
 
                                     i = new_pos;
 
-                                    let mut ifnode = Node::new(NodeType::IF);
+                                    let mut ifnode = Node::new(NodeType::If);
                                     ifnode.children.push(boolnode);
                                     ifnode.children.push(bodynode);
                                     return (ifnode, i)
@@ -752,32 +752,32 @@ fn conditional(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
                 _ => panic!("Unexpected token after 'if'")
             }
         }
-        Token::ELSE => {
+        Token::Else => {
 
             i += 1;
 
             match &tokens[i] {
 
-                Token::IF => {
+                Token::If => {
 
                     i += 1;
 
                     match tokens[i] {
-                        Token::PAREN1 => {
+                        Token::Paren1 => {
                             i += 1;
                             let (boolnode, new_pos) = expression(tokens, i);
 
                             match tokens[new_pos] {
-                                Token::PAREN2 => {
+                                Token::Paren2 => {
                                     i = new_pos + 1;
 
                                     match tokens[i] {
-                                        Token::BLOCK1 => {
+                                        Token::Block1 => {
                                             i += 1;
                                             let (bodynode, new_pos) = block(tokens, i);
                                             i = new_pos;
 
-                                            let mut elseifnode = Node::new(NodeType::ELSEIF);
+                                            let mut elseifnode = Node::new(NodeType::ElseIf);
                                             elseifnode.children.push(boolnode);
                                             elseifnode.children.push(bodynode);
 
@@ -793,14 +793,14 @@ fn conditional(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
                     }
                 }
 
-                Token::BLOCK1 => {
+                Token::Block1 => {
 
                     i += 1;
 
                     let (bodynode, new_pos) = block(tokens, i);
                     i = new_pos;
 
-                    let mut elsenode = Node::new(NodeType::ELSE);
+                    let mut elsenode = Node::new(NodeType::Else);
                     elsenode.children.push(bodynode);
 
                     return (elsenode, i)
@@ -833,11 +833,11 @@ fn disjunction(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
     let t: &Token = &tokens[next_pos];
 
     return match t {
-        Token::LOG_OR => {
+        Token::LogOr => {
 
             let (right, i) = disjunction(tokens, next_pos + 1);
 
-            let mut disnode = Node::new(NodeType::LOG_OR);
+            let mut disnode = Node::new(NodeType::LogOr);
             disnode.children.push(left);
             disnode.children.push(right);
 
@@ -855,11 +855,11 @@ fn conjunction(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
     let t: &Token = &tokens[next_pos];
 
     return match t {
-        Token::LOG_AND => {
+        Token::LogAnd => {
 
             let (right, i) = conjunction(tokens, next_pos + 1);
 
-            let mut connode = Node::new(NodeType::LOG_AND);
+            let mut connode = Node::new(NodeType::LogAnd);
             connode.children.push(left);
             connode.children.push(right);
 
@@ -879,8 +879,8 @@ fn sum(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
     let c: &Token = tokens.get(next_pos).unwrap();
 
     return match c {
-        Token::ADD => {
-            let mut sumnode = Node::new(NodeType::ADD);
+        Token::Add => {
+            let mut sumnode = Node::new(NodeType::Add);
             sumnode.children.push(left);
 
             let (right, i) = sum(tokens, next_pos + 1);
@@ -890,8 +890,8 @@ fn sum(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
             (sumnode, i)
         },
 
-        Token::SUB => {
-            let mut sumnode = Node::new(NodeType::SUB);
+        Token::Sub => {
+            let mut sumnode = Node::new(NodeType::Sub);
             sumnode.children.push(left);
 
             let (right, i) = sum(tokens, next_pos + 1);
@@ -914,8 +914,8 @@ fn product(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
     let t: &Token = tokens.get(i).unwrap();
 
     return match t {
-        Token::MUL => {
-            let mut prod = Node::new(NodeType::MUL);
+        Token::Mul => {
+            let mut prod = Node::new(NodeType::Mul);
             prod.children.push(left);
 
             i += 1;
@@ -924,8 +924,8 @@ fn product(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
             prod.children.push(right);
             (prod, i)
         }
-        Token::DIV => {
-            let mut div = Node::new(NodeType::DIV);
+        Token::Div => {
+            let mut div = Node::new(NodeType::Div);
             div.children.push(left);
 
             i += 1;
@@ -950,66 +950,66 @@ fn term(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
 
     match t {
 
-        &Token::INT(ref s) => {
-            let node = Node::new(NodeType::INT(s.clone()));
+        &Token::Int(ref s) => {
+            let node = Node::new(NodeType::Int(s.clone()));
             return (node, pos+1)
         }
 
-        &Token::DOUBLE(ref s) => {
-            let node = Node::new(NodeType::DOUBLE(s.clone()));
+        &Token::Double(ref s) => {
+            let node = Node::new(NodeType::Double(s.clone()));
             return (node, pos+1)
         }
 
-        &Token::STRING(ref s) => {
-            let node = Node::new(NodeType::STRING(s.clone()));
+        &Token::Str(ref s) => {
+            let node = Node::new(NodeType::Str(s.clone()));
             return (node, pos+1)
         }
 
-        &Token::BOOL(v) => {
-            let node = Node::new(NodeType::BOOL(v));
+        &Token::Bool(v) => {
+            let node = Node::new(NodeType::Bool(v));
             return (node, pos+1)
         }
 
-        &Token::NAME(ref s) => {
+        &Token::Name(ref s) => {
 
             // Postfixed inc/dec should be bound tightly, so handle
             // it here rather than in expression.
-            if let Token::INCREMENT = tokens[pos+1] {
-                let mut incnode = Node::new(NodeType::POSTINCREMENT);
-                let node = Node::new(NodeType::NAME(s.clone()));
+            if let Token::Increment = tokens[pos+1] {
+                let mut incnode = Node::new(NodeType::PostIncrement);
+                let node = Node::new(NodeType::Name(s.clone()));
                 incnode.children.push(node);
                 return (incnode, pos + 2);
             }
-            if let Token::DECREMENT = tokens[pos+1] {
-                let mut decnode = Node::new(NodeType::POSTDECREMENT);
-                let node = Node::new(NodeType::NAME(s.clone()));
+            if let Token::Decrement = tokens[pos+1] {
+                let mut decnode = Node::new(NodeType::PostDecrement);
+                let node = Node::new(NodeType::Name(s.clone()));
                 decnode.children.push(node);
                 return (decnode, pos + 2);
             }
 
 
-            if let Token::PAREN1 = tokens[pos+1] {
+            if let Token::Paren1 = tokens[pos+1] {
                 // Function call.
                 let (args_node, new_pos) = arglist(tokens, pos + 1);
-                let mut funcall_node = Node::new(NodeType::FUNCALL(s.to_string()));
-                funcall_node.nodetype = NodeType::FUNCALL(s.to_string());
+                let mut funcall_node = Node::new(NodeType::FunCall(s.to_string()));
+                funcall_node.nodetype = NodeType::FunCall(s.to_string());
                 funcall_node.children.push(args_node);
                 return (funcall_node, new_pos)
             }
 
 
 
-            let node = Node::new(NodeType::NAME(s.clone()));
+            let node = Node::new(NodeType::Name(s.clone()));
             return (node, pos+1)
         }
 
-        &Token::INCREMENT => {
+        &Token::Increment => {
 
             let next = &tokens[pos+1];
             return match next {
-                Token::NAME(s) => {
-                    let namenode = Node::new(NodeType::NAME(s.clone()));
-                    let mut incnode = Node::new(NodeType::PREINCREMENT);
+                Token::Name(s) => {
+                    let namenode = Node::new(NodeType::Name(s.clone()));
+                    let mut incnode = Node::new(NodeType::PreIncrement);
                     incnode.children.push(namenode);
                     (incnode, pos + 2)
                 }
@@ -1017,13 +1017,13 @@ fn term(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
             }
         }
 
-        &Token::DECREMENT => {
+        &Token::Decrement => {
 
             let next = &tokens[pos+1];
             return match next {
-                Token::NAME(s) => {
-                    let namenode = Node::new(NodeType::NAME(s.clone()));
-                    let mut incnode = Node::new(NodeType::PREDECREMENT);
+                Token::Name(s) => {
+                    let namenode = Node::new(NodeType::Name(s.clone()));
+                    let mut incnode = Node::new(NodeType::PreDecrement);
                     incnode.children.push(namenode);
                     (incnode, pos + 2)
                 }
@@ -1031,9 +1031,9 @@ fn term(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
             }
         }
 
-        &Token::PAREN1 => {
+        &Token::Paren1 => {
             let (wnode, new_pos) = expression(tokens, pos+1);
-            if let &Token::PAREN2 = &tokens[new_pos] {
+            if let &Token::Paren2 = &tokens[new_pos] {
                 return (wnode, new_pos + 1)
             }
             else {
@@ -1041,13 +1041,13 @@ fn term(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
             }
         }
 
-        &Token::BRACK1 => {
+        &Token::Brack1 => {
 
             let mut i = pos + 1;
-            let mut list_node = Node::new(NodeType::LIST);
+            let mut list_node = Node::new(NodeType::List);
             let mut expect_sep = false;
 
-            if tokens[i] == Token::BRACK2 {
+            if tokens[i] == Token::Brack2 {
                 return (list_node, i + 1)
             }
 
@@ -1056,7 +1056,7 @@ fn term(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
                 if expect_sep {
                     match &tokens[i] {
 
-                        Token::COMMA => {
+                        Token::Comma => {
                             if !expect_sep {
                                 panic!("Expected an identifier, but got ','");
                             }
@@ -1065,7 +1065,7 @@ fn term(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
                             continue;
                         }
 
-                        Token::BRACK2 => {
+                        Token::Brack2 => {
                             i += 1;
                             break;
                         }
