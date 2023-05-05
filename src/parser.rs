@@ -460,52 +460,44 @@ fn arglist(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
 
     let mut i = pos;
 
-    while i < tokens.len() {
+    if let Token::Paren1 = &tokens[i] {
 
-        match &tokens[i] {
+        let mut node = Node::new(NodeType::ArgList);
+        let mut expect_comma = false;
+        i += 1;
 
-            Token::Paren1 => {
+        while i < tokens.len() {
 
-                let mut node = Node::new(NodeType::ArgList);
-                let mut expect_comma = false;
-                i += 1;
+            match &tokens[i] {
 
-                while i < tokens.len() {
-
-                    match &tokens[i] {
-
-                        Token::Comma => {
-                            if !expect_comma {
-                                panic!("Error: Unexpected separator in arg list: ,");
-                            }
-                            i += 1;
-                            expect_comma = false;
-                            continue;
-                        }
-
-                        Token::Paren2 => {
-                            i += 1;
-                            break;
-                        }
-
-                        _ => {
-                            if expect_comma {
-                                panic!("Error: Expected separator in arg list.");
-                            }
-                            let (arg, new_pos) = expression(tokens, i);
-                            node.children.push(arg);
-                            i = new_pos;
-                            expect_comma = true;
-                            continue;
-                        }
-                    }
+                Token::Paren2 => {
+                    return (node, i + 1);
                 }
-                return (node, i);
-            }
-            _ => {
-                panic!("Expected (, starting arglist. Got: {}", &tokens[i])
+
+                Token::Comma => {
+                    if !expect_comma {
+                        panic!("Error: Unexpected separator in arg list: ','.");
+                    }
+                    i += 1;
+                    expect_comma = false;
+                    continue;
+                }
+
+                _ => {
+                    if expect_comma {
+                        panic!("Error: Expected separator in arg list.");
+                    }
+                    let (arg, new_pos) = expression(tokens, i);
+                    node.children.push(arg);
+                    i = new_pos;
+                    expect_comma = true;
+                    continue;
+                }
             }
         }
+    }
+    else {
+        panic!("Error: Expected start of arglist: '('. Found: {}", &tokens[i])
     }
     panic!("Error when reading arg list.")
 }
