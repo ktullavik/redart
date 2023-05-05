@@ -507,7 +507,6 @@ fn arglist(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
                         }
 
                         Token::Paren2 => {
-                            // j += 1;
                             i += 1;
                             break;
                         }
