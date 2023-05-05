@@ -38,7 +38,10 @@ fn main() {
 
             let input = read_inputfile(&args[2]);
             let tokens = lexer::lex(&input);
-            println!("\n{:?}\n", tokens);
+            for t in tokens {
+                print!("{} ", t);
+            }
+            println!();
         }
         "parse" => {
             if args.len() < 3 {
@@ -83,7 +86,10 @@ fn main() {
 
             if action == "lex" {
                 let tokens = lexer::lex(&input);
-                println!("tokens: \n{:?}\n", tokens);
+                for t in tokens {
+                    print!("{} ", t);
+                }
+                println!();
             }
             else if action == "parse" {
                 let tokens = lexer::lex(&input);

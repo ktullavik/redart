@@ -2,7 +2,6 @@ use std::fmt;
 use utils::dprint;
 
 
-#[derive(Debug)]
 #[derive(PartialEq)]
 pub enum Token {
     // Arithmetic
@@ -283,7 +282,7 @@ pub fn parse(tokens: &Vec<Token>) -> Result<Node, String> {
     }
 
     if i < tokens.len() - 1 {
-        return Err(format!("Expected end of input, found {:?} at {}", tokens[i], i))
+        return Err(format!("Expected end of input, found {} at {}", tokens[i], i))
     }
     else if i > tokens.len() - 1 {
         return Err(format!("Index returned beyond end of token array. Index: {}, len: {}", i, tokens.len()))
@@ -1149,7 +1148,7 @@ fn term(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
         }
 
         _ => {
-            panic!("Unexpected token {:?}, expected paren or number.", {t})
+            panic!("Unexpected token {}, expected paren or number.", {t})
         }
     }
 }
