@@ -249,6 +249,9 @@ fn main() {
             "39" => {
                 testfile = "39.not.dart";
             }
+            "40" => {
+                testfile = "40.fibonacci.dart";
+            }
             "70" => {
                 testfile = "70.list_replace.dart";
             }
