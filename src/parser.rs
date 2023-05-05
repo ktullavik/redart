@@ -458,9 +458,7 @@ fn arglist(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
 
     while i < tokens.len() {
 
-        let t = &tokens[i];
-
-        match t {
+        match &tokens[i] {
 
             Token::Paren1 => {
 
@@ -485,24 +483,15 @@ fn arglist(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
                         Token::Str(_) |
                         Token::Int(_)    |
                         Token::Double(_) |
-                        Token::Bool(_)
+                        Token::Bool(_) |
+                        Token::Sub |
+                        Token::Brack1 |
+                        Token::Paren1
                         => {
                             let (arg, new_pos) = expression(tokens, i);
                             node.children.push(arg);
                             i = new_pos;
                             expect_comma = true;
-                            continue;
-                        }
-
-                        Token::Add |
-                        Token::Sub |
-                        Token::Mul |
-                        Token::Brack1
-                        => {
-                            let (arg, new_pos) = expression(tokens, i);
-                            node.children.push(arg);
-                            i = new_pos;
-                            expect_comma = false;
                             continue;
                         }
 
@@ -518,7 +507,7 @@ fn arglist(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
                 return (node, i);
             }
             _ => {
-                panic!("Expected (, starting arglist. Got: {}", t)
+                panic!("Expected (, starting arglist. Got: {}", &tokens[i])
             }
         }
     }
