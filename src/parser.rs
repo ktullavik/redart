@@ -11,35 +11,37 @@ pub enum Token {
     Div,
     Increment,
     Decrement,
-    // Logical
+    // Logic
     Not,
     LogOr,
     LogAnd,
     BinOr,
     BinAnd,
-    // Relational
+    // Relation
     LessThan,
     GreaterThan,
     LessOrEq,
     GreaterOrEq,
     Equal,
-    Access,
-    Comma,
-    Assign,
-    // Keywords
-    If,
-    Else,
+    // Primitive
     Int(String),
     Double(String),
     Str(String),
     Bool(bool),
     Name(String),
+    // Structure
+    If,
+    Else,
     Paren1,
     Paren2,
     Block1,
     Block2,
     Brack1,
     Brack2,
+    Comma,
+    // Other
+    Assign,
+    Access,
     Return,
     Import,
     EndSt,
@@ -99,7 +101,6 @@ impl fmt::Display for Token {
 
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            Token::Assign => write!(f, "="),
             // Arithmetic
             Token::Add => write!(f, "+"),
             Token::Sub => write!(f, "-"),
@@ -107,33 +108,37 @@ impl fmt::Display for Token {
             Token::Div => write!(f, "/"),
             Token::Increment => write!(f, "++"),
             Token::Decrement => write!(f, "--"),
-            // Logical
+            // Logic
             Token::Not => write!(f, "!"),
             Token::LogOr => write!(f, "||"),
             Token::LogAnd => write!(f, "&&"),
             Token::BinOr => write!(f, "|"),
             Token::BinAnd => write!(f, "&"),
-            // Relational
+            // Relation
             Token::LessThan    => write!(f, "<"),
             Token::GreaterThan => write!(f, ">"),
             Token::LessOrEq    => write!(f, "<="),
             Token::GreaterOrEq => write!(f, ">="),
             Token::Equal => write!(f, "=="),
-            Token::Access => write!(f, "."),
-            Token::Comma => write!(f, ","),
-            Token::If => write!(f, "if"),
-            Token::Else => write!(f, "else"),
+            // Primitive
             Token::Int(s)     => write!(f, "{}", s),
             Token::Double(s)     => write!(f, "{}", s),
             Token::Str(s)  => write!(f, "\"{}\"", s),
             Token::Bool(v)     => write!(f, "{}", v),
             Token::Name(s)    => write!(f, "{}", s),
+            // Structure
+            Token::If => write!(f, "if"),
+            Token::Else => write!(f, "else"),
             Token::Paren1 => write!(f, "("),
             Token::Paren2 => write!(f, ")"),
             Token::Block1 => write!(f, "{{"),
             Token::Block2 => write!(f, "}}"),
             Token::Brack1 => write!(f, "["),
             Token::Brack2 => write!(f, "]"),
+            Token::Comma => write!(f, ","),
+            // Other
+            Token::Assign => write!(f, "="),
+            Token::Access => write!(f, "."),
             Token::Return => write!(f, "return"),
             Token::Import => write!(f, "import"),
             Token::EndSt => write!(f, "ENDST"),
