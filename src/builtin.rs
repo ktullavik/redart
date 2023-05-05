@@ -40,6 +40,6 @@ pub fn call(name: &str, args: &Vec<Object>) -> Object {
 
         _ => panic!("Unknown command: {}", name)
     }
-    Object::Void
+    Object::Null
 }
 

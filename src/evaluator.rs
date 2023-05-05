@@ -13,7 +13,7 @@ pub enum Object {
     Bool(bool),
     String(String),
     Function(String, Node, Vec<String>),
-    Void,
+    Null,
     Return(Box<Object>)
 }
 
@@ -78,13 +78,13 @@ pub fn eval(node: &Node, store: &mut Stack) -> Object {
                 NodeType::Name(ref s1) => {
                     let right_obj = eval(&node.children[1], store);
                     store.add(s1.as_str(), right_obj);
-                    return Object::Void;
+                    return Object::Null;
                 }
                 NodeType::TypedVar(_, ref s1) => {
                     let right_obj = eval(&node.children[1], store);
                     // symtable.insert(s1.clone(), right_obj);
                     store.add(s1.as_str(), right_obj);
-                    return Object::Void;
+                    return Object::Null;
                 }
                 _ => panic!("Illegal name for assignment: {}", &node.children[0].nodetype)
             }
@@ -700,7 +700,7 @@ pub fn eval(node: &Node, store: &mut Stack) -> Object {
             let obj = Object::Function(s.to_string(), body, args);
 
             store.add(s, obj);
-            return Object::Void;
+            return Object::Null;
         }
 
         NodeType::Conditional => {
@@ -736,7 +736,7 @@ pub fn eval(node: &Node, store: &mut Stack) -> Object {
                 }
             }
 
-            return Object::Void;
+            return Object::Null;
         }
 
         NodeType::Block => {
@@ -753,7 +753,7 @@ pub fn eval(node: &Node, store: &mut Stack) -> Object {
                     _ => {}
                 }
             }
-            return Object::Void;
+            return Object::Null;
         }
 
         NodeType::Module => {
