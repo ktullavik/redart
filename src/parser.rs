@@ -398,59 +398,43 @@ fn paramlist(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
 
     let mut i = pos;
 
-    while i < tokens.len() {
+    if let Token::Paren1 = &tokens[i] {
 
-        let t = &tokens[i];
+        let mut node = Node::new(NodeType::ParamList);
+        let mut expect_comma = false;
         i += 1;
 
-        match t {
+        while i < tokens.len() {
 
-            Token::Paren1 => {
+            match &tokens[i] {
 
-                let mut node = Node::new(NodeType::ParamList);
-                let mut expect_comma = false;
-                let mut j: usize = i;
-
-                while j < tokens.len() {
-
-                    let p = &tokens[j];
-
-                    match p {
-
-                        Token::Name(s) => {
-                            let paramnode= Node::new(NodeType::Name(s.to_string()));
-                            node.children.push(paramnode);
-                            expect_comma = true;
-                            j += 1;
-                        }
-
-                        Token::Comma => {
-                            if !expect_comma {
-                                panic!("Unexpected token when reading parameter list: ,");
-                            }
-                            j += 1;
-                            expect_comma = false;
-                            continue;
-                        }
-
-                        Token::Paren2 => {
-                            j += 1;
-                            break;
-                        }
-
-                        _ => {
-                            panic!("Unexpected token when reading parameters: {}", p)
-                        }
-                    }
+                Token::Paren2 => {
+                    return (node, i + 1);
                 }
 
-                i = j;
-                return (node, i);
-            }
-            _ => {
-                panic!("Expected (, starting paramlist. Got: {}", t)
+                Token::Comma => {
+                    if !expect_comma {
+                        panic!("Error: Unexpected separator in parameter list: ','.");
+                    }
+                    i += 1;
+                    expect_comma = false;
+                }
+
+                Token::Name(s) => {
+                    let paramnode= Node::new(NodeType::Name(s.to_string()));
+                    node.children.push(paramnode);
+                    expect_comma = true;
+                    i += 1;
+                }
+
+                _ => {
+                    panic!("Unexpected token when reading parameters: {}", &tokens[i])
+                }
             }
         }
+    }
+    else {
+        panic!("Error: Expected start of parameter list: '('. Found: {}", &tokens[i])
     }
     panic!("Error when reading param list.")
 }
@@ -480,7 +464,6 @@ fn arglist(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
                     }
                     i += 1;
                     expect_comma = false;
-                    continue;
                 }
 
                 _ => {
@@ -491,7 +474,6 @@ fn arglist(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
                     node.children.push(arg);
                     i = new_pos;
                     expect_comma = true;
-                    continue;
                 }
             }
         }
