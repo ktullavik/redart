@@ -13,7 +13,8 @@ pub enum Object {
     Bool(bool),
     String(String),
     Function(String, Node, Vec<String>),
-    Void
+    Void,
+    Return(Box<Object>)
 }
 
 
@@ -601,7 +602,6 @@ pub fn eval(node: &Node, store: &mut Stack) -> Object {
 
         NodeType::Double(s) => {
             dprint("Eval: NodeType::INT");
-            // Object::DOUBLE(s.parse().unwrap())
             Object::Double((s.as_str()).parse::<f64>().unwrap())
         },
 
@@ -621,7 +621,9 @@ pub fn eval(node: &Node, store: &mut Stack) -> Object {
         }
 
         NodeType::Return => {
-            return eval(&node.children[0], store);
+            dprint(format!("Eval: NodeType::Return"));
+            let retval = eval(&node.children[0], store);
+            return Object::Return(Box::new(retval));
         }
 
         NodeType::FunCall(s) => {
@@ -645,7 +647,15 @@ pub fn eval(node: &Node, store: &mut Stack) -> Object {
 
                         store.pop();
 
-                        return result;
+                        return match result {
+                            Object::Return(v) => {
+                                *v
+                            }
+
+                            _ => {
+                                result
+                            }
+                        }
                     }
                     _ => panic!("Called a non function object")
                 }
@@ -694,6 +704,7 @@ pub fn eval(node: &Node, store: &mut Stack) -> Object {
         }
 
         NodeType::Conditional => {
+            dprint("Eval: NodeType::Conditional");
 
             for condnode in &node.children {
 
@@ -729,17 +740,20 @@ pub fn eval(node: &Node, store: &mut Stack) -> Object {
         }
 
         NodeType::Block => {
-            // I think this ends up with
-            // whatever last expression in a function
-            // being passed as a return value.
-            // BLOCK should probably only propagate
-            // values that are wrapped in a RETURN object...
-            // or something like that.
-            let mut ret = Object::Void;
-            for s in &node.children {
-                ret = eval(s, store);
+            dprint("Eval: NodeType::Block");
+
+            for c in &node.children {
+
+                let retval = eval(c, store);
+
+                match &retval {
+                    Object::Return(_) => {
+                        return retval;
+                    }
+                    _ => {}
+                }
             }
-            return ret;
+            return Object::Void;
         }
 
         NodeType::Module => {
