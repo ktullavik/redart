@@ -18,6 +18,7 @@ pub enum Token {
     Increment,
     Decrement,
     // Logical
+    Not,
     LogOr,
     LogAnd,
     BinOr,
@@ -64,6 +65,7 @@ pub enum NodeType {
     PostIncrement,
     PreDecrement,
     PostDecrement,
+    Not,
     LogOr,
     LogAnd,
     BinOr,
@@ -112,6 +114,7 @@ impl fmt::Display for Token {
             Token::Increment => write!(f, "++"),
             Token::Decrement => write!(f, "--"),
             // Logical
+            Token::Not => write!(f, "!"),
             Token::LogOr => write!(f, "||"),
             Token::LogAnd => write!(f, "&&"),
             Token::BinOr => write!(f, "|"),
@@ -159,6 +162,7 @@ impl fmt::Display for NodeType {
             NodeType::PostIncrement => write!(f, "++"),
             NodeType::PreDecrement |
             NodeType::PostDecrement => write!(f, "--"),
+            NodeType::Not => write!(f, "!"),
             NodeType::LogOr => write!(f, "||"),
             NodeType::LogAnd => write!(f, "&&"),
             NodeType::BinOr => write!(f, "|"),
@@ -472,26 +476,10 @@ fn arglist(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
 
                         Token::Comma => {
                             if !expect_comma {
-                                panic!("Unexpected token when reading arg list: ,");
+                                panic!("Error: Unexpected separator in arg list: ,");
                             }
                             i += 1;
                             expect_comma = false;
-                            continue;
-                        }
-
-                        Token::Name(_)   |
-                        Token::Str(_) |
-                        Token::Int(_)    |
-                        Token::Double(_) |
-                        Token::Bool(_) |
-                        Token::Sub |
-                        Token::Brack1 |
-                        Token::Paren1
-                        => {
-                            let (arg, new_pos) = expression(tokens, i);
-                            node.children.push(arg);
-                            i = new_pos;
-                            expect_comma = true;
                             continue;
                         }
 
@@ -500,10 +488,18 @@ fn arglist(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
                             break;
                         }
 
-                        x => panic!("Unexpected token in argument list: {}", x)
+                        _ => {
+                            if expect_comma {
+                                panic!("Error: Expected separator in arg list.");
+                            }
+                            let (arg, new_pos) = expression(tokens, i);
+                            node.children.push(arg);
+                            i = new_pos;
+                            expect_comma = true;
+                            continue;
+                        }
                     }
                 }
-
                 return (node, i);
             }
             _ => {
@@ -1053,6 +1049,13 @@ fn term(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
             let (next, new_pos) = term(tokens, pos+1);
             unary.children.push(next);
             return (unary, new_pos)
+        }
+
+        &Token::Not => {
+            let mut notnode = Node::new(NodeType::Not);
+            let (next, new_pos) = term(tokens, pos+1);
+            notnode.children.push(next);
+            return (notnode, new_pos)
         }
 
         &Token::Str(ref s) => {

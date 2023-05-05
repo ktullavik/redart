@@ -247,6 +247,10 @@ pub fn lex(input: &str) -> Vec<parser::Token> {
                 tokens.push(parser::Token::BinAnd);
             }
 
+            '!' => {
+                tokens.push(parser::Token::Not);
+            }
+
             x if x.is_digit(10) => {
                 let mut nl = 1;
                 let mut nc: char;

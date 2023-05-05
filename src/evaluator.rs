@@ -90,6 +90,17 @@ pub fn eval(node: &Node, store: &mut Stack) -> Object {
             }
         }
 
+        NodeType::Not => {
+            let obj = eval(&node.children[0], store);
+
+            return match obj {
+                Object::BOOL(b) => {
+                    Object::BOOL(!b)
+                }
+                _ => panic!("Illegal operand for '!'")
+            }
+        }
+
         NodeType::LogOr => {
             let left_obj = eval(&node.children[0], store);
 
