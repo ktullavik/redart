@@ -30,7 +30,7 @@ pub fn preval(node: &Node, store: &mut Stack) {
 
         match t {
             NodeType::FunDef(fname) => {
-                dprint(format!("Preval: NodeType::FUNDEF '{}'", fname));
+                dprint(format!("Preval: NodeType::FunDef '{}'", fname));
 
                 let params = &n.children[0];
                 dprint(format!("{}", params));
@@ -38,7 +38,7 @@ pub fn preval(node: &Node, store: &mut Stack) {
                 let body = n.children[1].clone();
 
                 if params.nodetype != NodeType::ParamList {
-                    panic!("Expected paramlist for FUNDEF in preeval.");
+                    panic!("Expected paramlist for FunDef in preeval.");
                 }
 
                 let mut args: Vec<String> = Vec::new();
@@ -73,7 +73,7 @@ pub fn eval(node: &Node, store: &mut Stack) -> Object {
     match t {
 
         NodeType::Assign => {
-            dprint("Eval: NodeType::ASSIGN");
+            dprint("Eval: NodeType::Assign");
             match &node.children[0].nodetype {
                 NodeType::Name(ref s1) => {
                     let right_obj = eval(&node.children[1], store);
@@ -91,10 +91,11 @@ pub fn eval(node: &Node, store: &mut Stack) -> Object {
         }
 
         NodeType::Not => {
+            dprint("Eval: NodeType::Not");
+
             let obj = eval(&node.children[0], store);
 
             return match obj {
-
                 Object::Bool(b) => {
                     Object::Bool(!b)
                 }
@@ -103,6 +104,8 @@ pub fn eval(node: &Node, store: &mut Stack) -> Object {
         }
 
         NodeType::LogOr => {
+            dprint("Eval: NodeType::LogOr");
+
             let left_obj = eval(&node.children[0], store);
 
             match left_obj {
@@ -124,6 +127,8 @@ pub fn eval(node: &Node, store: &mut Stack) -> Object {
         }
 
         NodeType::LogAnd => {
+            dprint("Eval: NodeType::LogAnd");
+
             let left_obj = eval(&node.children[0], store);
 
             match left_obj {
@@ -145,6 +150,8 @@ pub fn eval(node: &Node, store: &mut Stack) -> Object {
         }
 
         NodeType::LessThan => {
+            dprint("Eval: NodeType::LessThan");
+
             let left_obj = eval(&node.children[0], store);
 
             match left_obj {
@@ -184,6 +191,8 @@ pub fn eval(node: &Node, store: &mut Stack) -> Object {
         }
 
         NodeType::GreaterThan => {
+            dprint("Eval: NodeType::GreaterThan");
+
             let left_obj = eval(&node.children[0], store);
 
             match left_obj {
@@ -223,6 +232,8 @@ pub fn eval(node: &Node, store: &mut Stack) -> Object {
         }
 
         NodeType::LessOrEq => {
+            dprint("Eval: NodeType::LessOrEq");
+
             let left_obj = eval(&node.children[0], store);
 
             match left_obj {
@@ -262,6 +273,8 @@ pub fn eval(node: &Node, store: &mut Stack) -> Object {
         }
 
         NodeType::GreaterOrEq => {
+            dprint("Eval: NodeType::GreaterOrEq");
+
             let left_obj = eval(&node.children[0], store);
 
             match left_obj {
@@ -301,6 +314,8 @@ pub fn eval(node: &Node, store: &mut Stack) -> Object {
         }
 
         NodeType::Equal => {
+            dprint("Eval: NodeType::Equal");
+
             let left_obj = eval(&node.children[0], store);
             let right_obj = eval(&node.children[1], store);
 
@@ -350,7 +365,7 @@ pub fn eval(node: &Node, store: &mut Stack) -> Object {
         }
 
         NodeType::Add => {
-            dprint("Eval: NodeType::ADD");
+            dprint("Eval: NodeType::Add");
 
             let left_obj = eval(&node.children[0], store);
 
@@ -387,7 +402,7 @@ pub fn eval(node: &Node, store: &mut Stack) -> Object {
         }
 
         NodeType::Sub => {
-            dprint("Eval: NodeType::SUB");
+            dprint("Eval: NodeType::Sub");
 
             let left_obj = eval(&node.children[0], store);
 
@@ -437,7 +452,7 @@ pub fn eval(node: &Node, store: &mut Stack) -> Object {
 
 
         NodeType::Mul => {
-            dprint("Eval: NodeType::MUL");
+            dprint("Eval: NodeType::Mul");
 
             let left_obj = eval(&node.children[0], store);
 
@@ -474,7 +489,7 @@ pub fn eval(node: &Node, store: &mut Stack) -> Object {
         }
 
         NodeType::Div => {
-            dprint("Eval: NodeType::DIV");
+            dprint("Eval: NodeType::Div");
 
             let left_obj = eval(&node.children[0], store);
 
@@ -512,6 +527,8 @@ pub fn eval(node: &Node, store: &mut Stack) -> Object {
         }
 
         NodeType::PreIncrement => {
+            dprint("Eval: NodeType::PreIncrement");
+
             let valnode = &node.children[0];
 
             match valnode.nodetype {
@@ -533,6 +550,8 @@ pub fn eval(node: &Node, store: &mut Stack) -> Object {
         }
 
         NodeType::PreDecrement => {
+            dprint("Eval: NodeType::PreDecrement");
+
             let valnode = &node.children[0];
 
             match valnode.nodetype {
@@ -554,6 +573,8 @@ pub fn eval(node: &Node, store: &mut Stack) -> Object {
         }
 
         NodeType::PostIncrement => {
+            dprint("Eval: NodeType::PostIncrement");
+
             let valnode = &node.children[0];
 
             match valnode.nodetype {
@@ -575,6 +596,8 @@ pub fn eval(node: &Node, store: &mut Stack) -> Object {
         }
 
         NodeType::PostDecrement => {
+            dprint("Eval: NodeType::PostDecrement");
+
             let valnode = &node.children[0];
 
             match valnode.nodetype {
@@ -596,27 +619,27 @@ pub fn eval(node: &Node, store: &mut Stack) -> Object {
         }
 
         NodeType::Int(s) => {
-            dprint("Eval: NodeType::INT");
+            dprint("Eval: NodeType::Int");
             Object::Int(s.parse().unwrap())
         },
 
         NodeType::Double(s) => {
-            dprint("Eval: NodeType::INT");
+            dprint("Eval: NodeType::Double");
             Object::Double((s.as_str()).parse::<f64>().unwrap())
         },
 
         NodeType::Bool(v) => {
-            dprint("Eval: NodeType::BOOL");
+            dprint("Eval: NodeType::Bool");
             Object::Bool(*v)
         },
 
         NodeType::Str(s) => {
-            dprint("Eval: NodeType::STRING");
+            dprint("Eval: NodeType::Str");
             Object::String(s.clone())
         },
 
         NodeType::Name(s) => {
-            dprint("Eval: NodeType::NAME");
+            dprint("Eval: NodeType::Name");
             store.get(s).clone()
         }
 
@@ -627,7 +650,7 @@ pub fn eval(node: &Node, store: &mut Stack) -> Object {
         }
 
         NodeType::FunCall(s) => {
-            dprint(format!("Eval: NodeType::FUNCALL({})", s));
+            dprint(format!("Eval: NodeType::FunCall({})", s));
 
             if store.has(s) {
                 let funcobj = store.get(s).clone();
@@ -676,13 +699,13 @@ pub fn eval(node: &Node, store: &mut Stack) -> Object {
         }
 
         NodeType::FunDef(s) => {
-            dprint("Eval: NodeType::FUNDEF");
+            dprint("Eval: NodeType::FunDef");
 
             let params = &node.children[0];
             let body = node.children[1].clone();
 
             if params.nodetype != NodeType::ParamList {
-                panic!("Expected paramlist for FUNDEF in eval.");
+                panic!("Expected paramlist for FunDef in eval.");
             }
 
             let mut args: Vec<String> = Vec::new();
@@ -757,7 +780,7 @@ pub fn eval(node: &Node, store: &mut Stack) -> Object {
         }
 
         NodeType::Module => {
-            dprint("Eval: NodeType::MODULE");
+            dprint("Eval: NodeType::Module");
 
             eval(&node.children[1], store)
         }
