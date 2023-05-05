@@ -115,7 +115,7 @@ fn main() {
         let mainfunc = &store.get("main").clone();
 
         match mainfunc {
-            Object::FUNCTION(_, n, _) => {
+            Object::Function(_, n, _) => {
                 utils::dprint(" ");
                 utils::dprint("EVALUATE");
                 utils::dprint(" ");

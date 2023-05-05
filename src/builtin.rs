@@ -20,16 +20,16 @@ pub fn call(name: &str, args: &Vec<Object>) -> Object {
 
             match a0 {
 
-                Object::STRING(s) => {
+                Object::String(s) => {
                     println!("{}", s);
                 }
-                Object::INT(n) => {
+                Object::Int(n) => {
                     println!("{}", n);
                 }
-                Object::DOUBLE(x) => {
+                Object::Double(x) => {
                     println!("{}", x);
                 }
-                Object::BOOL(b) => {
+                Object::Bool(b) => {
                     println!("{}", b);
                 }
                 _ => {
@@ -40,6 +40,6 @@ pub fn call(name: &str, args: &Vec<Object>) -> Object {
 
         _ => panic!("Unknown command: {}", name)
     }
-    Object::VOID
+    Object::Void
 }
 
