@@ -1,8 +1,3 @@
-/// statement  -> expression
-/// expression -> sum
-/// sum        -> product + sum | product
-/// product    -> num * product | num
-
 use std::fmt;
 use utils::dprint;
 
