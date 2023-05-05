@@ -234,6 +234,18 @@ fn main() {
             "34" => {
                 testfile = "34.unary_minus.dart";
             }
+            "35" => {
+                testfile = "35.arg_expression.dart";
+            }
+            "36" => {
+                testfile = "36.arg_expression2.dart";
+            }
+            "37" => {
+                testfile = "37.arg_expression3.dart";
+            }
+            "38" => {
+                testfile = "38.arg_expression4.dart";
+            }
             "70" => {
                 testfile = "70.list_replace.dart";
             }
