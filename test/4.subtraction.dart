@@ -1,6 +1,6 @@
 
 void main() {
 
-  var r = 10-3;
+  var r = 10-6;
   print(r);
 }
