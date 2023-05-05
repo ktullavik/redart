@@ -65,7 +65,6 @@ pub fn preval(node: &Node, store: &mut Stack) {
 }
 
 
-
 pub fn eval(node: &Node, store: &mut Stack) -> Object {
 
     let t: &NodeType = &node.nodetype;
@@ -94,6 +93,7 @@ pub fn eval(node: &Node, store: &mut Stack) -> Object {
             let obj = eval(&node.children[0], store);
 
             return match obj {
+
                 Object::Bool(b) => {
                     Object::Bool(!b)
                 }
@@ -115,12 +115,10 @@ pub fn eval(node: &Node, store: &mut Stack) -> Object {
                         Object::Bool(b2) => {
                             return Object::Bool(b1 || b2)
                         }
-
                         _ => panic!("Illegal right operand for ||")
                     }
                 }
                 _ => panic!("Illegal left operand for ||")
-
             }
         }
 
@@ -138,12 +136,10 @@ pub fn eval(node: &Node, store: &mut Stack) -> Object {
                         Object::Bool(b2) => {
                             return Object::Bool(b1 && b2)
                         }
-
                         _ => panic!("Illegal right operand for &&")
                     }
                 }
                 _ => panic!("Illegal left operand for &&")
-
             }
         }
 
