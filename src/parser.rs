@@ -466,17 +466,17 @@ fn arglist(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
 
                 let mut node = Node::new(NodeType::ArgList);
                 let mut expect_comma = false;
-                let mut j: usize = i + 1;
+                i += 1;
 
-                while j < tokens.len() {
+                while i < tokens.len() {
 
-                    match &tokens[j] {
+                    match &tokens[i] {
 
                         Token::Comma => {
                             if !expect_comma {
                                 panic!("Unexpected token when reading arg list: ,");
                             }
-                            j += 1;
+                            i += 1;
                             expect_comma = false;
                             continue;
                         }
@@ -487,10 +487,9 @@ fn arglist(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
                         Token::Double(_) |
                         Token::Bool(_)
                         => {
-                            let (arg, new_pos) = expression(tokens, j);
-
+                            let (arg, new_pos) = expression(tokens, i);
                             node.children.push(arg);
-                            j = new_pos;
+                            i = new_pos;
                             expect_comma = true;
                             continue;
                         }
@@ -500,24 +499,22 @@ fn arglist(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
                         Token::Mul |
                         Token::Brack1
                         => {
-                            let (arg, new_pos) = expression(tokens, j);
-
+                            let (arg, new_pos) = expression(tokens, i);
                             node.children.push(arg);
-                            j = new_pos;
-                            expect_comma = true;
+                            i = new_pos;
+                            expect_comma = false;
                             continue;
                         }
 
                         Token::Paren2 => {
-                            j += 1;
+                            // j += 1;
+                            i += 1;
                             break;
                         }
 
                         x => panic!("Unexpected token in argument list: {}", x)
                     }
                 }
-
-                i = j;
 
                 return (node, i);
             }
