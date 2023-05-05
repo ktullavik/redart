@@ -258,6 +258,9 @@ fn main() {
             "40" => {
                 testfile = "40.fibonacci.dart";
             }
+            "41" => {
+                testfile = "41.difficult_return.dart";
+            }
             "70" => {
                 testfile = "70.list_replace.dart";
             }
