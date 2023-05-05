@@ -246,6 +246,9 @@ fn main() {
             "38" => {
                 testfile = "38.arg_expression4.dart";
             }
+            "39" => {
+                testfile = "39.not.dart";
+            }
             "70" => {
                 testfile = "70.list_replace.dart";
             }
