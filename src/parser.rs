@@ -295,7 +295,7 @@ pub fn parse(tokens: &Vec<Token>) -> Result<Node, String> {
         return Err(format!("Index returned beyond end of token array. Index: {}, len: {}", i, tokens.len()))
     }
 
-    dprint(String::from(format!("Parse: finished at index: {}", i)));
+    dprint(format!("Parse: finished at index: {}", i));
     Ok(root)
 }
 
