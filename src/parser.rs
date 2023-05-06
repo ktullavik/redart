@@ -281,11 +281,11 @@ pub fn parse(tokens: &Vec<Token>) -> Result<Node, String> {
 
 
     while i < tokens.len() - 1 {
-        let (funnode, readindex) = fundef(tokens, i);
+        let (funnode, new_pos) = fundef(tokens, i);
         root.children.push(funnode);
 
-        dprint(format!("Parse: read len: {}", readindex));
-        i = readindex;
+        dprint(format!("Parse: read len: {}", new_pos));
+        i = new_pos;
     }
 
     if i < tokens.len() - 1 {
