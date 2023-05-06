@@ -94,7 +94,7 @@ pub enum NodeType {
     ArgList,
     Return,
     Directives,
-    Directive,
+    Import,
 }
 
 
@@ -193,7 +193,7 @@ impl fmt::Display for NodeType {
             NodeType::Block => write!(f, "BLOCK"),
             NodeType::Return => write!(f, "RETURN"),
             NodeType::Module => write!(f, "MODULE"),
-            NodeType::Directive => write!(f, "DIRECTIVE"),
+            NodeType::Import => write!(f, "import"),
             NodeType::Directives => write!(f, "DIRECTIVES"),
         }
     }
@@ -303,38 +303,32 @@ pub fn parse(tokens: &Vec<Token>) -> Result<Node, String> {
 fn directives(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
 
     let mut i = pos;
-    let directives_node = Node::new(NodeType::Directives);
+    let mut directives_node = Node::new(NodeType::Directives);
 
     while i < tokens.len() {
 
         match &tokens[i] {
             Token::Import => {
 
-                let mut node = Node::new(NodeType::Directive);
-                let mut j = i + 1;
+                let mut node = Node::new(NodeType::Import);
 
-                while j < tokens.len() {
+                i += 1;
+                if let Token::Str(s) = &tokens[i] {
+                    node.children.push(Node::new(NodeType::Str(s.clone())));
 
-                    match &tokens[j] {
-                        Token::EndSt => {
-                            i = j+1;
-                            break;
-                        }
-                        Token::End => {
-                            i = j;
-                            break;
-                        }
-                        Token::Name(s2) => {
-                            let child_node = Node::new(NodeType::Name(s2.to_string()));
-                            node.children.push(child_node);
-                            j += 1;
-                        }
-                        _ => {
-                            panic!("Unknown token in directive: {}", &tokens[j])
-                        }
+                    i += 1;
+                    if let Token::EndSt = tokens[i] {
+                        i += 1;
+
+                        directives_node.children.push(node);
+                    }
+                    else {
+                        panic!("Error: Expected ';' after import.")
                     }
                 }
-                continue;
+                else {
+                    panic!("Error: Expected string after 'import'.")
+                }
             }
             _  => break
         }
@@ -386,6 +380,11 @@ fn fundef(tokens: &Vec<Token>, pos: usize) -> (Node, usize)  {
                     panic!("Expected function name.")
                 }
             }
+        }
+
+        Token::Import => {
+            // As Dart.
+            panic!("Directives must appear before any declarations.")
         }
 
         _ => {
