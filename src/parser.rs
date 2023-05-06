@@ -30,6 +30,7 @@ pub enum Token {
     Bool(bool),
     Name(String),
     // Structure
+    Class,
     If,
     Else,
     Paren1,
@@ -127,6 +128,7 @@ impl fmt::Display for Token {
             Token::Bool(v)     => write!(f, "{}", v),
             Token::Name(s)    => write!(f, "{}", s),
             // Structure
+            Token::Class => write!(f, "class"),
             Token::If => write!(f, "if"),
             Token::Else => write!(f, "else"),
             Token::Paren1 => write!(f, "("),

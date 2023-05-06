@@ -18,6 +18,8 @@ pub enum Object {
 }
 
 
+// Find functions that are direct children of 'node'
+// and add them to the store for later lookup.
 pub fn preval(node: &Node, store: &mut Stack) {
     dprint(" ");
     dprint("PREVAL");

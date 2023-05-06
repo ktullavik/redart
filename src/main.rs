@@ -10,6 +10,7 @@ mod evaluator;
 mod builtin;
 mod utils;
 mod stack;
+mod objsys;
 
 use evaluator::Object;
 use stack::Stack;
@@ -261,6 +262,11 @@ fn main() {
             "41" => {
                 testfile = "41.difficult_return.dart";
             }
+
+            "50" => {
+                testfile = "50.classdef.dart";
+            }
+
             "70" => {
                 testfile = "70.list_replace.dart";
             }

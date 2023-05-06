@@ -40,6 +40,9 @@ fn read_word(tokens: &mut Vec<parser::Token>, chars: &[char], start: usize) -> u
     else if &sym == "return" {
         tokens.push(parser::Token::Return);
     }
+    else if &sym == "class" {
+        tokens.push(parser::Token::Class);
+    }
     else {
         tokens.push(parser::Token::Name(sym));
     }
