@@ -119,18 +119,25 @@ fn main() {
 
         evaluator::preval(&tree, &mut store);
 
-        let mainfunc = &store.get("main").clone();
 
-        match mainfunc {
-            Object::Function(_, n, _) => {
-                utils::dprint(" ");
-                utils::dprint("EVALUATE");
-                utils::dprint(" ");
-                evaluator::eval(n, &mut store);
+        if store.has("main") {
+            let mainfunc = &store.get("main").clone();
+
+            match mainfunc {
+                Object::Function(_, n, _) => {
+                    utils::dprint(" ");
+                    utils::dprint("EVALUATE");
+                    utils::dprint(" ");
+                    evaluator::eval(n, &mut store);
+                }
+                x => {
+                    panic!("Unexpected type of 'main': {:?}", x)
+                }
             }
-            x => {
-                panic!("Unexpected type of 'main': {:?}", x)
-            }
+        }
+        else {
+            // As Dart.
+            panic!("Error: No 'main' method found.");
         }
     }
 
