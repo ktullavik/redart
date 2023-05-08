@@ -4,8 +4,8 @@ class Banana {
   int ripeness = 0;
 
 
-  Banana(String type) {
-    this.type = type;
+  Banana(String t) {
+    type = t;
   }
 
   void ripen() {
@@ -16,4 +16,3 @@ class Banana {
     return ripeness == 10;
   }
 }
-
