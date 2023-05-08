@@ -95,6 +95,8 @@ pub enum NodeType {
     Return,
     Directives,
     Import,
+    Class(String),
+    Constructor,
 }
 
 
@@ -195,6 +197,8 @@ impl fmt::Display for NodeType {
             NodeType::Module => write!(f, "Module"),
             NodeType::Import => write!(f, "import"),
             NodeType::Directives => write!(f, "Directives"),
+            NodeType::Class(s) => write!(f, "Class({})", s),
+            NodeType::Constructor => write!(f, "Constructor"),
         }
     }
 }
@@ -345,7 +349,8 @@ fn fundef(tokens: &Vec<Token>, pos: usize) -> (Node, usize)  {
     i += 1;
 
     match t {
-        Token::Name(_) => {
+        Token::Name(s) => {
+            dprint(format!("fundef found NAME {}", s));
 
             let t2: &Token = tokens.get(i).unwrap();
             i += 1;
@@ -354,6 +359,7 @@ fn fundef(tokens: &Vec<Token>, pos: usize) -> (Node, usize)  {
 
                 Token::Name(fname) => {
                     let mut node = Node::new(NodeType::FunDef(fname.to_string()));
+                    println!("Calling paramlist from fundef");
                     let (params, new_pos) = paramlist(tokens, i);
                     i = new_pos;
                     node.children.push(params);
@@ -363,6 +369,8 @@ fn fundef(tokens: &Vec<Token>, pos: usize) -> (Node, usize)  {
 
                     match t3 {
                         Token::Block1 => {
+                            // Could increment i here. But is it better for block parse to
+                            // just expect starting at '{'?
                             let (body, new_pos) = block(tokens, i);
                             node.children.push(body);
                             i = new_pos;
@@ -382,19 +390,187 @@ fn fundef(tokens: &Vec<Token>, pos: usize) -> (Node, usize)  {
             }
         }
 
+        Token::Class => {
+            let (cnode, new_pos) = class(tokens, i);
+            dprint(format!("parsed class to pos {}", new_pos));
+            return (cnode, new_pos);
+        }
+
         Token::Import => {
             // As Dart.
             panic!("Directives must appear before any declarations.")
         }
 
-        _ => {
-            panic!("Expected function definition.")
+        x => {
+            panic!(format!("Expected top level declaration. Got {}", x))
         }
     }
 }
 
 
+fn class(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
+
+    let mut i = pos;
+
+    match &tokens[i] {
+        Token::Name(classname) => {
+
+            let mut classnode = Node::new(NodeType::Class(classname.clone()));
+            i += 1;
+
+            if let Token::Block1 = tokens[i] {
+                i += 1;
+
+                if let (members, new_pos) = readmembers(classname.clone(), tokens, i) {
+                    classnode.children = members;
+                    i = new_pos;
+                }
+
+                if let Token::Block2 = tokens[i] {
+                    return (classnode, i + 1)
+                }
+                panic!("Expected '}' to end class.")
+            }
+            else {
+                panic!("Error: Expected '{' after class name")
+            }
+
+        }
+        x => {
+            panic!("Error: Expected class name. Got: {}", x)
+        }
+    }
+}
+
+
+fn readmembers(classname: String, tokens: &Vec<Token>, pos: usize) -> (Vec<Node>, usize) {
+    // Expecting member declaration - field or method.
+
+    let mut i = pos;
+    let mut members : Vec<Node> = Vec::new();
+
+    while i < tokens.len() {
+
+        match &tokens[i] {
+
+            Token::Name(mtype) => {
+
+                if *mtype == classname {
+                    // Constructor
+                    dprint("Found constructor");
+
+                    i += 1;
+
+                    let mut constructor_node = Node::new(NodeType::Constructor);
+                    let (params, new_pos) = paramlist(tokens, i);
+                    let (body, new_pos)  = block(tokens, new_pos + 1);
+                    i = new_pos;
+
+                    constructor_node.children.push(params);
+                    constructor_node.children.push(body);
+
+
+                    members.push(constructor_node);
+                    continue;
+                }
+
+                i += 1;
+
+
+                match &tokens[i] {
+                    Token::Name(fieldname) => {
+                        i += 1;
+
+                        match &tokens[i] {
+                            Token::Paren1 => {
+                                // Method
+                                dprint("Found method");
+
+                                let mut method_node = Node::new(NodeType::FunDef(fieldname.clone()));
+                                let (param_node, new_pos) = paramlist(tokens, i);
+                                i = new_pos;
+
+                                if let Token::Block1 = tokens[i] {
+                                    i += 1;
+                                    let (body, new_pos) = block(tokens, i);
+                                    i = new_pos;
+
+                                    method_node.children.push(param_node);
+                                    method_node.children.push(body);
+
+                                    members.push(method_node);
+                                    // return (method_node, i)
+                                }
+                                else {
+                                    panic!("Expected opening brace in method declaration: '{'")
+                                }
+                            }
+
+                            Token::EndSt => {
+                                // Uninitialized field declare
+                                dprint("Found uninitialized field");
+
+                                let mut fieldnode = Node::new(NodeType::TypedVar(mtype.clone(), fieldname.clone()));
+                                members.push(fieldnode);
+                                i += 1;
+                            }
+
+                            Token::Assign => {
+                                // Initialized field declare
+                                dprint("Found initialized field");
+
+
+                                i += 1;
+
+                                let (val, new_pos) = expression(tokens, i);
+                                i = new_pos;
+
+                                if let Token::EndSt = tokens[i] {
+                                    dprint("Got endst after field init");
+                                    i += 1;
+                                }
+                                else {
+                                    panic!("Expected ';' after field initialization.")
+                                }
+
+                                let mut eqnode = Node::new(NodeType::Assign);
+                                let mut fieldnode = Node::new(NodeType::TypedVar(mtype.clone(), fieldname.clone()));
+
+                                eqnode.children.push(fieldnode);
+                                eqnode.children.push(val);
+                                members.push(eqnode);
+                            }
+
+                            Token::Block2 => {
+                                break;
+                            }
+
+                            x => panic!("Unexpected token when parsing class member: '{}'", x)
+                        }
+                    }
+
+                    Token::Block2 => {
+                        break;
+                    }
+
+                    x => panic!("Expected class member declaration. Got: '{}'", x)
+                }
+            }
+
+            Token::Block2 => {
+                break;
+            }
+
+            x => panic!("Unexpected first token when parsing class member: {}", x)
+        }
+    }
+
+    (members, i)
+}
+
+
 fn paramlist(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
+    dprint(format!("paramlist on {}", tokens[pos]));
 
     let mut i = pos;
 
