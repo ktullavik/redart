@@ -192,7 +192,9 @@ fn main() {
             "40" => "40.fibonacci.dart",
             "41" => "41.difficult_return.dart",
 
-            "50" => "50.classdef.dart",
+            "50" => "50.class_constructor_param.dart",
+            "51" => "51.class_reading_method.dart",
+            "52" => "52.class_writing_method.dart",
 
             "70" => "70.list_replace.dart",
 
