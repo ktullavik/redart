@@ -1,7 +1,5 @@
 use std::collections::HashMap;
 use evaluator::*;
-use parser::Node;
-use stack::Stack;
 use utils::dprint;
 
 
@@ -83,7 +81,7 @@ impl InstanceMap {
         }
 
         println!("Registered instances: ");
-        for (k, v) in &self.instance {
+        for (k, _) in &self.instance {
             println!("    {}", k);
         }
         panic!("Could not get this instance: {}", self.this);
@@ -162,45 +160,16 @@ impl Class {
     }
 
 
-    pub fn exec_method(&self,
-                       methname: &str,
-                       argslist: &Node,
-                       store: &mut Stack,
-                       classlist: &mut ClassMap,
-                       instlist: &mut InstanceMap) -> Object {
-        if let Object::Function(name, node, params) = &self.methods[methname] {
-
-            store.push();
-            for i in 0 .. params.len() {
-
-                let argtree = &argslist.children[i];
-                dprint(format!("about to eval method argtree: {}", argtree));
-
-                let argobj = eval(argtree, store, classlist, instlist);
-                store.add(params[i].as_str(), argobj);
-
-            }
-
-            let result = eval(node, store, classlist, instlist);
-
-            store.pop();
-
-            return result;
-        }
-        panic!("No such method")
-    }
-
-
     pub fn get_method(&self, methname: &str) -> Object {
 
-        if let Object::Function(name, node, params) = &self.methods[methname] {
+        if let Object::Function(_, _, _) = &self.methods[methname] {
             return self.methods[methname].clone();
         }
         panic!("No such method")
     }
 
 
-    pub fn instantiate(&self, instlist: &mut InstanceMap) -> Object {
+    pub fn instantiate(&self, instmap: &mut InstanceMap) -> Object {
         let id= nuid::next();
 
         let mut instance = Instance::new(id.clone(), self.name.clone());
@@ -210,7 +179,7 @@ impl Class {
             instance.set_field(fname.clone(), initval.clone())
         }
 
-        instlist.add(id.clone(), instance);
+        instmap.add(id.clone(), instance);
 
         Object::Reference(id)
     }

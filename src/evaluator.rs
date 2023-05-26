@@ -5,7 +5,6 @@ use utils::dprint;
 use stack::Stack;
 use objsys::Class;
 use objsys::ClassMap;
-use objsys::Instance;
 use objsys::InstanceMap;
 
 
@@ -851,7 +850,7 @@ pub fn eval(node: &Node, store: &mut Stack, classlist: &mut ClassMap, instlist: 
 
 
                 let meth = c.get_method(methname);
-                if let Object::Function(name, node, params) = meth {
+                if let Object::Function(_, node, params) = meth {
 
                     let argslist = &node.children[0];
 

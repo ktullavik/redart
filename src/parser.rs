@@ -398,11 +398,11 @@ fn fundef(tokens: &Vec<Token>, pos: usize) -> (Node, usize)  {
 
         Token::Import => {
             // As Dart.
-            panic!("Directives must appear before any declarations.")
+            panic!("Directives must appear before any declarations.");
         }
 
         x => {
-            panic!(format!("Expected top level declaration. Got {}", x))
+            panic!("Expected top level declaration. Got {}", x);
         }
     }
 }
@@ -421,10 +421,10 @@ fn class(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
             if let Token::Block1 = tokens[i] {
                 i += 1;
 
-                if let (members, new_pos) = readmembers(classname.clone(), tokens, i) {
-                    classnode.children = members;
-                    i = new_pos;
-                }
+                let (members, new_pos) = readmembers(classname.clone(), tokens, i);
+                classnode.children = members;
+                i = new_pos;
+                // }
 
                 if let Token::Block2 = tokens[i] {
                     return (classnode, i + 1)
@@ -510,7 +510,7 @@ fn readmembers(classname: String, tokens: &Vec<Token>, pos: usize) -> (Vec<Node>
                                 // Uninitialized field declare
                                 dprint("Found uninitialized field");
 
-                                let mut fieldnode = Node::new(NodeType::TypedVar(mtype.clone(), fieldname.clone()));
+                                let fieldnode = Node::new(NodeType::TypedVar(mtype.clone(), fieldname.clone()));
                                 members.push(fieldnode);
                                 i += 1;
                             }
@@ -534,7 +534,7 @@ fn readmembers(classname: String, tokens: &Vec<Token>, pos: usize) -> (Vec<Node>
                                 }
 
                                 let mut eqnode = Node::new(NodeType::Assign);
-                                let mut fieldnode = Node::new(NodeType::TypedVar(mtype.clone(), fieldname.clone()));
+                                let fieldnode = Node::new(NodeType::TypedVar(mtype.clone(), fieldname.clone()));
 
                                 eqnode.children.push(fieldnode);
                                 eqnode.children.push(val);
