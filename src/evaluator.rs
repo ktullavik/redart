@@ -657,18 +657,33 @@ pub fn eval(node: &Node, store: &mut Stack, classlist: &mut ClassList, instlist:
             match valnode.nodetype {
                 NodeType::Name(ref s) => {
 
-                    let oldval = store.get(s).clone();
+                    if store.has(s) {
+                        let oldval = store.get(s).clone();
 
-                    match oldval {
-                        Object::Int(n) => {
-                            let newval = Object::Int(n+1);
-                            store.add(s.as_str(), newval.clone());
-                            return newval;
+                        match oldval {
+                            Object::Int(n) => {
+                                let newval = Object::Int(n + 1);
+                                store.add(s.as_str(), newval.clone());
+                                return newval;
+                            }
+                            _ => panic!("Illegal operand for preincrement.")
                         }
-                        _ => panic!("Illegal operand for increment.")
+                    }
+                    else {
+                        let this = instlist.get_this();
+                        let oldval = this.get_field(s.clone()).clone();
+
+                        match oldval {
+                            Object::Int(n) => {
+                                let newval = Object::Int(n + 1);
+                                this.set_field(s.clone(), newval.clone());
+                                return newval;
+                            }
+                            _ => panic!("Illegal operand for preincrement.")
+                        }
                     }
                 }
-                _ => panic!("Illegal operand for increment: {}", valnode)
+                _ => panic!("Illegal operand for preincrement: {}", valnode)
             }
         }
 
@@ -680,18 +695,33 @@ pub fn eval(node: &Node, store: &mut Stack, classlist: &mut ClassList, instlist:
             match valnode.nodetype {
                 NodeType::Name(ref s) => {
 
-                    let oldval = store.get(s).clone();
+                    if store.has(s) {
+                        let oldval = store.get(s).clone();
 
-                    match oldval {
-                        Object::Int(n) => {
-                            let newval = Object::Int(n-1);
-                            store.add(s.as_str(), newval.clone());
-                            return newval;
+                        match oldval {
+                            Object::Int(n) => {
+                                let newval = Object::Int(n - 1);
+                                store.add(s.as_str(), newval.clone());
+                                return newval;
+                            }
+                            _ => panic!("Illegal operand for preincrement.")
                         }
-                        _ => panic!("Illegal operand for increment.")
+                    }
+                    else {
+                        let this = instlist.get_this();
+                        let oldval = this.get_field(s.clone()).clone();
+
+                        match oldval {
+                            Object::Int(n) => {
+                                let newval = Object::Int(n - 1);
+                                this.set_field(s.clone(), newval.clone());
+                                return newval;
+                            }
+                            _ => panic!("Illegal operand for predecrement.")
+                        }
                     }
                 }
-                _ => panic!("Illegal operand for increment: {}", valnode)
+                _ => panic!("Illegal operand for predecrement: {}", valnode)
             }
         }
 
@@ -742,15 +772,30 @@ pub fn eval(node: &Node, store: &mut Stack, classlist: &mut ClassList, instlist:
             match valnode.nodetype {
                 NodeType::Name(ref s) => {
 
-                    let oldval = store.get(s).clone();
+                    if store.has(s) {
+                        let oldval = store.get(s).clone();
 
-                    match oldval {
-                        Object::Int(n) => {
-                            let newval = Object::Int(n-1);
-                            store.add(s.as_str(), newval);
-                            return oldval;
+                        match oldval {
+                            Object::Int(n) => {
+                                let newval = Object::Int(n - 1);
+                                store.add(s.as_str(), newval);
+                                return oldval;
+                            }
+                            _ => panic!("Illegal operand for decrement.")
                         }
-                        _ => panic!("Illegal operand for decrement.")
+                    }
+                    else {
+                        let this = instlist.get_this();
+                        let oldval = this.get_field(s.clone()).clone();
+
+                        match oldval {
+                            Object::Int(n) => {
+                                let newval = Object::Int(n - 1);
+                                this.set_field(s.clone(), newval);
+                                return oldval;
+                            }
+                            _ => panic!("Illegal operand for decrement.")
+                        }
                     }
                 }
                 _ => panic!("Illegal operand for decrement: {}", valnode)

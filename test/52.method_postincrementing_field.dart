@@ -6,8 +6,8 @@ class Banana {
   Banana() {}
 
 
-  void printRipeness() {
-    print("ripeness should be 51:");
+  void ripen() {
+    ripeness++;
     print(ripeness);
   }
 
@@ -16,5 +16,5 @@ class Banana {
 
 void main() {
   var banana = Banana();
-  banana.printRipeness();
+  banana.ripen();
 }
