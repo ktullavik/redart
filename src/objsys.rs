@@ -90,19 +90,6 @@ impl InstanceMap {
 
     }
 
-
-    pub fn get_this_field(&self, fname: &str) -> &Object {
-        &self.instance[self.this.as_str()].fields[fname]
-    }
-
-
-    // pub fn set_this_field(&mut self, fname: &str, val: Object) {
-    pub fn set_this_field(&mut self, fname: &str, val: Object) {
-        let thisinst = self.instance.get_mut(self.this.as_str()).unwrap();
-
-        thisinst.set_field(String::from(fname), val);
-    }
-
 }
 
 
