@@ -96,7 +96,7 @@ pub enum NodeType {
     Directives,
     Import,
     Class(String),
-    Constructor,
+    Constructor(String),
 }
 
 
@@ -198,7 +198,7 @@ impl fmt::Display for NodeType {
             NodeType::Import => write!(f, "import"),
             NodeType::Directives => write!(f, "Directives"),
             NodeType::Class(s) => write!(f, "Class({})", s),
-            NodeType::Constructor => write!(f, "Constructor"),
+            NodeType::Constructor(name) => write!(f, "Constructor({})", name),
         }
     }
 }
@@ -461,7 +461,7 @@ fn readmembers(classname: String, tokens: &Vec<Token>, pos: usize) -> (Vec<Node>
 
                     i += 1;
 
-                    let mut constructor_node = Node::new(NodeType::Constructor);
+                    let mut constructor_node = Node::new(NodeType::Constructor(classname.clone()));
                     let (params, new_pos) = paramlist(tokens, i);
                     let (body, new_pos)  = block(tokens, new_pos + 1);
                     i = new_pos;

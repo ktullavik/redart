@@ -1,8 +1,14 @@
 use std::collections::HashMap;
-use evaluator::Object;
+use evaluator::*;
+use parser::Node;
+use stack::Stack;
+use utils::dprint;
 
 
+// #[derive(Clone)]
 pub struct Instance {
+    pub id: String,
+    pub classname: String,
     pub fields: HashMap<String, Object>
 
 }
@@ -10,26 +16,35 @@ pub struct Instance {
 
 impl Instance {
 
-    pub fn new() -> Instance {
+    pub fn new(id: String, classname: String) -> Instance {
         Instance {
+            id,
+            classname,
             fields: HashMap::new()
         }
     }
 
 
+    // pub fn set_field(&mut self, name: String, value: Object) {
     pub fn set_field(&mut self, name: String, value: Object) {
-
+        self.fields.insert(name, value);
     }
 
-    pub fn get_field(&self, name: String) -> Object {
-        return Object::Null;
+    pub fn get_field(&self, name: String) -> &Object {
+        self.fields.get(name.as_str()).unwrap()
+    }
+
+
+    pub fn has_field(&self, name: String) -> bool {
+        self.fields.contains_key(name.as_str())
     }
 
 }
 
 
 pub struct InstanceList {
-    pub instance: HashMap<String, Instance>
+    pub instance: HashMap<String, Instance>,
+    pub this: String
 }
 
 
@@ -38,9 +53,56 @@ impl InstanceList {
     pub fn new() -> InstanceList {
 
         InstanceList {
-            instance: HashMap::new()
+            instance: HashMap::new(),
+            this: String::from("")
         }
     }
+
+
+    pub fn add(&mut self, id: String, inst: Instance) {
+        self.instance.insert(id, inst);
+    }
+
+
+    pub fn get(&mut self, id: &str) -> &Instance {
+        self.instance.get(id).unwrap()
+    }
+
+
+    pub fn has_this(&self) -> bool {
+        self.instance.contains_key(self.this.as_str())
+    }
+
+
+    pub fn get_this(&mut self) -> &mut Instance {
+        println!("Get this: {}", self.this);
+
+        if self.instance.contains_key(self.this.as_str()) {
+            let thisinst = self.instance.get_mut(self.this.as_str()).unwrap();
+            return thisinst;
+        }
+
+        println!("Registered instances: ");
+        for (k, v) in &self.instance {
+            println!("    {}", k);
+        }
+        panic!("Could not get this instance: {}", self.this);
+
+    }
+
+
+    pub fn get_this_field(&self, fname: &str) -> &Object {
+        &self.instance[self.this.as_str()].fields[fname]
+    }
+
+
+    // pub fn set_this_field(&mut self, fname: &str, val: Object) {
+    pub fn set_this_field(&mut self, fname: &str, val: Object) {
+        let thisinst = self.instance.get_mut(self.this.as_str()).unwrap();
+
+        thisinst.set_field(String::from(fname), val);
+    }
+
 }
 
 
@@ -57,12 +119,26 @@ impl ClassList {
             class: HashMap::new()
         }
     }
+
+
+    pub fn get(&mut self, name: &str) -> &Class {
+        println!("getting class: {}", name);
+        self.class.get(name).unwrap()
+    }
+
+
+    pub fn add(&mut self, c: Class) {
+        self.class.insert(c.name.clone(), c);
+    }
+
 }
 
 
 pub struct Class {
     pub name: String,
-    pub fields: Vec<(String, String)>,
+    pub classid: String,
+    pub constructors: HashMap<String, Object>,
+    pub fields: Vec<(String, String, Object)>,
     pub methods: HashMap<String, Object>
 }
 
@@ -73,26 +149,83 @@ impl Class {
 
         Class {
             name,
+            classid: nuid::next(),
+            constructors: HashMap::new(),
             fields: Vec::new(),
             methods: HashMap::new()
         }
     }
 
 
-    pub fn add_field(&mut self, fieldtype: String, name: String) {
-        self.fields.push((fieldtype, name));
+    pub fn add_constructor(&mut self, name: String, m: Object) {
+        self.constructors.insert(name.clone(), m);
+        dprint(format!("Inserted to constructortable: {}", name));
+    }
+
+
+    pub fn add_field(&mut self, ftype: String, fname: String, initval: Object) {
+        self.fields.push((ftype.clone(), fname.clone(), initval));
+        dprint(format!("Inserted to fieldtable: {}", fname));
     }
 
 
     pub fn add_method(&mut self, name: String, m: Object) {
-        self.methods.insert(name, m);
+        self.methods.insert(name.clone(), m);
+        dprint(format!("Inserted to methodtable: {}", name));
     }
 
 
-    pub fn exec_method(&self, name: &str, args: Vec<Object>) {
-        if let Object::Function(name, node, params) = &self.methods[name] {
+    pub fn exec_method(&self,
+                       methname: &str,
+                       argslist: &Node,
+                       store: &mut Stack,
+                       classlist: &mut ClassList,
+                       instlist: &mut InstanceList) -> Object {
+        if let Object::Function(name, node, params) = &self.methods[methname] {
 
+            store.push();
+            for i in 0 .. params.len() {
+
+                let argtree = &argslist.children[i];
+                dprint(format!("about to eval method argtree: {}", argtree));
+
+                let argobj = eval(argtree, store, classlist, instlist);
+                store.add(params[i].as_str(), argobj);
+
+            }
+
+            let result = eval(node, store, classlist, instlist);
+
+            store.pop();
+
+            return result;
         }
+        panic!("No such method")
+    }
+
+
+    pub fn get_method(&self, methname: &str) -> Object {
+
+        if let Object::Function(name, node, params) = &self.methods[methname] {
+            return self.methods[methname].clone();
+        }
+        panic!("No such method")
+    }
+
+
+    pub fn instantiate(&self, instlist: &mut InstanceList) -> Object {
+        let id= nuid::next();
+
+        let mut instance = Instance::new(id.clone(), self.name.clone());
+
+
+        for (ftype, fname, initval) in &self.fields {
+            instance.set_field(fname.clone(), initval.clone())
+        }
+
+        instlist.add(id.clone(), instance);
+
+        Object::Reference(id)
     }
 
 

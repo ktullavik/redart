@@ -1,4 +1,5 @@
 extern crate rustyline;
+extern crate nuid;
 
 use std::io::prelude::*;
 use std::env;
@@ -14,6 +15,8 @@ mod objsys;
 
 use evaluator::Object;
 use stack::Stack;
+use objsys::ClassList;
+use objsys::InstanceList;
 
 
 static TESTPATH: &str = "/usr/home/kt/devel/redart/test/";
@@ -116,8 +119,10 @@ fn main() {
         let tree = parser::parse(&tokens).unwrap();
 
         let mut store = Stack::new();
+        let mut classlist = ClassList::new();
+        let mut instlist = InstanceList::new();
 
-        evaluator::preval(&tree, &mut store);
+        evaluator::preval(&tree, &mut store, &mut classlist, &mut instlist);
 
 
         if store.has("main") {
@@ -128,7 +133,7 @@ fn main() {
                     utils::dprint(" ");
                     utils::dprint("EVALUATE");
                     utils::dprint(" ");
-                    evaluator::eval(n, &mut store);
+                    evaluator::eval(n, &mut store, &mut classlist, &mut instlist);
                 }
                 x => {
                     panic!("Unexpected type of 'main': {:?}", x)
