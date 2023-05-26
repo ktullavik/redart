@@ -4,9 +4,9 @@ use builtin;
 use utils::dprint;
 use stack::Stack;
 use objsys::Class;
-use objsys::ClassList;
+use objsys::ClassMap;
 use objsys::Instance;
-use objsys::InstanceList;
+use objsys::InstanceMap;
 
 
 #[derive(Debug)]
@@ -26,7 +26,7 @@ pub enum Object {
 
 // Find functions that are direct children of 'node'
 // and add them to the store for later lookup.
-pub fn preval(node: &Node, store: &mut Stack, classlist: &mut ClassList, instlist: &mut InstanceList) {
+pub fn preval(node: &Node, store: &mut Stack, classlist: &mut ClassMap, instlist: &mut InstanceMap) {
     dprint(" ");
     dprint("PREVAL");
     dprint(" ");
@@ -81,7 +81,7 @@ pub fn preval(node: &Node, store: &mut Stack, classlist: &mut ClassList, instlis
 }
 
 
-fn preval_class(classobj: &mut Class, store: &mut Stack, classnode: &Node, classlist: &mut ClassList, instlist: &mut InstanceList) {
+fn preval_class(classobj: &mut Class, store: &mut Stack, classnode: &Node, classlist: &mut ClassMap, instlist: &mut InstanceMap) {
 
     for member in &classnode.children {
         let t: &NodeType = &member.nodetype;
@@ -166,7 +166,7 @@ fn preval_class(classobj: &mut Class, store: &mut Stack, classnode: &Node, class
 }
 
 
-pub fn eval(node: &Node, store: &mut Stack, classlist: &mut ClassList, instlist: &mut InstanceList) -> Object {
+pub fn eval(node: &Node, store: &mut Stack, classlist: &mut ClassMap, instlist: &mut InstanceMap) -> Object {
 
     let t: &NodeType = &node.nodetype;
 

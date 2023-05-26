@@ -42,17 +42,17 @@ impl Instance {
 }
 
 
-pub struct InstanceList {
+pub struct InstanceMap {
     pub instance: HashMap<String, Instance>,
     pub this: String
 }
 
 
-impl InstanceList {
+impl InstanceMap {
 
-    pub fn new() -> InstanceList {
+    pub fn new() -> InstanceMap {
 
-        InstanceList {
+        InstanceMap {
             instance: HashMap::new(),
             this: String::from("")
         }
@@ -106,16 +106,16 @@ impl InstanceList {
 }
 
 
-pub struct ClassList {
+pub struct ClassMap {
     pub class: HashMap<String, Class>
 }
 
 
-impl ClassList {
+impl ClassMap {
 
-    pub fn new() -> ClassList {
+    pub fn new() -> ClassMap {
 
-        ClassList {
+        ClassMap {
             class: HashMap::new()
         }
     }
@@ -179,8 +179,8 @@ impl Class {
                        methname: &str,
                        argslist: &Node,
                        store: &mut Stack,
-                       classlist: &mut ClassList,
-                       instlist: &mut InstanceList) -> Object {
+                       classlist: &mut ClassMap,
+                       instlist: &mut InstanceMap) -> Object {
         if let Object::Function(name, node, params) = &self.methods[methname] {
 
             store.push();
@@ -213,7 +213,7 @@ impl Class {
     }
 
 
-    pub fn instantiate(&self, instlist: &mut InstanceList) -> Object {
+    pub fn instantiate(&self, instlist: &mut InstanceMap) -> Object {
         let id= nuid::next();
 
         let mut instance = Instance::new(id.clone(), self.name.clone());

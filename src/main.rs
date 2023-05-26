@@ -15,8 +15,8 @@ mod objsys;
 
 use evaluator::Object;
 use stack::Stack;
-use objsys::ClassList;
-use objsys::InstanceList;
+use objsys::ClassMap;
+use objsys::InstanceMap;
 
 
 static TESTPATH: &str = "/usr/home/kt/devel/redart/test/";
@@ -119,8 +119,8 @@ fn main() {
         let tree = parser::parse(&tokens).unwrap();
 
         let mut store = Stack::new();
-        let mut classlist = ClassList::new();
-        let mut instlist = InstanceList::new();
+        let mut classlist = ClassMap::new();
+        let mut instlist = InstanceMap::new();
 
         evaluator::preval(&tree, &mut store, &mut classlist, &mut instlist);
 
