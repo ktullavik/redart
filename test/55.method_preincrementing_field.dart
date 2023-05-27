@@ -1,13 +1,13 @@
 
 class Banana {
-  int ripeness = 51;
+  int ripeness = 54;
 
 
   Banana() {}
 
 
   void ripen() {
-    ripeness++;
+    ++ripeness;
     print(ripeness);
   }
 

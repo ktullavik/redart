@@ -1,13 +1,13 @@
 
 class Banana {
-  int ripeness = 53;
+  int ripeness = 55;
 
 
   Banana() {}
 
 
-  void ripen() {
-    ++ripeness;
+  void unripen() {
+    ripeness--;
     print(ripeness);
   }
 
@@ -16,5 +16,5 @@ class Banana {
 
 void main() {
   var banana = Banana();
-  banana.ripen();
+  banana.unripen();
 }
