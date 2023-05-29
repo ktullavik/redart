@@ -188,7 +188,7 @@ pub fn eval(node: &Node, globals: &mut HashMap<String, Object>, store: &mut Stac
 
                     let right_obj = eval(&node.children[1], globals, store, classlist, instlist);
 
-                    if store.has(s1.as_str()) {
+                    if store.has_in_lexscope(s1.as_str()) {
                         // As dart.
                         darterror(format!("'{}' is already declared in this scope.", s1));
                     }
@@ -1038,13 +1038,17 @@ pub fn eval(node: &Node, globals: &mut HashMap<String, Object>, store: &mut Stac
                     NodeType::ElseIf => {
                         let boolnode= &condnode.children[0];
 
-                        let res = eval(&boolnode, globals, store, classlist, instlist);
-                        match res {
+                        let cond = eval(&boolnode, globals, store, classlist, instlist);
+                        match cond {
 
                             Object::Bool(v) => {
                                 if v {
                                     let bodynode= &condnode.children[1];
-                                    return eval(&bodynode, globals, store, classlist, instlist);
+
+                                    store.push_lex();
+                                    let ret = eval(&bodynode, globals, store, classlist, instlist);
+                                    store.pop_lex();
+                                    return ret;
                                 }
                             }
                             _ => panic!("Expected bool in conditional")
@@ -1053,7 +1057,10 @@ pub fn eval(node: &Node, globals: &mut HashMap<String, Object>, store: &mut Stac
 
                     NodeType::Else => {
                         let bodynode= &condnode.children[0];
-                        return eval(&bodynode, globals, store, classlist, instlist);
+                        store.push_lex();
+                        let ret = eval(&bodynode, globals, store, classlist, instlist);
+                        store.pop_lex();
+                        return ret;
                     }
                     _ => panic!("Invalid node in conditional!")
 

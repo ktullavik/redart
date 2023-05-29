@@ -108,6 +108,11 @@ impl Stack {
     }
 
 
+    pub fn has_in_lexscope(&self, s: &str) -> bool {
+        self.stack.last().unwrap().last().unwrap().contains_key(s)
+    }
+
+
     // Searches backwards through current lexical stack frames to find and return s.
     pub fn get(&self, s: &str) -> &Object {
         let callframe = self.stack.last().unwrap();
