@@ -205,6 +205,8 @@ fn main() {
             "56" => "56.method_predecrementing_field.dart",
 
             "60" => "60.cross_function_leak.dart",
+            "61" => "61.double_declaration.dart",
+            "62" => "62.forgotten_paramlist.dart",
 
             "70" => "70.list_replace.dart",
 
