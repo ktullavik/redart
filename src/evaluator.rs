@@ -893,7 +893,7 @@ pub fn eval(node: &Node, globals: &mut HashMap<String, Object>, store: &mut Stac
         NodeType::FunCall(s) => {
             dprint(format!("Eval: NodeType::FunCall({})", s));
 
-            let mut funcobj : Object;
+            let funcobj : Object;
             if store.has(s) {
                 funcobj = store.get(s).clone();
             }

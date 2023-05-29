@@ -175,7 +175,7 @@ impl Class {
         let mut instance = Instance::new(id.clone(), self.name.clone());
 
 
-        for (ftype, fname, initval) in &self.fields {
+        for (_, fname, initval) in &self.fields {
             instance.set_field(fname.clone(), initval.clone())
         }
 
