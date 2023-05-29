@@ -73,16 +73,16 @@ impl InstanceMap {
 
 
     pub fn get_this(&mut self) -> &mut Instance {
-        println!("Get this: {}", self.this);
+        dprint(format!("Get this: {}", self.this));
 
         if self.instance.contains_key(self.this.as_str()) {
             let thisinst = self.instance.get_mut(self.this.as_str()).unwrap();
             return thisinst;
         }
 
-        println!("Registered instances: ");
+        dprint("Registered instances: ");
         for (k, _) in &self.instance {
-            println!("    {}", k);
+            dprint(format!("    {}", k));
         }
         panic!("Could not get this instance: {}", self.this);
 
@@ -107,7 +107,7 @@ impl ClassMap {
 
 
     pub fn get(&mut self, name: &str) -> &Class {
-        println!("getting class: {}", name);
+        dprint(format!("Getting class: {}", name));
         self.class.get(name).unwrap()
     }
 
