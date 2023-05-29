@@ -1,7 +1,7 @@
 use parser::Node;
 use parser::NodeType;
 use builtin;
-use utils::dprint;
+use utils::{dprint, darterror};
 use stack::Stack;
 use objsys::Class;
 use objsys::ClassMap;
@@ -176,11 +176,9 @@ pub fn eval(node: &Node, globals: &mut HashMap<String, Object>, store: &mut Stac
                     let right_obj = eval(&node.children[1], globals, store, classlist, instlist);
 
                     if store.has(s1.as_str()) {
-                        println!("Assign to store: {}", s1);
                         store.add(s1.as_str(), right_obj);
                     }
                     else {
-                        println!("Assign to this: {}", s1);
                         let this = instlist.get_this();
                         this.set_field(s1.clone(), right_obj);
                     }
@@ -191,16 +189,16 @@ pub fn eval(node: &Node, globals: &mut HashMap<String, Object>, store: &mut Stac
                     let right_obj = eval(&node.children[1], globals, store, classlist, instlist);
 
                     if store.has(s1.as_str()) {
-                        panic!("Variable with name {} already exists.", s1)
+                        // As dart.
+                        darterror(format!("'{}' is already declared in this scope.", s1));
                     }
                     else {
                         if instlist.has_this() {
                             let this = instlist.get_this();
                             if this.has_field(s1.clone()) {
-                                panic!("Variable with name {} already exists.", s1)
+                                panic!("Variable with name {} already exists.", s1);
                             }
                         }
-                        println!("Assign to this: {}", s1);
                         store.add(s1.as_str(), right_obj);
                     }
 
@@ -831,7 +829,8 @@ pub fn eval(node: &Node, globals: &mut HashMap<String, Object>, store: &mut Stac
             }
             else {
                 store.printstack();
-                panic!("Name not found: {}", s);
+                // As dart.
+                darterror(format!("Undefined name: '{}'.", s));
             }
         }
 

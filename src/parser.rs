@@ -1,5 +1,5 @@
 use std::fmt;
-use utils::dprint;
+use utils::{dprint, darterror};
 
 
 #[derive(PartialEq)]
@@ -359,7 +359,7 @@ fn fundef(tokens: &Vec<Token>, pos: usize) -> (Node, usize)  {
 
                 Token::Name(fname) => {
                     let mut node = Node::new(NodeType::FunDef(fname.to_string()));
-                    println!("Calling paramlist from fundef");
+                    dprint("Calling paramlist from fundef");
                     let (params, new_pos) = paramlist(tokens, i);
                     i = new_pos;
                     node.children.push(params);
@@ -570,7 +570,7 @@ fn readmembers(classname: String, tokens: &Vec<Token>, pos: usize) -> (Vec<Node>
 
 
 fn paramlist(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
-    dprint(format!("paramlist on {}", tokens[pos]));
+    dprint(format!("Paramlist on {}", tokens[pos]));
 
     let mut i = pos;
 
@@ -610,7 +610,7 @@ fn paramlist(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
         }
     }
     else {
-        panic!("Error: Expected start of parameter list: '('. Found: {}", &tokens[i])
+        darterror("A function declaration needs an explicit list of parameters.")
     }
     panic!("Error when reading param list.")
 }
@@ -1190,7 +1190,7 @@ fn term(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
 
         &Token::Add => {
             // As Dart.
-            panic!("Error: '+' is not a prefix operator.")
+            darterror("Error: '+' is not a prefix operator.");
         }
 
         &Token::Sub => {
