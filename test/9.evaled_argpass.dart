@@ -1,10 +1,9 @@
 
 
 void main() {
-  printArg(7+8);
+  printArg(7+2);
 }
 
 void printArg(a) {
-  print('My evaled argument should be 15:');
   print(a);
 }
