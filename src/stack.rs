@@ -65,7 +65,7 @@ impl Stack {
     // Add a new frame to the lex-stack - a new lexical scope.
     pub fn push_lex(&mut self) {
         let lexframe : HashMap<String, Object> = HashMap::new();
-        let mut callframe = self.stack.last_mut().unwrap();
+        let callframe = self.stack.last_mut().unwrap();
         callframe.push(lexframe);
         self.lex_level += 1;
     }
@@ -85,8 +85,8 @@ impl Stack {
 
     // Add a new key-value pair to the current frame.
     pub fn add(&mut self, s: &str, v: Object) {
-        let mut callframe = self.stack.last_mut().unwrap();
-        let mut lexframe = callframe.last_mut().unwrap();
+        let callframe = self.stack.last_mut().unwrap();
+        let lexframe = callframe.last_mut().unwrap();
         lexframe.insert(String::from(s), v);
     }
 
@@ -132,10 +132,10 @@ impl Stack {
         let mut cl = self.call_level;
 
         while cl > 0 {
-            let mut callframe = self.stack.get(cl - 1).unwrap();
+            let callframe = self.stack.get(cl - 1).unwrap();
             let mut ll = callframe.len();
             while ll > 0 {
-                let mut lexframe = callframe.get(ll - 1).unwrap();
+                let lexframe = callframe.get(ll - 1).unwrap();
 
                 println!("level {},{}:", cl, ll);
                 for (k, v) in lexframe {
