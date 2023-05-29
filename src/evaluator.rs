@@ -992,8 +992,6 @@ pub fn eval(node: &Node, globals: &mut HashMap<String, Object>, store: &mut Stac
                         _ => panic!("Couldn't find intance that was just created.")
                     }
                 }
-
-
                 _ => panic!("Called a non function object")
             }
 
@@ -1044,7 +1042,6 @@ pub fn eval(node: &Node, globals: &mut HashMap<String, Object>, store: &mut Stac
                             Object::Bool(v) => {
                                 if v {
                                     let bodynode= &condnode.children[1];
-
                                     store.push_lex();
                                     let ret = eval(&bodynode, globals, store, classlist, instlist);
                                     store.pop_lex();
