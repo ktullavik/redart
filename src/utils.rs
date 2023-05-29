@@ -14,7 +14,7 @@ pub fn darterror<S: Into<String>>(s: S) -> ! {
     let debug = false;
 
     if debug {
-        panic!(s.into())
+        panic!("{}", s.into())
     }
     else {
         println!("Error: {}", s.into());
