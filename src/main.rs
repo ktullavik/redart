@@ -17,6 +17,7 @@ use evaluator::Object;
 use stack::Stack;
 use objsys::ClassMap;
 use objsys::InstanceMap;
+use std::collections::HashMap;
 
 
 static TESTPATH: &str = "/usr/home/kt/devel/redart/test/";
@@ -121,19 +122,22 @@ fn main() {
         let mut store = Stack::new();
         let mut classlist = ClassMap::new();
         let mut instlist = InstanceMap::new();
+        let mut globals : HashMap<String, Object> = HashMap::new();
 
-        evaluator::preval(&tree, &mut store, &mut classlist, &mut instlist);
+        evaluator::preval(&tree, &mut globals, &mut store, &mut classlist, &mut instlist);
 
-
-        if store.has("main") {
-            let mainfunc = &store.get("main").clone();
+        if globals.contains_key("main") {
+            let mainfunc = &globals.get("main").unwrap().clone();
 
             match mainfunc {
                 Object::Function(_, n, _) => {
                     utils::dprint(" ");
                     utils::dprint("EVALUATE");
                     utils::dprint(" ");
-                    evaluator::eval(n, &mut store, &mut classlist, &mut instlist);
+
+                    store.push_call();
+                    evaluator::eval(n, &mut globals, &mut store, &mut classlist, &mut instlist);
+                    store.pop_call();
                 }
                 x => {
                     panic!("Unexpected type of 'main': {:?}", x)
@@ -199,6 +203,8 @@ fn main() {
             "54" => "54.method_postdecrementing_field.dart",
             "55" => "55.method_preincrementing_field.dart",
             "56" => "56.method_predecrementing_field.dart",
+
+            "60" => "60.cross_function_leak.dart",
 
             "70" => "70.list_replace.dart",
 
