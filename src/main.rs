@@ -209,7 +209,7 @@ fn main() {
             "62" => "62.forgotten_paramlist.dart",
             "63" => "63.lexical_scope.dart",
 
-            "70" => "70.list_replace.dart",
+            "100" => "100.list_replace.dart",
 
             s => s
         };
