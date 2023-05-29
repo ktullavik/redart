@@ -932,7 +932,6 @@ pub fn eval(node: &Node, globals: &mut HashMap<String, Object>, store: &mut Stac
 
                     store.push_call();
                     for i in 0 .. params.len() {
-                        let a : &Object = evaled_args.get(i).unwrap();
                         store.add(params[i].as_str(), evaled_args.remove(i));
                     }
 
@@ -968,7 +967,6 @@ pub fn eval(node: &Node, globals: &mut HashMap<String, Object>, store: &mut Stac
 
                     store.push_call();
                     for i in 0 .. params.len() {
-                        let a : &Object = evaled_args.get(i).unwrap();
                         store.add(params[i].as_str(), evaled_args.remove(i));
                     }
 
