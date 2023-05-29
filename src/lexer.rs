@@ -238,7 +238,7 @@ pub fn lex(input: &str) -> Vec<parser::Token> {
                     i += 2;
                     continue;
                 }
-                tokens.push(parser::Token::BinOr);
+                tokens.push(parser::Token::BitOr);
             }
 
             '&' => {
@@ -247,7 +247,7 @@ pub fn lex(input: &str) -> Vec<parser::Token> {
                     i += 2;
                     continue;
                 }
-                tokens.push(parser::Token::BinAnd);
+                tokens.push(parser::Token::BitAnd);
             }
 
             '!' => {
