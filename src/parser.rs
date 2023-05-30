@@ -978,28 +978,8 @@ fn expression(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
     dprint(format!("Parse: expression: {}", &tokens[pos]));
 
     // disjunction(tokens, pos)
+    // FIXME, should call disjunction
     equality(tokens, pos)
-}
-
-
-fn equality(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
-    let (left, next_pos) = disjunction(tokens, pos);
-    let t: &Token = &tokens[next_pos];
-
-    return match t {
-        Token::Equal => {
-
-            let (right, i) = disjunction(tokens, next_pos + 1);
-
-            let mut eqnode = Node::new(NodeType::Equal);
-            eqnode.children.push(left);
-            eqnode.children.push(right);
-
-            (eqnode, i)
-        }
-
-        _ => (left, next_pos)
-    }
 }
 
 
@@ -1028,6 +1008,7 @@ fn disjunction(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
 fn conjunction(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
 
     // let (left, next_pos) = sum(tokens, pos);
+    // FIXME, should call equality
     let (left, next_pos) = comparison(tokens, pos);
     let t: &Token = &tokens[next_pos];
 
@@ -1048,14 +1029,36 @@ fn conjunction(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
 }
 
 
+fn equality(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
+    let (left, next_pos) = disjunction(tokens, pos);
+    let t: &Token = &tokens[next_pos];
+
+    return match t {
+        Token::Equal => {
+
+            // FIXME, should call comparison
+            let (right, i) = disjunction(tokens, next_pos + 1);
+
+            let mut eqnode = Node::new(NodeType::Equal);
+            eqnode.children.push(left);
+            eqnode.children.push(right);
+
+            (eqnode, i)
+        }
+
+        _ => (left, next_pos)
+    }
+}
+
+
 fn comparison(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
-    let (left, next_pos) = sum(tokens, pos);
+    let (left, next_pos) = bitwise(tokens, pos);
     let t: &Token = &tokens[next_pos];
 
     return match t {
         Token::LessThan => {
 
-            let (right, i) = sum(tokens, next_pos + 1);
+            let (right, i) = bitwise(tokens, next_pos + 1);
 
             let mut connode = Node::new(NodeType::LessThan);
             connode.children.push(left);
@@ -1065,7 +1068,7 @@ fn comparison(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
         }
         Token::GreaterThan => {
 
-            let (right, i) = sum(tokens, next_pos + 1);
+            let (right, i) = bitwise(tokens, next_pos + 1);
 
             let mut connode = Node::new(NodeType::GreaterThan);
             connode.children.push(left);
@@ -1075,7 +1078,7 @@ fn comparison(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
         }
         Token::LessOrEq => {
 
-            let (right, i) = sum(tokens, next_pos + 1);
+            let (right, i) = bitwise(tokens, next_pos + 1);
 
             let mut connode = Node::new(NodeType::LessOrEq);
             connode.children.push(left);
@@ -1085,13 +1088,45 @@ fn comparison(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
         }
         Token::GreaterOrEq => {
 
-            let (right, i) = sum(tokens, next_pos + 1);
+            let (right, i) = bitwise(tokens, next_pos + 1);
 
             let mut connode = Node::new(NodeType::GreaterOrEq);
             connode.children.push(left);
             connode.children.push(right);
 
             (connode, i)
+        }
+
+        _ => (left, next_pos)
+    }
+}
+
+
+fn bitwise(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
+
+    dprint(format!("Parse: bitwise: {}", &tokens[pos]));
+
+    let (left, next_pos) = sum(tokens, pos);
+    let c: &Token = tokens.get(next_pos).unwrap();
+
+    return match c {
+        Token::BitAnd => {
+            let mut node = Node::new(NodeType::BitAnd);
+            node.children.push(left);
+
+            let (right, i) = bitwise(tokens, next_pos + 1);
+            node.children.push(right);
+
+            (node, i)
+        }
+        Token::BitOr => {
+            let mut node = Node::new(NodeType::BitOr);
+            node.children.push(left);
+
+            let (right, i) = bitwise(tokens, next_pos + 1);
+            node.children.push(right);
+
+            (node, i)
         }
 
         _ => (left, next_pos)

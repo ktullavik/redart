@@ -195,6 +195,9 @@ fn main() {
             "39" => "39.not.dart",
             "40" => "40.fibonacci.dart",
             "41" => "41.difficult_return.dart",
+            "42" => "42.bitand.dart",
+            "43" => "43.bitor.dart",
+            "44" => "44.left_associative_sum.dart",
 
             "50" => "50.method_reading_field.dart",
             "51" => "51.constructor_setting_field.dart",
