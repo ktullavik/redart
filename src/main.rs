@@ -14,6 +14,9 @@ mod builtin;
 mod utils;
 mod stack;
 mod objsys;
+mod expression;
+mod token;
+mod node;
 
 use evaluator::Object;
 use stack::Stack;
