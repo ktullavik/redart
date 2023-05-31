@@ -1,5 +1,4 @@
-use parser::Node;
-use parser::NodeType;
+use node::{NodeType, Node};
 use builtin;
 use utils::{dprint, darterror};
 use stack::Stack;

@@ -1,6 +1,7 @@
 use std::fmt;
 use token::Token;
 use node::{NodeType, Node};
+use expression::expression;
 use utils::{dprint, darterror};
 
 
@@ -408,7 +409,7 @@ fn paramlist(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
 }
 
 
-fn arglist(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
+pub fn arglist(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
 
     let mut i = pos;
 

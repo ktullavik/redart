@@ -1,5 +1,5 @@
 use token::Token;
-use parser;
+use expression;
 use utils::dprint;
 
 
@@ -9,7 +9,7 @@ fn is_legal_namechar(c: char) -> bool {
 }
 
 
-fn read_word(tokens: &mut Vec<parser::Token>, chars: &[char], start: usize) -> usize {
+fn read_word(tokens: &mut Vec<Token>, chars: &[char], start: usize) -> usize {
     let mut len: usize = 0;
     let mut sym = String::from("");
 
@@ -24,41 +24,41 @@ fn read_word(tokens: &mut Vec<parser::Token>, chars: &[char], start: usize) -> u
     }
 
     if &sym == "import" {
-        tokens.push(parser::Token::Import);
+        tokens.push(Token::Import);
     }
     else if &sym == "true" {
-        tokens.push(parser::Token::Bool(true));
+        tokens.push(Token::Bool(true));
     }
     else if &sym == "false" {
-        tokens.push(parser::Token::Bool(false));
+        tokens.push(Token::Bool(false));
     }
     else if &sym == "if" {
-        tokens.push(parser::Token::If);
+        tokens.push(Token::If);
     }
     else if &sym == "else" {
-        tokens.push(parser::Token::Else);
+        tokens.push(Token::Else);
     }
     else if &sym == "return" {
-        tokens.push(parser::Token::Return);
+        tokens.push(Token::Return);
     }
     else if &sym == "class" {
-        tokens.push(parser::Token::Class);
+        tokens.push(Token::Class);
     }
     else {
-        tokens.push(parser::Token::Name(sym));
+        tokens.push(Token::Name(sym));
     }
     return len;
 }
 
 
 
-pub fn lex(input: &str) -> Vec<parser::Token> {
+pub fn lex(input: &str) -> Vec<Token> {
 
     dprint(" ");
     dprint("LEX");
     dprint(" ");
 
-    let mut tokens: Vec<parser::Token> = Vec::new();
+    let mut tokens: Vec<Token> = Vec::new();
     let chars: Vec<char> = input.chars().collect();
     let inp_length = chars.len();
     let mut i: usize = 0;
@@ -94,7 +94,7 @@ pub fn lex(input: &str) -> Vec<parser::Token> {
                 if !closed {
                     panic!("Unclosed quote!");
                 }
-                tokens.push(parser::Token::Str(s));
+                tokens.push(Token::Str(s));
                 i += k;
                 continue;
             }
@@ -113,7 +113,7 @@ pub fn lex(input: &str) -> Vec<parser::Token> {
                         }
                     }
                     else {
-                        tokens.push(parser::Token::Div);
+                        tokens.push(Token::Div);
                     }
                 }
                 else {
@@ -143,116 +143,116 @@ pub fn lex(input: &str) -> Vec<parser::Token> {
                 if !closed {
                     panic!("Unclosed quote!");
                 }
-                tokens.push(parser::Token::Str(s));
+                tokens.push(Token::Str(s));
                 i += k;
                 continue;
             }
 
             '(' => {
-                tokens.push(parser::Token::Paren1);
+                tokens.push(Token::Paren1);
             }
 
             ')' => {
-                tokens.push(parser::Token::Paren2);
+                tokens.push(Token::Paren2);
             }
 
             '{' => {
-                tokens.push(parser::Token::Block1);
+                tokens.push(Token::Block1);
             }
 
             '}' => {
-                tokens.push(parser::Token::Block2);
+                tokens.push(Token::Block2);
             }
 
             '[' => {
-                tokens.push(parser::Token::Brack1);
+                tokens.push(Token::Brack1);
             }
 
             ']' => {
-                tokens.push(parser::Token::Brack2);
+                tokens.push(Token::Brack2);
             }
 
             '.' => {
-                tokens.push(parser::Token::Access);
+                tokens.push(Token::Access);
             }
 
             ',' => {
-                tokens.push(parser::Token::Comma);
+                tokens.push(Token::Comma);
             }
 
             ';' => {
-                tokens.push(parser::Token::EndSt);
+                tokens.push(Token::EndSt);
             }
 
             '=' => {
                 if chars[i+1] == '=' {
-                    tokens.push(parser::Token::Equal);
+                    tokens.push(Token::Equal);
                     i += 2;
                     continue;
                 }
-                tokens.push(parser::Token::Assign);
+                tokens.push(Token::Assign);
             }
 
             '+' => {
                 if chars[i+1] == '+' {
-                    tokens.push(parser::Token::Increment);
+                    tokens.push(Token::Increment);
                     i += 2;
                     continue;
                 }
-                tokens.push(parser::Token::Add);
+                tokens.push(Token::Add);
             }
 
             '-' => {
                 if chars[i+1] == '-' {
-                    tokens.push(parser::Token::Decrement);
+                    tokens.push(Token::Decrement);
                     i += 2;
                     continue;
                 }
-                tokens.push(parser::Token::Sub);
+                tokens.push(Token::Sub);
             }
 
             '*' => {
-                tokens.push(parser::Token::Mul);
+                tokens.push(Token::Mul);
             }
 
             '<' => {
                 if chars[i+1] == '=' {
-                    tokens.push(parser::Token::LessOrEq);
+                    tokens.push(Token::LessOrEq);
                     i += 2;
                     continue;
                 }
-                tokens.push(parser::Token::LessThan);
+                tokens.push(Token::LessThan);
             }
 
             '>' => {
                 if chars[i+1] == '=' {
-                    tokens.push(parser::Token::GreaterOrEq);
+                    tokens.push(Token::GreaterOrEq);
                     i += 2;
                     continue;
                 }
-                tokens.push(parser::Token::GreaterThan);
+                tokens.push(Token::GreaterThan);
             }
 
             '|' => {
                 if chars[i+1] == '|' {
-                    tokens.push(parser::Token::LogOr);
+                    tokens.push(Token::LogOr);
                     i += 2;
                     continue;
                 }
-                tokens.push(parser::Token::BitOr);
+                tokens.push(Token::BitOr);
             }
 
             '&' => {
                 if chars[i+1] == '&' {
-                    tokens.push(parser::Token::LogAnd);
+                    tokens.push(Token::LogAnd);
                     i += 2;
                     continue;
                 }
-                tokens.push(parser::Token::BitAnd);
+                tokens.push(Token::BitAnd);
             }
 
             '!' => {
-                tokens.push(parser::Token::Not);
+                tokens.push(Token::Not);
             }
 
             x if x.is_digit(10) => {
@@ -279,10 +279,10 @@ pub fn lex(input: &str) -> Vec<parser::Token> {
 
                 let val: &str = input.get(i .. i + nl).unwrap();
                 if is_int {
-                    tokens.push(parser::Token::Int(String::from(val)));
+                    tokens.push(Token::Int(String::from(val)));
                 }
                 else {
-                    tokens.push(parser::Token::Double(String::from(val)));
+                    tokens.push(Token::Double(String::from(val)));
                 }
                 i += nl;
                 continue;
@@ -304,6 +304,6 @@ pub fn lex(input: &str) -> Vec<parser::Token> {
         i += 1;
     }
 
-    tokens.push(parser::Token::End);
+    tokens.push(Token::End);
     tokens
 }

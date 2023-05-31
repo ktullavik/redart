@@ -1,11 +1,12 @@
 use token::Token;
 use node::{NodeType, Node};
+use parser::arglist;
 use utils::{dprint, darterror};
 use queues::*;
 
 
 
-fn expression(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
+pub fn expression(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
 
     dprint(format!("Parse: expression: {}", &tokens[pos]));
 
