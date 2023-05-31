@@ -1,6 +1,5 @@
 extern crate rustyline;
 extern crate nuid;
-#[macro_use]
 extern crate queues;
 
 use std::io::prelude::*;
