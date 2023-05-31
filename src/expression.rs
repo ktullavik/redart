@@ -5,14 +5,15 @@ use utils::{dprint, darterror};
 use queues::*;
 
 
-
 pub fn expression(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
     dprint(format!("Parse: expression: {}", &tokens[pos]));
+
     equality(tokens, pos)
 }
 
 
 fn disjunction(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
+    dprint(format!("Parse: disjunction: {}", &tokens[pos]));
 
     let (left, next_pos) = conjunction(tokens, pos);
     let t: &Token = &tokens[next_pos];
@@ -35,6 +36,7 @@ fn disjunction(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
 
 
 fn conjunction(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
+    dprint(format!("Parse: conjunction: {}", &tokens[pos]));
 
     let (left, next_pos) = equality(tokens, pos);
     let t: &Token = &tokens[next_pos];
@@ -57,6 +59,8 @@ fn conjunction(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
 
 
 fn equality(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
+    dprint(format!("Parse: equality: {}", &tokens[pos]));
+
     let (left, next_pos) = comparison(tokens, pos);
     let t: &Token = &tokens[next_pos];
 
@@ -78,6 +82,8 @@ fn equality(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
 
 
 fn comparison(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
+    dprint(format!("Parse: comparison: {}", &tokens[pos]));
+
     let (left, next_pos) = bitwise(tokens, pos);
     let t: &Token = &tokens[next_pos];
 
@@ -129,7 +135,6 @@ fn comparison(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
 
 
 fn bitwise(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
-
     dprint(format!("Parse: bitwise: {}", &tokens[pos]));
 
     let (left, next_pos) = sum(tokens, pos);
@@ -161,6 +166,8 @@ fn bitwise(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
 
 
 fn sum(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
+    dprint(format!("Parse: sum: {}", &tokens[pos]));
+
     sum_help(tokens, pos, &mut queue![], &mut queue![])
 }
 
@@ -207,7 +214,6 @@ fn sum_help(tokens: &Vec<Token>, pos: usize, righties: &mut Queue<Node>, ops: &m
 
 
 fn product(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
-
     dprint(format!("Parse: product: {}", &tokens[pos]));
 
     let (left, mut i) = term(tokens, pos);
@@ -243,7 +249,6 @@ fn product(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
 
 
 fn term(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
-
     dprint(format!("Parse: term: {}", &tokens[pos]));
 
     let t: &Token = tokens.get(pos).expect("No token for term!");
