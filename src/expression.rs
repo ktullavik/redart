@@ -12,6 +12,11 @@ pub fn expression(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
 }
 
 
+// The following are operators as given by
+// https://dart.dev/language/operators
+// Ordered from loose to tight.
+
+
 fn disjunction(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
     dprint(format!("Parse: disjunction: {}", &tokens[pos]));
 
