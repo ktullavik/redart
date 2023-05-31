@@ -1,5 +1,7 @@
 extern crate rustyline;
 extern crate nuid;
+#[macro_use]
+extern crate queues;
 
 use std::io::prelude::*;
 use std::env;
@@ -198,6 +200,7 @@ fn main() {
             "42" => "42.bitand.dart",
             "43" => "43.bitor.dart",
             "44" => "44.left_associative_sum.dart",
+            "45" => "45.hard_expression.dart",
 
             "50" => "50.method_reading_field.dart",
             "51" => "51.constructor_setting_field.dart",

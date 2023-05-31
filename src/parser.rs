@@ -1,5 +1,6 @@
 use std::fmt;
 use utils::{dprint, darterror};
+use queues::*;
 
 
 #[derive(PartialEq)]
@@ -1135,36 +1136,47 @@ fn bitwise(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
 
 
 fn sum(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
+    sum_help(tokens, pos, &mut queue![], &mut queue![])
+}
 
-    dprint(format!("Parse: sum: {}", &tokens[pos]));
 
-    let (left, next_pos) = product(tokens, pos);
+fn sum_help(tokens: &Vec<Token>, pos: usize, righties: &mut Queue<Node>, ops: &mut Queue<Node>) -> (Node, usize) {
+
+    let (n, next_pos) = product(tokens, pos);
     let c: &Token = tokens.get(next_pos).unwrap();
 
+    righties.add(n);
+
     return match c {
+
         Token::Add => {
-            let mut sumnode = Node::new(NodeType::Add);
-            sumnode.children.push(left);
 
-            let (right, i) = sum(tokens, next_pos + 1);
-            sumnode.children.push(right);
+            ops.add(Node::new(NodeType::Add));
 
-            dprint(format!("Parse: assembled sum: {}", &sumnode));
-            (sumnode, i)
-        },
+            let (deeper, i) = sum_help(tokens, next_pos + 1, righties, ops);
 
+            let mut node = ops.remove().unwrap();
+            node.children.push(deeper);
+            node.children.push(righties.remove().unwrap());
+
+            (node, i)
+        }
         Token::Sub => {
-            let mut sumnode = Node::new(NodeType::Sub);
-            sumnode.children.push(left);
 
-            let (right, i) = sum(tokens, next_pos + 1);
-            sumnode.children.push(right);
+            ops.add(Node::new(NodeType::Sub));
 
-            dprint(format!("Parse: assembled sum: {}", &sumnode));
-            (sumnode, i)
+            let (deeper, i) = sum_help(tokens, next_pos + 1, righties, ops);
+
+            let mut node = ops.remove().unwrap();
+            node.children.push(deeper);
+            node.children.push(righties.remove().unwrap());
+
+            (node, i)
         }
 
-        _ => (left, next_pos)
+        _ => {
+            (righties.remove().unwrap(), next_pos)
+        }
     }
 }
 
