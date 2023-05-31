@@ -1,5 +1,6 @@
 
 void main() {
-  // Should be 44, not 36.
-  print(44 - 4 + 4);
+  // Should be 44, not 40.
+  var a = 47 - 5 + 2;
+  print(a);
 }
