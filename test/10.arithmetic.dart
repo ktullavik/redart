@@ -1,7 +1,6 @@
 
 
 void main() {
-  print("Aritmetic should evalutate to 70:");
-  print(7+8*8-1);
+  print(7+8*5-37);
 }
 
