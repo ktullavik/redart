@@ -978,7 +978,7 @@ pub fn eval(node: &Node, globals: &mut HashMap<String, Object>, store: &mut Stac
 
                     store.push_call();
                     for i in 0 .. params.len() {
-                        store.add(params[i].as_str(), evaled_args.remove(i));
+                        store.add(params[i].as_str(), evaled_args.remove(0));
                     }
 
                     let result = eval(&body, globals, store, classlist, instlist);
