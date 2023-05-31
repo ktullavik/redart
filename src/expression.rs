@@ -8,7 +8,7 @@ use queues::*;
 pub fn expression(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
     dprint(format!("Parse: expression: {}", &tokens[pos]));
 
-    equality(tokens, pos)
+    disjunction(tokens, pos)
 }
 
 
