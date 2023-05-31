@@ -7,11 +7,7 @@ use queues::*;
 
 
 pub fn expression(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
-
     dprint(format!("Parse: expression: {}", &tokens[pos]));
-
-    // disjunction(tokens, pos)
-    // FIXME, should call disjunction
     equality(tokens, pos)
 }
 
@@ -40,9 +36,7 @@ fn disjunction(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
 
 fn conjunction(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
 
-    // let (left, next_pos) = sum(tokens, pos);
-    // FIXME, should call equality
-    let (left, next_pos) = comparison(tokens, pos);
+    let (left, next_pos) = equality(tokens, pos);
     let t: &Token = &tokens[next_pos];
 
     return match t {
@@ -63,14 +57,13 @@ fn conjunction(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
 
 
 fn equality(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
-    let (left, next_pos) = disjunction(tokens, pos);
+    let (left, next_pos) = comparison(tokens, pos);
     let t: &Token = &tokens[next_pos];
 
     return match t {
         Token::Equal => {
 
-            // FIXME, should call comparison
-            let (right, i) = disjunction(tokens, next_pos + 1);
+            let (right, i) = comparison(tokens, next_pos + 1);
 
             let mut eqnode = Node::new(NodeType::Equal);
             eqnode.children.push(left);
