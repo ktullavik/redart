@@ -221,33 +221,46 @@ fn sum_help(tokens: &Vec<Token>, pos: usize, righties: &mut Queue<Node>, ops: &m
 fn product(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
     dprint(format!("Parse: product: {}", &tokens[pos]));
 
-    let (left, mut i) = term(tokens, pos);
-    let t: &Token = tokens.get(i).unwrap();
+    product_help(tokens, pos, &mut queue![], &mut queue![])
+}
 
-    return match t {
+
+fn product_help(tokens: &Vec<Token>, pos: usize, righties: &mut Queue<Node>, ops: &mut Queue<Node>) -> (Node, usize) {
+
+    let (n, next_pos) = term(tokens, pos);
+    let c: &Token = tokens.get(next_pos).unwrap();
+
+    righties.add(n);
+
+    return match c {
+
         Token::Mul => {
-            let mut prod = Node::new(NodeType::Mul);
-            prod.children.push(left);
 
-            i += 1;
+            ops.add(Node::new(NodeType::Mul));
 
-            let (right, i) = product(tokens, i);
-            prod.children.push(right);
-            (prod, i)
+            let (deeper, i) = product_help(tokens, next_pos + 1, righties, ops);
+
+            let mut node = ops.remove().unwrap();
+            node.children.push(deeper);
+            node.children.push(righties.remove().unwrap());
+
+            (node, i)
         }
         Token::Div => {
-            let mut div = Node::new(NodeType::Div);
-            div.children.push(left);
 
-            i += 1;
+            ops.add(Node::new(NodeType::Div));
 
-            let (right, i) = product(tokens, i);
-            div.children.push(right);
-            (div, i)
+            let (deeper, i) = product_help(tokens, next_pos + 1, righties, ops);
+
+            let mut node = ops.remove().unwrap();
+            node.children.push(deeper);
+            node.children.push(righties.remove().unwrap());
+
+            (node, i)
         }
 
         _ => {
-            (left, i)
+            (righties.remove().unwrap(), next_pos)
         }
     }
 }
