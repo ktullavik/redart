@@ -201,9 +201,10 @@ fn main() {
             "41" => "41.difficult_return.dart",
             "42" => "42.bitand.dart",
             "43" => "43.bitor.dart",
-            "44" => "44.left_associative_sum.dart",
-            "45" => "45.hard_expression.dart",
-            "46" => "46.left_associative_product.dart",
+            "44" => "44.bitxor.dart",
+            "45" => "45.left_associative_sum.dart",
+            "46" => "46.hard_expression.dart",
+            "47" => "47.left_associative_product.dart",
 
             "50" => "50.method_reading_field.dart",
             "51" => "51.constructor_setting_field.dart",
