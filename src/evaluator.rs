@@ -6,7 +6,7 @@ use objsys::Class;
 use objsys::ClassMap;
 use objsys::InstanceMap;
 use std::collections::HashMap;
-use std::ops::{BitAnd, BitOr};
+use std::ops::{BitAnd, BitOr, BitXor};
 
 
 #[derive(Debug)]
@@ -525,6 +525,29 @@ pub fn eval(node: &Node, globals: &mut HashMap<String, Object>, store: &mut Stac
                     }
                 }
                 _ => panic!("Illegal left operand for bitwise or: {:?}", &left_obj)
+            }
+        }
+
+        NodeType::BitXor => {
+            dprint("Eval: NodeType::BitXor");
+
+            let left_obj = eval(&node.children[0], globals, store, classlist, instlist);
+
+            match &left_obj {
+
+                Object::Int(s1) => {
+
+                    let right_obj = eval(&node.children[1], globals, store, classlist, instlist);
+
+                    match &right_obj {
+
+                        Object::Int(s2) => {
+                            Object::Int(s1.bitxor(s2))
+                        }
+                        _ => panic!("Illegal right operand for bitwise xor: {:?}", &right_obj)
+                    }
+                }
+                _ => panic!("Illegal left operand for bitwise xor: {:?}", &left_obj)
             }
         }
 

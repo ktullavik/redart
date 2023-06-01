@@ -15,6 +15,7 @@ use std::fmt;
   LogOr,
   LogAnd,
   BitOr,
+  BitXor,
   BitAnd,
   // Relation
   LessThan,
@@ -65,6 +66,7 @@ impl fmt::Display for Token {
       Token::LogOr => write!(f, "||"),
       Token::LogAnd => write!(f, "&&"),
       Token::BitOr => write!(f, "|"),
+      Token::BitXor => write!(f, "^"),
       Token::BitAnd => write!(f, "&"),
       // Relation
       Token::LessThan    => write!(f, "<"),

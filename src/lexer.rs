@@ -250,6 +250,10 @@ pub fn lex(input: &str) -> Vec<Token> {
                 tokens.push(Token::BitAnd);
             }
 
+            '^' => {
+                tokens.push(Token::BitXor);
+            }
+
             '!' => {
                 tokens.push(Token::Not);
             }

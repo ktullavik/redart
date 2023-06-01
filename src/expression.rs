@@ -21,7 +21,7 @@ pub fn expression(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
 // the || and && operators as left associative. However,
 // since disjunction and conjunction are associative and have
 // distinct precedence levels, it should not matter for result.
-// This is also the case for bitwise-or and bitwise-and.
+// This is also the case for bit-or, bit-xor and bit-and.
 // Use the simpler right-tree parsing until proven stupid.
 
 fn disjunction(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
@@ -149,7 +149,7 @@ fn comparison(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
 fn bit_or(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
     dprint(format!("Parse: bit_or: {}", &tokens[pos]));
 
-    let (left, next_pos) = bit_and(tokens, pos);
+    let (left, next_pos) = bit_xor(tokens, pos);
     let c: &Token = tokens.get(next_pos).unwrap();
 
     return match c {
@@ -158,6 +158,27 @@ fn bit_or(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
             node.children.push(left);
 
             let (right, i) = bit_or(tokens, next_pos + 1);
+            node.children.push(right);
+
+            (node, i)
+        }
+        _ => (left, next_pos)
+    }
+}
+
+
+fn bit_xor(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
+    dprint(format!("Parse: bit_xor: {}", &tokens[pos]));
+
+    let (left, next_pos) = bit_and(tokens, pos);
+    let c: &Token = tokens.get(next_pos).unwrap();
+
+    return match c {
+        Token::BitXor => {
+            let mut node = Node::new(NodeType::BitXor);
+            node.children.push(left);
+
+            let (right, i) = bit_xor(tokens, next_pos + 1);
             node.children.push(right);
 
             (node, i)
