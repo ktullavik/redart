@@ -20,7 +20,8 @@ pub fn expression(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
 // Various docs for many languages, including dart, specifies
 // the || and && operators as left associative. However,
 // since disjunction and conjunction are associative and have
-// distinct precedence levels, it should not matter.
+// distinct precedence levels, it should not matter for result.
+// This is also the case for bitwise-or and bitwise-and.
 // Use the simpler right-tree parsing until proven stupid.
 
 fn disjunction(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
@@ -95,13 +96,13 @@ fn equality(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
 fn comparison(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
     dprint(format!("Parse: comparison: {}", &tokens[pos]));
 
-    let (left, next_pos) = bitwise(tokens, pos);
+    let (left, next_pos) = bit_or(tokens, pos);
     let t: &Token = &tokens[next_pos];
 
     return match t {
         Token::LessThan => {
 
-            let (right, i) = bitwise(tokens, next_pos + 1);
+            let (right, i) = bit_or(tokens, next_pos + 1);
 
             let mut connode = Node::new(NodeType::LessThan);
             connode.children.push(left);
@@ -111,7 +112,7 @@ fn comparison(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
         }
         Token::GreaterThan => {
 
-            let (right, i) = bitwise(tokens, next_pos + 1);
+            let (right, i) = bit_or(tokens, next_pos + 1);
 
             let mut connode = Node::new(NodeType::GreaterThan);
             connode.children.push(left);
@@ -121,7 +122,7 @@ fn comparison(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
         }
         Token::LessOrEq => {
 
-            let (right, i) = bitwise(tokens, next_pos + 1);
+            let (right, i) = bit_or(tokens, next_pos + 1);
 
             let mut connode = Node::new(NodeType::LessOrEq);
             connode.children.push(left);
@@ -131,7 +132,7 @@ fn comparison(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
         }
         Token::GreaterOrEq => {
 
-            let (right, i) = bitwise(tokens, next_pos + 1);
+            let (right, i) = bit_or(tokens, next_pos + 1);
 
             let mut connode = Node::new(NodeType::GreaterOrEq);
             connode.children.push(left);
@@ -145,8 +146,29 @@ fn comparison(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
 }
 
 
-fn bitwise(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
-    dprint(format!("Parse: bitwise: {}", &tokens[pos]));
+fn bit_or(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
+    dprint(format!("Parse: bit_or: {}", &tokens[pos]));
+
+    let (left, next_pos) = bit_and(tokens, pos);
+    let c: &Token = tokens.get(next_pos).unwrap();
+
+    return match c {
+        Token::BitOr => {
+            let mut node = Node::new(NodeType::BitOr);
+            node.children.push(left);
+
+            let (right, i) = bit_or(tokens, next_pos + 1);
+            node.children.push(right);
+
+            (node, i)
+        }
+        _ => (left, next_pos)
+    }
+}
+
+
+fn bit_and(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
+    dprint(format!("Parse: bit_and: {}", &tokens[pos]));
 
     let (left, next_pos) = sum(tokens, pos);
     let c: &Token = tokens.get(next_pos).unwrap();
@@ -156,21 +178,11 @@ fn bitwise(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
             let mut node = Node::new(NodeType::BitAnd);
             node.children.push(left);
 
-            let (right, i) = bitwise(tokens, next_pos + 1);
+            let (right, i) = bit_and(tokens, next_pos + 1);
             node.children.push(right);
 
             (node, i)
         }
-        Token::BitOr => {
-            let mut node = Node::new(NodeType::BitOr);
-            node.children.push(left);
-
-            let (right, i) = bitwise(tokens, next_pos + 1);
-            node.children.push(right);
-
-            (node, i)
-        }
-
         _ => (left, next_pos)
     }
 }
