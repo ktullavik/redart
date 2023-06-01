@@ -222,10 +222,10 @@ fn class(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
                 if let Token::Block2 = tokens[i] {
                     return (classnode, i + 1)
                 }
-                panic!("Expected '}' to end class.")
+                panic!("{}", "Expected '}' to end class.")
             }
             else {
-                panic!("Error: Expected '{' after class name")
+                panic!("{}", "Error: Expected '{' after class name")
             }
 
         }
@@ -295,7 +295,7 @@ fn readmembers(classname: String, tokens: &Vec<Token>, pos: usize) -> (Vec<Node>
                                     // return (method_node, i)
                                 }
                                 else {
-                                    panic!("Expected opening brace in method declaration: '{'")
+                                    panic!("{}", "Expected opening brace in method declaration: '{'")
                                 }
                             }
 
