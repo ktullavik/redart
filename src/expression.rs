@@ -13,9 +13,15 @@ pub fn expression(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
 
 
 // The following are operators as given by
-// https://dart.dev/language/operators
+// https://www.tutorialandexample.com/dart-operators-precedence-and-associativity
 // Ordered from loose to tight.
 
+
+// Various docs for many languages, including dart, specifies
+// the || and && operators as left associative. However,
+// since disjunction and conjunction are associative and have
+// distinct precedence levels, it should not matter.
+// Use the simpler right-tree parsing until proven stupid.
 
 fn disjunction(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
     dprint(format!("Parse: disjunction: {}", &tokens[pos]));
