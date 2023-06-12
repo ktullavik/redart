@@ -79,7 +79,6 @@ pub fn lex_real(input: &str, startpos: usize, interpol: usize) -> (Vec<Token>, u
             ' ' | '\n' => {}
 
             '"' => {
-                println!("Quote");
                 let mut k = 1;
                 let mut s = String::new();
                 let mut closed = false;
@@ -96,7 +95,6 @@ pub fn lex_real(input: &str, startpos: usize, interpol: usize) -> (Vec<Token>, u
                     }
 
                     if nc == "$" {
-                        println!("found $");
                         s.push(input.get(i+k .. i+k+1).unwrap().chars().next().unwrap());
                         k += 1;
                         let nnc = input.get(i+k .. i+k+1).unwrap();
@@ -105,8 +103,6 @@ pub fn lex_real(input: &str, startpos: usize, interpol: usize) -> (Vec<Token>, u
                             let (sublex, new_pos) = lex_real(input, i+k + 1, interpol + 1);
                             subs.push(sublex);
                             k = new_pos - i;
-
-                            println!("Finished interpol on pos: {}", i);
                         }
                     }
                     else {
@@ -119,7 +115,6 @@ pub fn lex_real(input: &str, startpos: usize, interpol: usize) -> (Vec<Token>, u
                 }
                 tokens.push(Token::Str(s, subs));
                 i += k;
-                println!("finished string on pos: {}", i);
                 continue;
             }
 
