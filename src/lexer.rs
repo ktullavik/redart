@@ -50,8 +50,13 @@ fn read_word(tokens: &mut Vec<Token>, chars: &[char], start: usize) -> usize {
 }
 
 
-
 pub fn lex(input: &str) -> Vec<Token> {
+    let (tokens, pos) = lex_real(input, 0, 0);
+    return tokens;
+}
+
+
+pub fn lex_real(input: &str, mut startpos: usize, mut interpol: usize) -> (Vec<Token>, usize) {
 
     dprint(" ");
     dprint("LEX");
@@ -60,7 +65,7 @@ pub fn lex(input: &str) -> Vec<Token> {
     let mut tokens: Vec<Token> = Vec::new();
     let chars: Vec<char> = input.chars().collect();
     let inp_length = chars.len();
-    let mut i: usize = 0;
+    let mut i: usize = startpos;
     let mut c: char;
 
 
@@ -73,9 +78,12 @@ pub fn lex(input: &str) -> Vec<Token> {
             ' ' | '\n' => {}
 
             '"' => {
+                println!("Quote");
                 let mut k = 1;
                 let mut s = String::new();
                 let mut closed = false;
+                let mut interpolations: isize = 0;
+                let mut subs: Vec<Vec<Token>> = Vec::new();
 
                 while i+k < inp_length {
 
@@ -87,14 +95,32 @@ pub fn lex(input: &str) -> Vec<Token> {
                         break;
                     }
 
-                    s.push((input.get(i + k..i + k + 1)).unwrap().chars().next().unwrap());
-                    k += 1;
+                    if nc == "$" {
+                        println!("found $");
+                        s.push(input.get(i+k .. i+k+1).unwrap().chars().next().unwrap());
+                        k += 1;
+                        interpolations += 1;
+                        let nnc = input.get(i+k .. i+k+1).unwrap();
+                        if nnc == "{" {
+
+                            let (sublex, new_pos) = lex_real(input, i+k + 1, interpol + 1);
+                            subs.push(sublex);
+                            k = new_pos - i;
+
+                            println!("Finished interpol on pos: {}", i);
+                        }
+                    }
+                    else {
+                        s.push((input.get(i + k..i + k + 1)).unwrap().chars().next().unwrap());
+                        k += 1;
+                    }
                 }
                 if !closed {
                     panic!("Unclosed quote!");
                 }
-                tokens.push(Token::Str(s));
+                tokens.push(Token::Str(s, subs));
                 i += k;
+                println!("finished string on pos: {}", i);
                 continue;
             }
 
@@ -125,6 +151,7 @@ pub fn lex(input: &str) -> Vec<Token> {
                 let mut k = 1;
                 let mut s = String::new();
                 let mut closed = false;
+                let mut subs: Vec<Vec<Token>> = Vec::new();
 
                 while i+k < inp_length {
 
@@ -142,7 +169,7 @@ pub fn lex(input: &str) -> Vec<Token> {
                 if !closed {
                     panic!("Unclosed quote!");
                 }
-                tokens.push(Token::Str(s));
+                tokens.push(Token::Str(s, subs));
                 i += k;
                 continue;
             }
@@ -160,6 +187,10 @@ pub fn lex(input: &str) -> Vec<Token> {
             }
 
             '}' => {
+                if interpol > 0 {
+                    interpol -= 1;
+                    return (tokens, i+1);
+                }
                 tokens.push(Token::Block2);
             }
 
@@ -308,5 +339,5 @@ pub fn lex(input: &str) -> Vec<Token> {
     }
 
     tokens.push(Token::End);
-    tokens
+    (tokens, i)
 }

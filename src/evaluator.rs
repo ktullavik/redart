@@ -5,6 +5,7 @@ use stack::Stack;
 use objsys::Class;
 use objsys::ClassMap;
 use objsys::InstanceMap;
+use std::fmt;
 use std::collections::HashMap;
 use std::ops::{BitAnd, BitOr, BitXor};
 
@@ -21,6 +22,37 @@ pub enum Object {
     Reference(String),
     Null,
     Return(Box<Object>)
+}
+
+
+impl fmt::Display for Object {
+
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+
+        match self {
+            Object::Int(i) => write!(f, "{}", i),
+            Object::Double(x) => write!(f, "{}", x),
+            Object::Bool(b) => write!(f, "{}", b),
+            Object::String(s) => write!(f, "{}", s),
+            Object::Function(name, node, params) => {
+                // Dart prints a function signature, like: (int) => String.
+                // But since the function will turn into a closure, it really prints
+                // Closure: (int) => String
+                // TODO
+                write!(f, "() => ?")
+            },
+            Object::Constructor(name, node, params) => {
+                // TODO
+                write!(f, "() => ?")
+            },
+            Object::Reference(s) => {
+                // TODO, need lookup, dont have access.
+                write!(f, "Reference")
+            },
+            Object::Null => write!(f, "null"),
+            Object::Return(_) => panic!("Tried to display Return Object")
+        }
+    }
 }
 
 
@@ -43,27 +75,31 @@ pub fn preval(node: &Node, globals: &mut HashMap<String, Object>, store: &mut St
 
                 let body = n.children[1].clone();
 
-                if params.nodetype != NodeType::ParamList {
+                if let NodeType::ParamList = params.nodetype {
+
+                    let mut args: Vec<String> = Vec::new();
+
+                    for i in 0..params.children.len() {
+                        let p = &params.children[i];
+                        match &p.nodetype {
+                            NodeType::Name(s) => {
+                                args.push(s.clone());
+                            }
+                            x => panic!("Invalid parameter: {}", x)
+                        }
+                    }
+
+                    let obj = Object::Function(fname.to_string(), body, args);
+                    // store.add(fname, obj);
+                    globals.insert(fname.to_string(), obj);
+
+                    dprint(format!("Inserted to symtable: {}", fname));
+
+                } else {
                     panic!("Expected paramlist for FunDef in preeval.");
                 }
 
-                let mut args: Vec<String> = Vec::new();
 
-                for i in 0..params.children.len() {
-                    let p = &params.children[i];
-                    match &p.nodetype {
-                        NodeType::Name(s) => {
-                            args.push(s.clone());
-                        }
-                        x => panic!("Invalid parameter: {}", x)
-                    }
-                }
-
-                let obj = Object::Function(fname.to_string(), body, args);
-                // store.add(fname, obj);
-                globals.insert(fname.to_string(), obj);
-
-                dprint(format!("Inserted to symtable: {}", fname));
             }
             NodeType::Class(cname) => {
                 let mut class = Class::new(cname.clone());
@@ -94,24 +130,27 @@ fn preval_class(classobj: &mut Class, globals: &mut HashMap<String, Object>, sto
 
                 let body = member.children[1].clone();
 
-                if params.nodetype != NodeType::ParamList {
-                    panic!("Expected paramlist for FunDef in preeval.");
-                }
+                if let NodeType::ParamList = params.nodetype {
+                    let mut args: Vec<String> = Vec::new();
 
-                let mut args: Vec<String> = Vec::new();
-
-                for i in 0..params.children.len() {
-                    let p = &params.children[i];
-                    match &p.nodetype {
-                        NodeType::Name(s) => {
-                            args.push(s.clone());
+                    for i in 0..params.children.len() {
+                        let p = &params.children[i];
+                        match &p.nodetype {
+                            NodeType::Name(s) => {
+                                args.push(s.clone());
+                            }
+                            x => panic!("Invalid parameter: {}", x)
                         }
-                        x => panic!("Invalid parameter: {}", x)
                     }
+
+                    let obj = Object::Function(fname.to_string(), body, args);
+                    classobj.add_method(fname.clone(), obj);
+                } else {
+                    panic!("Expected paramlist for FunDef in preeval.");
+
                 }
 
-                let obj = Object::Function(fname.to_string(), body, args);
-                classobj.add_method(fname.clone(), obj);
+
             }
             NodeType::Assign => {
                 let namenode = member.children[0].clone();
@@ -134,25 +173,27 @@ fn preval_class(classobj: &mut Class, globals: &mut HashMap<String, Object>, sto
 
                 let body = member.children[1].clone();
 
-                if params.nodetype != NodeType::ParamList {
+                if let NodeType::ParamList = params.nodetype {
+
+                    let mut args: Vec<String> = Vec::new();
+
+                    for i in 0..params.children.len() {
+                        let p = &params.children[i];
+                        match &p.nodetype {
+                            NodeType::Name(s) => {
+                                args.push(s.clone());
+                            }
+                            x => panic!("Invalid parameter: {}", x)
+                        }
+                    }
+
+                    let obj = Object::Constructor(cname.to_string(), body, args);
+
+                    globals.insert(cname.to_string(), obj);
+
+                } else {
                     panic!("Expected paramlist for Constructor in preeval.");
                 }
-
-                let mut args: Vec<String> = Vec::new();
-
-                for i in 0..params.children.len() {
-                    let p = &params.children[i];
-                    match &p.nodetype {
-                        NodeType::Name(s) => {
-                            args.push(s.clone());
-                        }
-                        x => panic!("Invalid parameter: {}", x)
-                    }
-                }
-
-                let obj = Object::Constructor(cname.to_string(), body, args);
-
-                globals.insert(cname.to_string(), obj);
             }
             x => {
                 dprint(format!("preval_class considering node {}", x));
@@ -881,9 +922,28 @@ pub fn eval(node: &Node, globals: &mut HashMap<String, Object>, store: &mut Stac
             Object::Bool(*v)
         },
 
-        NodeType::Str(s) => {
+        NodeType::Str(s, interpols) => {
             dprint("Eval: NodeType::Str");
-            Object::String(s.clone())
+            if interpols.is_empty() {
+                return Object::String(s.clone())
+            }
+
+            let mut evaled_itps = Vec::new();
+            for itp in interpols {
+                evaled_itps.push(eval(itp, globals, store, classlist, instlist));
+            }
+
+            let mut parts : Vec<&str> = s.as_str().split("$").collect();
+
+            let mut built : String = String::new();
+
+            for i in 0 .. evaled_itps.len() {
+                built.push_str(parts[i]);
+                built.push_str(format!("{}", evaled_itps[i].clone()).as_str());
+            }
+            built.push_str(parts.last().unwrap());
+
+            return Object::String(built)
         },
 
         NodeType::Name(s) => {
@@ -1072,26 +1132,27 @@ pub fn eval(node: &Node, globals: &mut HashMap<String, Object>, store: &mut Stac
             let params = &node.children[0];
             let body = node.children[1].clone();
 
-            if params.nodetype != NodeType::ParamList {
+            if let NodeType::ParamList = params.nodetype {
+
+                let mut args: Vec<String> = Vec::new();
+
+                for i in 0 .. params.children.len() {
+                    let p = &params.children[i];
+                    match &p.nodetype {
+                        NodeType::Name(s) => {
+                            args.push(s.clone());
+                        }
+                        x => panic!("Invalid parameter: {}", x)
+                    }
+                }
+
+                let obj = Object::Function(s.to_string(), body, args);
+
+                store.add(s, obj);
+                return Object::Null;
+            } else {
                 panic!("Expected paramlist for FunDef in eval.");
             }
-
-            let mut args: Vec<String> = Vec::new();
-
-            for i in 0 .. params.children.len() {
-                let p = &params.children[i];
-                match &p.nodetype {
-                    NodeType::Name(s) => {
-                        args.push(s.clone());
-                    }
-                    x => panic!("Invalid parameter: {}", x)
-                }
-            }
-
-            let obj = Object::Function(s.to_string(), body, args);
-
-            store.add(s, obj);
-            return Object::Null;
         }
 
         NodeType::Conditional => {

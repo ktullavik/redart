@@ -2,7 +2,6 @@ use std::fmt;
 
 
 #[derive(Debug)]
-#[derive(PartialEq)]
 #[derive(Clone)]
 pub enum NodeType {
     Add,
@@ -28,7 +27,7 @@ pub enum NodeType {
     Assign,
     Int(String),
     Double(String),
-    Str(String),
+    Str(String, Vec<Node>),
     Bool(bool),
     Name(String),
     TypedVar(String, String),
@@ -79,7 +78,7 @@ impl fmt::Display for NodeType {
             NodeType::Access => write!(f, "."),
             NodeType::Int(s)                        => write!(f, "{}", s),
             NodeType::Double(s)                     => write!(f, "{}", s),
-            NodeType::Str(s)                     => write!(f, "\"{}\"", s),
+            NodeType::Str(s, _)                     => write!(f, "\"{}\"", s),
             NodeType::Bool(v)                        => write!(f, "{}", v),
             NodeType::Name(s)                       => write!(f, "{}", s),
             NodeType::TypedVar(tp, name)  => write!(f, "{}:{}", name, tp),

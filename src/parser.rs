@@ -110,8 +110,8 @@ fn directives(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
                 let mut node = Node::new(NodeType::Import);
 
                 i += 1;
-                if let Token::Str(s) = &tokens[i] {
-                    node.children.push(Node::new(NodeType::Str(s.clone())));
+                if let Token::Str(s, _) = &tokens[i] {
+                    node.children.push(Node::new(NodeType::Str(s.clone(), Vec::new())));
 
                     i += 1;
                     if let Token::EndSt = tokens[i] {

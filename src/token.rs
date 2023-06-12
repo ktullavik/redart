@@ -26,7 +26,7 @@ use std::fmt;
   // Primitive
   Int(String),
   Double(String),
-  Str(String),
+  Str(String, Vec<Vec<Token>>),
   Bool(bool),
   Name(String),
   // Structure
@@ -77,7 +77,21 @@ impl fmt::Display for Token {
       // Primitive
       Token::Int(s)     => write!(f, "{}", s),
       Token::Double(s)     => write!(f, "{}", s),
-      Token::Str(s)  => write!(f, "\"{}\"", s),
+      Token::Str(s, interpols)  => {
+        if interpols.len() > 0 {
+          write!(f, "\"{}\"", s);
+          write!(f, "( ");
+          for itp in interpols {
+            for t in itp {
+              write!(f, "{} ", t);
+            }
+          }
+          write!(f, ")")
+        }
+        else {
+          write!(f, "\"{}\"", s)
+        }
+      },
       Token::Bool(v)     => write!(f, "{}", v),
       Token::Name(s)    => write!(f, "{}", s),
       // Structure

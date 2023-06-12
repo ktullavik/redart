@@ -28,6 +28,11 @@ fn disjunction(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
     dprint(format!("Parse: disjunction: {}", &tokens[pos]));
 
     let (left, next_pos) = conjunction(tokens, pos);
+
+    if tokens.len() <= next_pos {
+        return (left, next_pos);
+    }
+
     let t: &Token = &tokens[next_pos];
 
     return match t {
@@ -51,6 +56,11 @@ fn conjunction(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
     dprint(format!("Parse: conjunction: {}", &tokens[pos]));
 
     let (left, next_pos) = equality(tokens, pos);
+
+    if tokens.len() <= next_pos {
+        return (left, next_pos);
+    }
+
     let t: &Token = &tokens[next_pos];
 
     return match t {
@@ -74,6 +84,11 @@ fn equality(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
     dprint(format!("Parse: equality: {}", &tokens[pos]));
 
     let (left, next_pos) = comparison(tokens, pos);
+
+    if tokens.len() <= next_pos {
+        return (left, next_pos);
+    }
+
     let t: &Token = &tokens[next_pos];
 
     return match t {
@@ -97,6 +112,11 @@ fn comparison(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
     dprint(format!("Parse: comparison: {}", &tokens[pos]));
 
     let (left, next_pos) = bit_or(tokens, pos);
+
+    if tokens.len() <= next_pos {
+        return (left, next_pos);
+    }
+
     let t: &Token = &tokens[next_pos];
 
     return match t {
@@ -150,6 +170,11 @@ fn bit_or(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
     dprint(format!("Parse: bit_or: {}", &tokens[pos]));
 
     let (left, next_pos) = bit_xor(tokens, pos);
+
+    if tokens.len() <= next_pos {
+        return (left, next_pos);
+    }
+
     let c: &Token = tokens.get(next_pos).unwrap();
 
     return match c {
@@ -171,6 +196,11 @@ fn bit_xor(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
     dprint(format!("Parse: bit_xor: {}", &tokens[pos]));
 
     let (left, next_pos) = bit_and(tokens, pos);
+
+    if tokens.len() <= next_pos {
+        return (left, next_pos);
+    }
+
     let c: &Token = tokens.get(next_pos).unwrap();
 
     return match c {
@@ -192,6 +222,11 @@ fn bit_and(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
     dprint(format!("Parse: bit_and: {}", &tokens[pos]));
 
     let (left, next_pos) = sum(tokens, pos);
+
+    if tokens.len() <= next_pos {
+        return (left, next_pos);
+    }
+
     let c: &Token = tokens.get(next_pos).unwrap();
 
     return match c {
@@ -219,6 +254,11 @@ fn sum(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
 fn sum_help(tokens: &Vec<Token>, pos: usize, righties: &mut Queue<Node>, ops: &mut Queue<Node>) -> (Node, usize) {
 
     let (n, next_pos) = product(tokens, pos);
+
+    if tokens.len() <= next_pos {
+        return (n, next_pos);
+    }
+
     let c: &Token = tokens.get(next_pos).unwrap();
 
     righties.add(n);
@@ -267,6 +307,11 @@ fn product(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
 fn product_help(tokens: &Vec<Token>, pos: usize, righties: &mut Queue<Node>, ops: &mut Queue<Node>) -> (Node, usize) {
 
     let (n, next_pos) = term(tokens, pos);
+
+    if tokens.len() <= next_pos {
+        return (n, next_pos);
+    }
+
     let c: &Token = tokens.get(next_pos).unwrap();
 
     righties.add(n);
@@ -342,9 +387,19 @@ fn term(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
             return (notnode, new_pos)
         }
 
-        &Token::Str(ref s) => {
-            let node = Node::new(NodeType::Str(s.clone()));
-            return (node, pos+1)
+        &Token::Str(ref s, ref interpols) => {
+            return if interpols.is_empty() {
+                let node = Node::new(NodeType::Str(s.clone(), Vec::new()));
+                (node, pos + 1)
+            } else {
+                let mut itpnodes: Vec<Node> = Vec::new();
+                for itp in interpols {
+                    let (itpn, _) = expression(&itp, 0);
+                    itpnodes.push(itpn);
+                }
+                let node = Node::new(NodeType::Str(s.clone(), itpnodes));
+                (node, pos + 1)
+            }
         }
 
         &Token::Bool(v) => {
@@ -356,29 +411,31 @@ fn term(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
 
             // Postfixed inc/dec should be bound tightly, so handle
             // it here rather than in expression.
-            if let Token::Increment = tokens[pos+1] {
-                let mut incnode = Node::new(NodeType::PostIncrement);
-                let node = Node::new(NodeType::Name(s.clone()));
-                incnode.children.push(node);
-                return (incnode, pos + 2);
-            }
-            if let Token::Decrement = tokens[pos+1] {
-                let mut decnode = Node::new(NodeType::PostDecrement);
-                let node = Node::new(NodeType::Name(s.clone()));
-                decnode.children.push(node);
-                return (decnode, pos + 2);
-            }
+
+            if tokens.len() > pos + 1 {
+                if let Token::Increment = tokens[pos + 1] {
+                    let mut incnode = Node::new(NodeType::PostIncrement);
+                    let node = Node::new(NodeType::Name(s.clone()));
+                    incnode.children.push(node);
+                    return (incnode, pos + 2);
+                }
+                if let Token::Decrement = tokens[pos + 1] {
+                    let mut decnode = Node::new(NodeType::PostDecrement);
+                    let node = Node::new(NodeType::Name(s.clone()));
+                    decnode.children.push(node);
+                    return (decnode, pos + 2);
+                }
 
 
-            if let Token::Paren1 = tokens[pos+1] {
-                // Function call.
-                let (args_node, new_pos) = arglist(tokens, pos + 1);
-                let mut funcall_node = Node::new(NodeType::FunCall(s.to_string()));
-                funcall_node.nodetype = NodeType::FunCall(s.to_string());
-                funcall_node.children.push(args_node);
-                return (funcall_node, new_pos)
+                if let Token::Paren1 = tokens[pos + 1] {
+                    // Function call.
+                    let (args_node, new_pos) = arglist(tokens, pos + 1);
+                    let mut funcall_node = Node::new(NodeType::FunCall(s.to_string()));
+                    funcall_node.nodetype = NodeType::FunCall(s.to_string());
+                    funcall_node.children.push(args_node);
+                    return (funcall_node, new_pos)
+                }
             }
-
 
 
             let node = Node::new(NodeType::Name(s.clone()));
