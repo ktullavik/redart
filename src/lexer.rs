@@ -113,29 +113,6 @@ pub fn lex_real(input: &str, startpos: usize, interpol: usize) -> (Vec<Token>, u
                 continue;
             }
 
-            '/' => {
-                i = i + 1;
-                if inp_length > i {
-                    if chars[i] == '/' {
-                        i += 1;
-                        while i < inp_length  {
-                            if chars[i] == '\n' {
-                                i += 1;
-                                break;
-                            }
-                            i += 1;
-                        }
-                    }
-                    else {
-                        tokens.push(Token::Div);
-                    }
-                }
-                else {
-                    panic!("Unexpected end of input: '/'");
-                }
-                continue;
-            }
-
             '\'' => {
                 let mut k = 1;
                 let mut s = String::new();
@@ -160,6 +137,29 @@ pub fn lex_real(input: &str, startpos: usize, interpol: usize) -> (Vec<Token>, u
                 }
                 tokens.push(Token::Str(s, subs));
                 i += k;
+                continue;
+            }
+
+            '/' => {
+                i = i + 1;
+                if inp_length > i {
+                    if chars[i] == '/' {
+                        i += 1;
+                        while i < inp_length  {
+                            if chars[i] == '\n' {
+                                i += 1;
+                                break;
+                            }
+                            i += 1;
+                        }
+                    }
+                    else {
+                        tokens.push(Token::Div);
+                    }
+                }
+                else {
+                    panic!("Unexpected end of input: '/'");
+                }
                 continue;
             }
 
