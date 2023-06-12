@@ -79,42 +79,37 @@ pub fn lex_real(input: &str, startpos: usize, interpol: usize) -> (Vec<Token>, u
             ' ' | '\n' => {}
 
             '"' => {
-                let mut k = 1;
                 let mut s = String::new();
                 let mut closed = false;
                 let mut subs: Vec<Vec<Token>> = Vec::new();
+                i += 1;
 
-                while i+k < inp_length {
+                while i < inp_length {
 
-                    let nc = input.get(i+k .. i+k+1).unwrap();
+                    let nc : char = chars[i];
 
-                    if nc == "\"" {
+                    if nc == '"' {
                         closed = true;
-                        k += 1;
+                        i += 1;
                         break;
                     }
 
-                    if nc == "$" {
-                        s.push(input.get(i+k .. i+k+1).unwrap().chars().next().unwrap());
-                        k += 1;
-                        let nnc = input.get(i+k .. i+k+1).unwrap();
-                        if nnc == "{" {
+                    s.push(nc);
+                    i += 1;
 
-                            let (sublex, new_pos) = lex_real(input, i+k + 1, interpol + 1);
+                    if nc == '$' {
+                        let nnc = chars[i];
+                        if nnc == '{' {
+                            let (sublex, new_pos) = lex_real(input, i + 1, interpol + 1);
                             subs.push(sublex);
-                            k = new_pos - i;
+                            i = new_pos;
                         }
-                    }
-                    else {
-                        s.push((input.get(i + k..i + k + 1)).unwrap().chars().next().unwrap());
-                        k += 1;
                     }
                 }
                 if !closed {
                     panic!("Unclosed quote!");
                 }
                 tokens.push(Token::Str(s, subs));
-                i += k;
                 continue;
             }
 
