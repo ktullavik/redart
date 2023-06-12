@@ -34,18 +34,18 @@ impl fmt::Display for Object {
             Object::Double(x) => write!(f, "{}", x),
             Object::Bool(b) => write!(f, "{}", b),
             Object::String(s) => write!(f, "{}", s),
-            Object::Function(name, node, params) => {
+            Object::Function(_, _, _) => {
                 // Dart prints a function signature, like: (int) => String.
                 // But since the function will turn into a closure, it really prints
                 // Closure: (int) => String
                 // TODO
                 write!(f, "() => ?")
             },
-            Object::Constructor(name, node, params) => {
+            Object::Constructor(_, _, _) => {
                 // TODO
                 write!(f, "() => ?")
             },
-            Object::Reference(s) => {
+            Object::Reference(_) => {
                 // TODO, need lookup, dont have access.
                 write!(f, "Reference")
             },
@@ -933,7 +933,7 @@ pub fn eval(node: &Node, globals: &mut HashMap<String, Object>, store: &mut Stac
                 evaled_itps.push(eval(itp, globals, store, classlist, instlist));
             }
 
-            let mut parts : Vec<&str> = s.as_str().split("$").collect();
+            let parts : Vec<&str> = s.as_str().split("$").collect();
 
             let mut built : String = String::new();
 

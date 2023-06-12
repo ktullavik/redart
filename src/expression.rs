@@ -261,13 +261,13 @@ fn sum_help(tokens: &Vec<Token>, pos: usize, righties: &mut Queue<Node>, ops: &m
 
     let c: &Token = tokens.get(next_pos).unwrap();
 
-    righties.add(n);
+    righties.add(n).ok();
 
     return match c {
 
         Token::Add => {
 
-            ops.add(Node::new(NodeType::Add));
+            ops.add(Node::new(NodeType::Add)).ok();
 
             let (deeper, i) = sum_help(tokens, next_pos + 1, righties, ops);
 
@@ -279,7 +279,7 @@ fn sum_help(tokens: &Vec<Token>, pos: usize, righties: &mut Queue<Node>, ops: &m
         }
         Token::Sub => {
 
-            ops.add(Node::new(NodeType::Sub));
+            ops.add(Node::new(NodeType::Sub)).ok();
 
             let (deeper, i) = sum_help(tokens, next_pos + 1, righties, ops);
 
@@ -314,13 +314,13 @@ fn product_help(tokens: &Vec<Token>, pos: usize, righties: &mut Queue<Node>, ops
 
     let c: &Token = tokens.get(next_pos).unwrap();
 
-    righties.add(n);
+    righties.add(n).ok();
 
     return match c {
 
         Token::Mul => {
 
-            ops.add(Node::new(NodeType::Mul));
+            ops.add(Node::new(NodeType::Mul)).ok();
 
             let (deeper, i) = product_help(tokens, next_pos + 1, righties, ops);
 
@@ -332,7 +332,7 @@ fn product_help(tokens: &Vec<Token>, pos: usize, righties: &mut Queue<Node>, ops
         }
         Token::Div => {
 
-            ops.add(Node::new(NodeType::Div));
+            ops.add(Node::new(NodeType::Div)).ok();
 
             let (deeper, i) = product_help(tokens, next_pos + 1, righties, ops);
 

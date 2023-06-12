@@ -79,11 +79,11 @@ impl fmt::Display for Token {
       Token::Double(s)     => write!(f, "{}", s),
       Token::Str(s, interpols)  => {
         if interpols.len() > 0 {
-          write!(f, "\"{}\"", s);
-          write!(f, "( ");
+          write!(f, "\"{}\"", s).ok();
+          write!(f, "( ").ok();
           for itp in interpols {
             for t in itp {
-              write!(f, "{} ", t);
+              write!(f, "{} ", t).ok();
             }
           }
           write!(f, ")")

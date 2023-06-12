@@ -52,11 +52,12 @@ fn read_word(tokens: &mut Vec<Token>, chars: &[char], start: usize) -> usize {
 
 pub fn lex(input: &str) -> Vec<Token> {
     let (tokens, pos) = lex_real(input, 0, 0);
+    assert_eq!(pos, input.chars().count(), "Lexer with leftover input.");
     return tokens;
 }
 
 
-pub fn lex_real(input: &str, mut startpos: usize, mut interpol: usize) -> (Vec<Token>, usize) {
+pub fn lex_real(input: &str, startpos: usize, interpol: usize) -> (Vec<Token>, usize) {
 
     dprint(" ");
     dprint("LEX");
@@ -82,7 +83,6 @@ pub fn lex_real(input: &str, mut startpos: usize, mut interpol: usize) -> (Vec<T
                 let mut k = 1;
                 let mut s = String::new();
                 let mut closed = false;
-                let mut interpolations: isize = 0;
                 let mut subs: Vec<Vec<Token>> = Vec::new();
 
                 while i+k < inp_length {
@@ -99,7 +99,6 @@ pub fn lex_real(input: &str, mut startpos: usize, mut interpol: usize) -> (Vec<T
                         println!("found $");
                         s.push(input.get(i+k .. i+k+1).unwrap().chars().next().unwrap());
                         k += 1;
-                        interpolations += 1;
                         let nnc = input.get(i+k .. i+k+1).unwrap();
                         if nnc == "{" {
 
@@ -188,7 +187,6 @@ pub fn lex_real(input: &str, mut startpos: usize, mut interpol: usize) -> (Vec<T
 
             '}' => {
                 if interpol > 0 {
-                    interpol -= 1;
                     return (tokens, i+1);
                 }
                 tokens.push(Token::Block2);

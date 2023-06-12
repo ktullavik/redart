@@ -2,7 +2,7 @@ use std::process;
 
 
 pub fn dprint<S: Into<String>>(s: S) {
-    let debug = false;
+    let debug = true;
 
     if debug {
         println!("{}", s.into());
