@@ -97,12 +97,10 @@ pub fn lex_real(input: &str, startpos: usize, interpol: usize) -> (Vec<Token>, u
                     s.push(nc);
                     i += 1;
 
-                    if nc == '$' {
-                        if chars[i] == '{' {
-                            let (sublex, new_pos) = lex_real(input, i + 1, interpol + 1);
-                            subs.push(sublex);
-                            i = new_pos;
-                        }
+                    if nc == '$' && chars[i] == '{' {
+                        let (sublex, new_pos) = lex_real(input, i + 1, interpol + 1);
+                        subs.push(sublex);
+                        i = new_pos;
                     }
                 }
                 if !closed {
@@ -131,12 +129,10 @@ pub fn lex_real(input: &str, startpos: usize, interpol: usize) -> (Vec<Token>, u
                     s.push(nc);
                     i += 1;
 
-                    if nc == '$' {
-                        if chars[i] == '{' {
-                            let (sublex, new_pos) = lex_real(input, i + 1, interpol + 1);
-                            subs.push(sublex);
-                            i = new_pos;
-                        }
+                    if nc == '$' && chars[i] == '{' {
+                        let (sublex, new_pos) = lex_real(input, i + 1, interpol + 1);
+                        subs.push(sublex);
+                        i = new_pos;
                     }
                 }
                 if !closed {
