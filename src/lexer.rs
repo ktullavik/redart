@@ -98,8 +98,7 @@ pub fn lex_real(input: &str, startpos: usize, interpol: usize) -> (Vec<Token>, u
                     i += 1;
 
                     if nc == '$' {
-                        let nnc = chars[i];
-                        if nnc == '{' {
+                        if chars[i] == '{' {
                             let (sublex, new_pos) = lex_real(input, i + 1, interpol + 1);
                             subs.push(sublex);
                             i = new_pos;
@@ -114,29 +113,36 @@ pub fn lex_real(input: &str, startpos: usize, interpol: usize) -> (Vec<Token>, u
             }
 
             '\'' => {
-                let mut k = 1;
                 let mut s = String::new();
                 let mut closed = false;
                 let mut subs: Vec<Vec<Token>> = Vec::new();
+                i += 1;
 
-                while i+k < inp_length {
+                while i < inp_length {
 
-                    let nc = input.get(i+k .. i+k+1).unwrap();
+                    let nc : char = chars[i];
 
-                    if nc == "'" {
+                    if nc == '\'' {
                         closed = true;
-                        k += 1;
+                        i += 1;
                         break;
                     }
 
-                    s.push((input.get(i + k..i + k + 1)).unwrap().chars().next().unwrap());
-                    k += 1;
+                    s.push(nc);
+                    i += 1;
+
+                    if nc == '$' {
+                        if chars[i] == '{' {
+                            let (sublex, new_pos) = lex_real(input, i + 1, interpol + 1);
+                            subs.push(sublex);
+                            i = new_pos;
+                        }
+                    }
                 }
                 if !closed {
                     panic!("Unclosed quote!");
                 }
                 tokens.push(Token::Str(s, subs));
-                i += k;
                 continue;
             }
 
