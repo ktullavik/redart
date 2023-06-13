@@ -111,3 +111,63 @@ pub struct Node {
     pub children: Vec<Node>
 }
 
+
+impl Node {
+
+    pub fn new(nodetype: NodeType) -> Node {
+        Node {
+            nodetype,
+            children: Vec::new(),
+        }
+    }
+
+
+    pub fn print(&self, f: &mut fmt::Formatter, depth: usize) -> fmt::Result {
+
+        match self.children.len() {
+
+            0 => {
+                writeln!(f, "{1:0$} {2}", depth * 2, "", self.nodetype)
+            },
+
+            1 => {
+                let res = writeln!(f, "{1:0$} {2}", depth * 2, "", self.nodetype);
+                if let Err(e) = self.children[0].print(f,depth + 1) {
+                    println!("Error when printing node children: {}", e.to_string())
+                }
+                return res
+            },
+
+            2 => {
+                let res = writeln!(f, "{1:0$} {2}", depth * 2, "", self.nodetype);
+                if let Err(e) = self.children[0].print(f,depth + 1) {
+                    println!("Error when printing node children: {}", e.to_string())
+                }
+                if let Err(e) = self.children[1].print(f,depth + 1) {
+                    println!("Error when printing node children: {}", e.to_string())
+                }
+                return res;
+            }
+
+            x => {
+                let res = writeln!(f, "{1:0$} {2}", depth * 2, "", self.nodetype);
+                for i in 0 .. x {
+                    if let Err(e) = self.children[i].print(f, depth + 1) {
+                        println!("Error when printing node children: {}", e.to_string());
+                    }
+                }
+                if let Err(e) = write!(f, "") {
+                    println!("Error when printing node: {}", e.to_string())
+                }
+                return res;
+            }
+        }
+    }
+}
+
+
+impl fmt::Display for Node {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        self.print(f, 0)
+    }
+}
