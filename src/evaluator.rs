@@ -936,12 +936,12 @@ pub fn eval(node: &Node, globals: &mut HashMap<String, Object>, store: &mut Stac
 
         NodeType::Str(s, interpols) => {
             dprint("Eval: NodeType::Str");
-            if interpols.is_empty() {
+            if node.children.is_empty() {
                 return Object::String(s.clone())
             }
 
             let mut evaled_itps = Vec::new();
-            for itp in interpols {
+            for itp in &node.children {
                 evaled_itps.push(eval(itp, globals, store, classlist, instlist));
             }
 
@@ -950,8 +950,7 @@ pub fn eval(node: &Node, globals: &mut HashMap<String, Object>, store: &mut Stac
             let mut built : String = String::new();
 
             for i in 0 .. evaled_itps.len() {
-                built.push_str(parts[i]);
-                built.push_str(format!("{}", evaled_itps[i].clone()).as_str());
+                built = String::from(format!("{}{}{}", parts[0], built.clone(), evaled_itps[i].clone()).as_str());
             }
             built.push_str(parts.last().unwrap());
 

@@ -254,14 +254,13 @@ fn sum(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
 fn sum_help(tokens: &Vec<Token>, pos: usize, righties: &mut Queue<Node>, ops: &mut Queue<Node>) -> (Node, usize) {
 
     let (n, next_pos) = product(tokens, pos);
+    righties.add(n).ok();
 
     if tokens.len() <= next_pos {
-        return (n, next_pos);
+        return (righties.remove().unwrap(), next_pos);
     }
 
     let c: &Token = tokens.get(next_pos).unwrap();
-
-    righties.add(n).ok();
 
     return match c {
 
@@ -274,7 +273,6 @@ fn sum_help(tokens: &Vec<Token>, pos: usize, righties: &mut Queue<Node>, ops: &m
             let mut node = ops.remove().unwrap();
             node.children.push(deeper);
             node.children.push(righties.remove().unwrap());
-
             (node, i)
         }
         Token::Sub => {
@@ -392,12 +390,12 @@ fn term(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
                 let node = Node::new(NodeType::Str(s.clone(), Vec::new()));
                 (node, pos + 1)
             } else {
-                let mut itpnodes: Vec<Node> = Vec::new();
+                let mut node = Node::new(NodeType::Str(s.clone(), Vec::new()));
+
                 for itp in interpols {
                     let (itpn, _) = expression(&itp, 0);
-                    itpnodes.push(itpn);
+                    node.children.push(itpn);
                 }
-                let node = Node::new(NodeType::Str(s.clone(), itpnodes));
                 (node, pos + 1)
             }
         }
