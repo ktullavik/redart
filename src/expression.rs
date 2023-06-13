@@ -387,10 +387,10 @@ fn term(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
 
         &Token::Str(ref s, ref interpols) => {
             return if interpols.is_empty() {
-                let node = Node::new(NodeType::Str(s.clone(), Vec::new()));
+                let node = Node::new(NodeType::Str(s.clone()));
                 (node, pos + 1)
             } else {
-                let mut node = Node::new(NodeType::Str(s.clone(), Vec::new()));
+                let mut node = Node::new(NodeType::Str(s.clone()));
 
                 for itp in interpols {
                     let (itpn, _) = expression(&itp, 0);

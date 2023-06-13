@@ -934,7 +934,7 @@ pub fn eval(node: &Node, globals: &mut HashMap<String, Object>, store: &mut Stac
             Object::Bool(*v)
         },
 
-        NodeType::Str(s, interpols) => {
+        NodeType::Str(s) => {
             dprint("Eval: NodeType::Str");
             if node.children.is_empty() {
                 return Object::String(s.clone())
