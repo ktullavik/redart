@@ -305,14 +305,13 @@ fn product(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
 fn product_help(tokens: &Vec<Token>, pos: usize, righties: &mut Queue<Node>, ops: &mut Queue<Node>) -> (Node, usize) {
 
     let (n, next_pos) = term(tokens, pos);
+    righties.add(n).ok();
 
     if tokens.len() <= next_pos {
-        return (n, next_pos);
+        return (righties.remove().unwrap(), next_pos);
     }
 
     let c: &Token = tokens.get(next_pos).unwrap();
-
-    righties.add(n).ok();
 
     return match c {
 
