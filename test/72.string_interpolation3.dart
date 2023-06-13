@@ -1,11 +1,7 @@
 
-
 void main() {
-  // Should print:
-  // abc: ab: bc: c
-
-  var a = "a";
-  var b = "b";
-  var c = "c";
-  print("abc: ${a + "b: ${b + "c: ${c}"}"}");
+  var a = "ra";
+  var b = "da";
+  var c = "bra";
+  print("ab${a + "ca${b + "${c}"}"}");
 }
