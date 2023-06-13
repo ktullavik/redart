@@ -223,6 +223,7 @@ fn main() {
             "70" => "70.string_interpolation.dart",
             "71" => "71.string_interpolation2.dart",
             "72" => "72.string_interpolation3.dart",
+            "73" => "73.string_interpolation4.dart",
 
             "100" => "100.list_replace.dart",
 
