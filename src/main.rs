@@ -205,6 +205,7 @@ fn main() {
             "45" => "45.left_associative_sum.dart",
             "46" => "46.hard_expression.dart",
             "47" => "47.left_associative_product.dart",
+            "48" => "48.string_concat.dart",
 
             "50" => "50.method_reading_field.dart",
             "51" => "51.constructor_setting_field.dart",
