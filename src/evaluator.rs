@@ -625,6 +625,18 @@ pub fn eval(node: &Node, globals: &mut HashMap<String, Object>, store: &mut Stac
                         _ => panic!("Illegal right operand for addition: {:?}", &right_obj)
                     }
                 }
+                Object::String(s1) => {
+                    let right_obj = eval(&node.children[1], globals, store, classlist, instlist);
+
+                    match &right_obj {
+                        Object::String(s2) => {
+                            let mut ret = s1.clone();
+                            ret.push_str(s2);
+                            return Object::String(ret);
+                        }
+                        _ => panic!("Illegal right operand for addition: {:?}", &right_obj)
+                    }
+                }
                 _ => panic!("Illegal left operand for addition: {:?}", &left_obj)
             }
         }
