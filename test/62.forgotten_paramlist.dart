@@ -1,18 +1,14 @@
 
 // Dart error:
 //
-// lib/main.dart:3:3:
-// Error: Setter not found: 'a'.
-// a = 8;
-// ^
-// lib/main.dart:4:9:
-// Error: Undefined name 'a'.
-// print(a);
-//       ^
-// Error: Compilation failed.
+// bin/redarter.dart:3:6: Error: A function declaration needs an explicit list of parameters.
+// Try adding a parameter list to the function declaration.
+// void main {
+//      ^^^^
+
 
 void main {
-  a = 1;
+  var a = 1;
   print(a);
 }
 
