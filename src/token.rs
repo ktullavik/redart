@@ -121,7 +121,7 @@ impl fmt::Display for Token {
 
 impl Token {
 
-  pub fn find_token_position(&self, tokens: &Vec<Token>, index: usize) -> (usize, usize) {
+  pub fn find_token_position(&self) -> (usize, usize) {
     return match self {
       // Arithmetic
       Token::Add(l, i) |
