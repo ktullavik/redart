@@ -46,42 +46,35 @@ fn main() {
                 println!("Please specify file ...");
                 return;
             }
-
-            let input = read_inputfile(&args[2]);
-            let tokens = lexer::lex(&input);
-            for t in tokens {
-                print!("{} ", t);
-            }
-            println!();
+            do_task("lex", read_inputfile(&args[2]));
         }
         "parse" => {
             if args.len() < 3 {
                 println!("Please specify file...");
                 return;
             }
-
-            let input = read_inputfile(&args[2]);
-            let tokens = lexer::lex(&input);
-            let tree = parser::parse(&tokens).unwrap();
-            println!("\n{}\n", tree);
+            do_task("parse", read_inputfile(&args[2]));
         }
         "test" => {
-
             if args.len() < 3 {
-                println!("Please specify filename...");
+                println!("Running all tests:");
+                for testindex in 1 .. 49 {
+                    do_task("eval", read_testfile(testindex.to_string().as_str()));
+                }
                 return;
             }
+
             let a2 : &String =  &args[2];
-            let mut action = "eval";
+            let mut task = "eval";
             let nextarg: &String;
 
             match a2.as_str() {
                 "lex" => {
-                    action = "lex";
+                    task = "lex";
                     nextarg = &args[3];
                 }
                 "parse" => {
-                    action = "parse";
+                    task = "parse";
                     nextarg = &args[3];
                 }
                 "eval" => {
@@ -92,30 +85,36 @@ fn main() {
                 }
             }
 
-            let input = read_inputfile(nextarg);
+            do_task(task, read_testfile(nextarg));
+        }
+        _ => {
+            println!("Illegal argument: {}", a1);
+        }
+    }
 
 
-            if action == "lex" {
+    fn do_task(action: &str, input: String) {
+
+        match action {
+            "lex" => {
                 let tokens = lexer::lex(&input);
                 for t in tokens {
                     print!("{} ", t);
                 }
                 println!();
             }
-            else if action == "parse" {
+            "parse" => {
                 let tokens = lexer::lex(&input);
                 let tree = parser::parse(&tokens).unwrap();
                 println!("\n{}\n", tree);
             }
-            else if action == "eval" {
+            "eval" => {
                 evaluate(&input);
             }
-            else {
-                println!("Unknown action: {}", action);
+            x => {
+                println!("Unknown action: {}", x);
             }
-        }
-        _ => {
-            println!("Illegal argument: {}", a1);
+
         }
     }
 
@@ -157,7 +156,15 @@ fn main() {
     }
 
 
-    fn read_inputfile(s: &str) -> String {
+    fn read_inputfile(filename: &str) -> String {
+        let mut input = String::new();
+        let mut f = File::open(format!("{}{}", TESTPATH, filename)).expect("File not found!");
+        f.read_to_string(&mut input).expect("Error when reading input file.");
+        return input;
+    }
+
+
+    fn read_testfile(s: &str) -> String {
 
         let filename = match s {
             "1" => "1.hello.dart",
@@ -236,9 +243,8 @@ fn main() {
         };
 
         let mut input = String::new();
-        let mut f = File::open(format!("{}{}", TESTPATH, filename)).expect("File not found!");
+        let mut f = File::open(format!("{}{}", TESTPATH, filename)).expect(format!("File not found: {}.", filename).as_str());
         f.read_to_string(&mut input).expect("Error when reading input file.");
         return input;
     }
-
 }
