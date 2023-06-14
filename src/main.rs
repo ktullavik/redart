@@ -59,7 +59,7 @@ fn main() {
         "test" => {
             if args.len() < 3 {
                 println!("Running all tests:");
-                for testindex in 1 .. 49 {
+                for testindex in 1 .. 57 {
                     println!("Running test: {}", testindex);
                     do_task("eval", read_testfile(testindex.to_string().as_str()));
                 }
@@ -265,7 +265,7 @@ fn main() {
             "46" => "46.hard_expression.dart",
             "47" => "47.left_associative_product.dart",
             "48" => "48.string_concat.dart",
-
+            "49" => "49.lexical_scope.dart",
             "50" => "50.method_reading_field.dart",
             "51" => "51.constructor_setting_field.dart",
             "52" => "52.constructor_setting_field_from_arg.dart",
@@ -274,7 +274,6 @@ fn main() {
             "55" => "55.method_preincrementing_field.dart",
             "56" => "56.method_predecrementing_field.dart",
 
-            "63" => "63.lexical_scope.dart",
 
             "70" => "70.string_interpolation.dart",
             "71" => "71.string_interpolation2.dart",
