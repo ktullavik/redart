@@ -59,7 +59,7 @@ fn main() {
         "test" => {
             if args.len() < 3 {
                 println!("Running all tests:");
-                for testindex in 1 .. 57 {
+                for testindex in 1 .. 62 {
                     println!("Running test: {}", testindex);
                     do_task("eval", read_testfile(testindex.to_string().as_str()));
                 }
@@ -273,14 +273,11 @@ fn main() {
             "54" => "54.method_postdecrementing_field.dart",
             "55" => "55.method_preincrementing_field.dart",
             "56" => "56.method_predecrementing_field.dart",
-
-
-            "70" => "70.string_interpolation.dart",
-            "71" => "71.string_interpolation2.dart",
-            "72" => "72.string_interpolation3.dart",
-            "73" => "73.string_interpolation4.dart",
-
-            "80" => "80.semicolon_king.dart",
+            "57" => "57.string_interpolation.dart",
+            "58" => "58.string_interpolation2.dart",
+            "59" => "59.string_interpolation3.dart",
+            "60" => "60.string_interpolation4.dart",
+            "61" => "61.semicolon_king.dart",
 
             "100" => "100.list_replace.dart",
 
