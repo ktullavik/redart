@@ -219,6 +219,7 @@ fn main() {
             "61" => "61.double_declaration.dart",
             "62" => "62.forgotten_paramlist.dart",
             "63" => "63.lexical_scope.dart",
+            "64" => "64.plus_is_not_prefix.dart",
 
             "70" => "70.string_interpolation.dart",
             "71" => "71.string_interpolation2.dart",
