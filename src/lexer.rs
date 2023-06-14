@@ -51,7 +51,7 @@ fn read_word(tokens: &mut Vec<Token>, chars: &[char], start: usize, linenum: usi
 
 
 pub fn lex(input: &str) -> Vec<Token> {
-    let (tokens, pos) = lex_real(input, 0, 0, 0, 0);
+    let (tokens, pos) = lex_real(input, 0, 0, 1, 1);
     assert_eq!(pos, input.chars().count(), "Lexer with leftover input.");
     return tokens;
 }
