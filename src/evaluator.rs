@@ -12,7 +12,13 @@ use std::ops::{BitAnd, BitOr, BitXor};
 
 // Find functions that are direct children of 'node'
 // and add them to the store for later lookup.
-pub fn preval(node: &Node, globals: &mut HashMap<String, Object>, store: &mut Stack, classlist: &mut ClassMap, instlist: &mut InstanceMap) {
+pub fn preval(
+    node: &Node,
+    globals: &mut HashMap<String, Object>,
+    store: &mut Stack,
+    classlist: &mut ClassMap,
+    instlist: &mut InstanceMap) {
+
     dprint(" ");
     dprint("PREVAL");
     dprint(" ");
@@ -70,7 +76,12 @@ pub fn preval(node: &Node, globals: &mut HashMap<String, Object>, store: &mut St
 }
 
 
-fn preval_class(classobj: &mut Class, globals: &mut HashMap<String, Object>, store: &mut Stack, classnode: &Node, classlist: &mut ClassMap, instlist: &mut InstanceMap) {
+fn preval_class(
+    classobj: &mut Class,
+    globals: &mut HashMap<String, Object>,
+    store: &mut Stack, classnode: &Node,
+    classlist: &mut ClassMap,
+    instlist: &mut InstanceMap) {
 
     for member in &classnode.children {
         let t: &NodeType = &member.nodetype;
@@ -157,7 +168,11 @@ fn preval_class(classobj: &mut Class, globals: &mut HashMap<String, Object>, sto
 }
 
 
-pub fn eval(node: &Node, globals: &mut HashMap<String, Object>, store: &mut Stack, classlist: &mut ClassMap, instlist: &mut InstanceMap) -> Object {
+pub fn eval(
+    node: &Node, globals: &mut HashMap<String, Object>,
+    store: &mut Stack,
+    classlist: &mut ClassMap,
+    instlist: &mut InstanceMap) -> Object {
 
     let t: &NodeType = &node.nodetype;
 
