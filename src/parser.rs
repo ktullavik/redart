@@ -418,7 +418,16 @@ fn block(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
                 break;
             }
 
-            x => {
+            Token::EndSt(_, _) => {
+                // Dart allows redundant semicolons. Analyzer complains.
+                // Warranted semicolons are handled below, when statement returns.
+                //
+                // Analyser("info • bin/redarter.dart:5:1 • Unnecessary empty statement. Try removing the empty statement or restructuring the code. • empty_statements");
+                i += 1;
+                continue;
+            }
+
+            _ => {
                 let (snode, new_pos) = statement(tokens, i);
                 node.children.push(snode);
 
