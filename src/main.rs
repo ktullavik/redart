@@ -225,6 +225,8 @@ fn main() {
             "72" => "72.string_interpolation3.dart",
             "73" => "73.string_interpolation4.dart",
 
+            "80" => "80.semicolon_king.dart",
+
             "100" => "100.list_replace.dart",
 
             s => s
