@@ -519,41 +519,8 @@ fn term(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
                     (list_node, i)
                 }
             }
-
-
-            // if tokens[i] == Token::Brack2 {
-            //     return (list_node, i + 1)
-            // }
-
-            // while i < tokens.len() {
-            //
-            //     if expect_sep {
-            //         match &tokens[i] {
-            //
-            //             Token::Comma(_, _) => {
-            //                 if !expect_sep {
-            //                     panic!("Expected an identifier, but got ','");
-            //                 }
-            //                 i += 1;
-            //                 expect_sep = false;
-            //                 continue;
-            //             }
-            //
-            //             Token::Brack2(_, _) => {
-            //                 i += 1;
-            //                 break;
-            //             }
-            //             _ => panic!("Unexpected token when parsing list: {}", &tokens[i])
-            //         }
-            //     }
-            //     expect_sep = true;
-            //     let (entry, new_pos) = expression(tokens, i);
-            //     list_node.children.push(entry);
-            //     i = new_pos;
-            // }
-            //
-            // return (list_node, i)
         }
+
 
         _ => {
             panic!("Unexpected token {}, expected paren or number.", {t})
