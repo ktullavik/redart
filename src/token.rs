@@ -119,3 +119,56 @@ impl fmt::Display for Token {
   }
 }
 
+impl Token {
+
+  pub fn find_token_position(&self, tokens: &Vec<Token>, index: usize) -> (usize, usize) {
+    return match self {
+      // Arithmetic
+      Token::Add(l, i) |
+      Token::Sub(l, i) |
+      Token::Mul(l, i) |
+      Token::Div(l, i) |
+      Token::Increment(l, i) |
+      Token::Decrement(l, i) |
+      // Logic
+      Token::Not(l, i) |
+      Token::LogOr(l, i) |
+      Token::LogAnd(l, i) |
+      Token::BitOr(l, i) |
+      Token::BitXor(l, i) |
+      Token::BitAnd(l, i) |
+      // Relation
+      Token::LessThan(l, i) |
+      Token::GreaterThan(l, i) |
+      Token::LessOrEq(l, i) |
+      Token::GreaterOrEq(l, i) |
+      Token::Equal(l, i) |
+      // Primitive
+      Token::Int(_, l, i) |
+      Token::Double(_, l, i) |
+      Token::Str(_, _, l, i) |
+      Token::Bool(_, l, i) |
+      Token::Name(_, l, i) |
+      // Structure
+      Token::Class(l, i) |
+      Token::If(l, i) |
+      Token::Else(l, i) |
+      Token::Paren1(l, i) |
+      Token::Paren2(l, i) |
+      Token::Block1(l, i) |
+      Token::Block2(l, i) |
+      Token::Brack1(l, i) |
+      Token::Brack2(l, i) |
+      Token::Comma(l, i) |
+      // Other
+      Token::Assign(l, i) |
+      Token::Access(l, i) |
+      Token::Return(l, i) |
+      Token::Import(l, i) |
+      Token::EndSt(l, i) => {
+        (l.clone(), i.clone())
+      },
+      Token::End => panic!("Requested position of End token")
+    }
+  }
+}
