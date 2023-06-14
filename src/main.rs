@@ -27,6 +27,7 @@ use std::collections::HashMap;
 
 
 static TESTPATH: &str = "/usr/home/kt/devel/redart/test/";
+static FAILTESTPATH: &str = "/usr/home/kt/devel/redart/testfail/";
 
 
 
@@ -87,6 +88,39 @@ fn main() {
             }
 
             do_task(task, read_testfile(nextarg));
+        }
+        "testfail" => {
+            if args.len() < 3 {
+                println!("Running all fail tests:");
+                for testindex in 1 .. 5 {
+                    println!("Running test: {}", testindex);
+                    do_task("eval", read_failtestfile(testindex.to_string().as_str()));
+                }
+                return;
+            }
+
+            let a2 : &String =  &args[2];
+            let mut task = "eval";
+            let nextarg: &String;
+
+            match a2.as_str() {
+                "lex" => {
+                    task = "lex";
+                    nextarg = &args[3];
+                }
+                "parse" => {
+                    task = "parse";
+                    nextarg = &args[3];
+                }
+                "eval" => {
+                    nextarg = &args[3];
+                }
+                _ => {
+                    nextarg = &args[2];
+                }
+            }
+
+            do_task(task, read_failtestfile(nextarg));
         }
         _ => {
             println!("Illegal argument: {}", a1);
@@ -165,6 +199,21 @@ fn main() {
     }
 
 
+    fn read_failtestfile(s: &str) -> String {
+        let filename = match s {
+            "1" => "1.cross_function_leak.dart",
+            "2" => "2.double_declaration.dart",
+            "3" => "3.forgotten_paramlist.dart",
+            "4" => "4.plus_is_not_prefix.dart",
+            x => panic!("Unknown failtest: {}", x)
+        };
+        let mut input = String::new();
+        let mut f = File::open(format!("{}{}", FAILTESTPATH, filename)).expect(format!("File not found: {}.", filename).as_str());
+        f.read_to_string(&mut input).expect("Error when reading input file.");
+        return input;
+    }
+
+
     fn read_testfile(s: &str) -> String {
 
         let filename = match s {
@@ -225,11 +274,7 @@ fn main() {
             "55" => "55.method_preincrementing_field.dart",
             "56" => "56.method_predecrementing_field.dart",
 
-            "60" => "60.cross_function_leak.dart",
-            "61" => "61.double_declaration.dart",
-            "62" => "62.forgotten_paramlist.dart",
             "63" => "63.lexical_scope.dart",
-            "64" => "64.plus_is_not_prefix.dart",
 
             "70" => "70.string_interpolation.dart",
             "71" => "71.string_interpolation2.dart",
