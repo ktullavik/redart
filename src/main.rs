@@ -1,7 +1,6 @@
 extern crate rustyline;
 extern crate nuid;
 extern crate queues;
-extern crate core;
 
 use std::io::prelude::*;
 use std::env;
