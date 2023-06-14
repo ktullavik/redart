@@ -9,6 +9,7 @@ class Banana {
   void printType() {
     print("Type should be Pisang:");
     print(bananatype);
+    assert(bananatype == "Pisang");
   }
 }
 

@@ -2,6 +2,7 @@
 void main() {
   print("Should be 55:")
   print(fibo(10));
+  assert(fibo(10) == 55);
 }
 
 void fibo(n) {

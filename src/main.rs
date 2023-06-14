@@ -59,6 +59,7 @@ fn main() {
             if args.len() < 3 {
                 println!("Running all tests:");
                 for testindex in 1 .. 49 {
+                    println!("Running test: {}", testindex);
                     do_task("eval", read_testfile(testindex.to_string().as_str()));
                 }
                 return;

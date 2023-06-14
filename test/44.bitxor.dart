@@ -7,5 +7,6 @@ void main() {
   int b = 30;
   int c = a ^ b;
   print(c);
+  assert(c==44);
 }
 

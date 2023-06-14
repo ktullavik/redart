@@ -6,5 +6,6 @@ void main() {
 
 void printIt(a) {
   print(a);
+  assert(a == 37);
 }
 

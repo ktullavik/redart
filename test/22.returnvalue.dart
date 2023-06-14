@@ -2,6 +2,7 @@
 void main() {
   int i = returner();
   print(i);
+  assert(i == 22);
 }
 
 

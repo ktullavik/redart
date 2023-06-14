@@ -21,5 +21,6 @@ void main() {
   int i = 17;
   i++;
   print(i);
+  assert(i == 18);
 }
 

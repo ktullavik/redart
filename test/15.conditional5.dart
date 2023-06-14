@@ -4,12 +4,15 @@ void main() {
 
   if (false) {
     print("Wrong!");
+    assert(false);
   }
   else if (false) {
-    print("Correct!");
+    print("Wrong again!");
+    assert(false);
   }
   else {
     print("Correct!");
+    assert(true);
   }
 
 }

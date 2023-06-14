@@ -7,4 +7,5 @@ void main() {
   int b = 46;
   int c = a & b;
   print(c);
+  assert(c == 42);
 }

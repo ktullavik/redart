@@ -7,6 +7,7 @@ void main() {
   int b = 11;
   int c = a | b;
   print(c);
+  assert(c == 43);
 }
 
 

@@ -6,6 +6,7 @@ void main() {
 
 void printIt(a, b) {
   print(a + b);
+  assert(a + b == 38);
 }
 
 

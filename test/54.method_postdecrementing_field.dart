@@ -9,6 +9,7 @@ class Banana {
   void unripen() {
     ripeness--;
     print(ripeness);
+    assert(ripeness == 54);
   }
 
 }

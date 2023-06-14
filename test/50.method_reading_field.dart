@@ -9,6 +9,7 @@ class Banana {
   void printRipeness() {
     print("Ripeness should be 50:");
     print(ripeness);
+    assert(50 == ripeness);
   }
 
 }
