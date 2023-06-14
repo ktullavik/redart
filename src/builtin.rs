@@ -1,5 +1,6 @@
 use std::process;
 use object::Object;
+use std::collections::HashMap;
 
 
 pub fn has_function(name: &str) -> bool {
@@ -11,7 +12,7 @@ pub fn has_function(name: &str) -> bool {
 }
 
 
-pub fn call(name: &str, args: &Vec<Object>) -> Object {
+pub fn call(name: &str, args: &Vec<Object>, ctx: &HashMap<&str, String>) -> Object {
     match name {
 
         "assert" => {
@@ -28,14 +29,15 @@ pub fn call(name: &str, args: &Vec<Object>) -> Object {
                         let mut msg = String::from("is not true.");
 
                         if args.len() > 1 {
+                            // Dart accepts ints and bools and whatnot as second param.
                             msg = format!("{}", &args[1]);
                         }
 
+                        let filepath = ctx.get("filepath").unwrap();
                         let linenum = 0;
                         let sympos = 0;
-                        let filename = "/home/kt/devel/project/filename.dart";
 
-                        println!("'file://{}': Failed assertion: line {} pos {}: argument: {}", filename, linenum, sympos, msg);
+                        println!("'file://{}': Failed assertion: line {} pos {}: argument: {}", filepath, linenum, sympos, msg);
                         // TODO: Dart manages to get the variable name in here.
                         // println!("'file://{}': Failed assertion: line {} pos {}: 'argname': {}.", filename, linenum, sympos, msg);
 
@@ -44,12 +46,19 @@ pub fn call(name: &str, args: &Vec<Object>) -> Object {
                 }
                 _ => {
                     // Should be caught generally, by type system. For now, msg like dart.
-                    // TODO, get filename, line number and symbol number.
+                    // TODO, get line number, symbol number and object type.
+
+                    let filepath = ctx.get("filepath").unwrap();
+                    let linenum = 0;
+                    let sympos = 0;
+                    let objtype = "unknown";
+
                     println!(
-                        "{}:{}:{}: Error: A value of type 'int' can't be assigned to a variable of type 'bool'.",
-                        "filename",
-                        0,
-                        0
+                        "{}:{}:{}: Error: A value of type '{}' can't be assigned to a variable of type 'bool'.",
+                        filepath,
+                        linenum,
+                        sympos,
+                        objtype
                     );
                     process::exit(1);
                 }

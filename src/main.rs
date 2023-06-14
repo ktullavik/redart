@@ -25,8 +25,8 @@ use objsys::InstanceMap;
 use std::collections::HashMap;
 
 
-static TESTPATH: &str = "/usr/home/kt/devel/redart/test/";
-static FAILTESTPATH: &str = "/usr/home/kt/devel/redart/testfail/";
+static TESTPATH: &str = "/usr/home/kt/devel/redart/test";
+static FAILTESTPATH: &str = "/usr/home/kt/devel/redart/testfail";
 
 
 
@@ -38,6 +38,9 @@ fn main() {
         panic!("Argument expected.");
     }
 
+    let mut ctx = HashMap::new();
+    ctx.insert("filename", String::from(""));
+
     let a1 = &args[1];
 
     match a1.as_str() {
@@ -46,21 +49,25 @@ fn main() {
                 println!("Please specify file ...");
                 return;
             }
-            do_task("lex", read_inputfile(&args[2]));
+            ctx.insert("filepath", String::from(&args[2]));
+            do_task("lex", read_file(&args[2]), &ctx);
         }
         "parse" => {
             if args.len() < 3 {
                 println!("Please specify file...");
                 return;
             }
-            do_task("parse", read_inputfile(&args[2]));
+            ctx.insert("filepath", String::from(&args[2]));
+            do_task("parse", read_file(&args[2]), &ctx);
         }
         "test" => {
             if args.len() < 3 {
                 println!("Running all tests:");
                 for testindex in 1 .. 62 {
                     println!("Running test: {}", testindex);
-                    do_task("eval", read_testfile(testindex.to_string().as_str()));
+                    let filepath = get_testfilepath(testindex.to_string());
+                    ctx.insert("filepath", filepath.clone());
+                    do_task("eval", read_file(filepath.as_str()), &ctx);
                 }
                 return;
             }
@@ -86,14 +93,18 @@ fn main() {
                 }
             }
 
-            do_task(task, read_testfile(nextarg));
+            let filepath = get_testfilepath(nextarg.clone());
+            ctx.insert("filepath", filepath.clone());
+            do_task(task, read_file(filepath.as_str()), &ctx);
         }
         "testfail" => {
             if args.len() < 3 {
                 println!("Running all fail tests:");
                 for testindex in 1 .. 5 {
                     println!("Running test: {}", testindex);
-                    do_task("eval", read_failtestfile(testindex.to_string().as_str()));
+                    let filepath = get_failtestfilepath(testindex.to_string());
+                    ctx.insert("filepath", filepath.clone());
+                    do_task("eval", read_file(filepath.as_str()), &ctx);
                 }
                 return;
             }
@@ -119,7 +130,9 @@ fn main() {
                 }
             }
 
-            do_task(task, read_failtestfile(nextarg));
+            let filepath = get_failtestfilepath(nextarg.clone());
+            ctx.insert("filepath", filepath.clone());
+            do_task(task, read_file(filepath.as_str()), &ctx);
         }
         _ => {
             println!("Illegal argument: {}", a1);
@@ -127,7 +140,7 @@ fn main() {
     }
 
 
-    fn do_task(action: &str, input: String) {
+    fn do_task(action: &str, input: String, ctx: &HashMap<&str, String>) {
 
         match action {
             "lex" => {
@@ -143,7 +156,7 @@ fn main() {
                 println!("\n{}\n", tree);
             }
             "eval" => {
-                evaluate(&input);
+                evaluate(&input, ctx);
             }
             x => {
                 println!("Unknown action: {}", x);
@@ -153,7 +166,7 @@ fn main() {
     }
 
 
-    fn evaluate(input: &String) {
+    fn evaluate(input: &String, ctx: &HashMap<&str, String>) {
 
         let tokens = lexer::lex(&input);
         let tree = parser::parse(&tokens).unwrap();
@@ -163,7 +176,7 @@ fn main() {
         let mut instlist = InstanceMap::new();
         let mut globals : HashMap<String, Object> = HashMap::new();
 
-        evaluator::preval(&tree, &mut globals, &mut store, &mut classlist, &mut instlist);
+        evaluator::preval(&tree, &mut globals, &mut store, &mut classlist, &mut instlist, ctx);
 
         if globals.contains_key("main") {
             let mainfunc = &globals.get("main").unwrap().clone();
@@ -175,7 +188,7 @@ fn main() {
                     utils::dprint(" ");
 
                     store.push_call();
-                    evaluator::eval(n, &mut globals, &mut store, &mut classlist, &mut instlist);
+                    evaluator::eval(n, &mut globals, &mut store, &mut classlist, &mut instlist, ctx);
                     store.pop_call();
                 }
                 x => {
@@ -190,32 +203,30 @@ fn main() {
     }
 
 
-    fn read_inputfile(filename: &str) -> String {
+    fn read_file(filepath: &str) -> String {
         let mut input = String::new();
-        let mut f = File::open(format!("{}{}", TESTPATH, filename)).expect("File not found!");
+        let mut f = File::open(filepath).expect(format!("File not found: {}.", filepath).as_str());
         f.read_to_string(&mut input).expect("Error when reading input file.");
         return input;
     }
 
 
-    fn read_failtestfile(s: &str) -> String {
-        let filename = match s {
+    fn get_failtestfilepath(s: String) -> String {
+
+        let filename = match s.as_str() {
             "1" => "1.cross_function_leak.dart",
             "2" => "2.double_declaration.dart",
             "3" => "3.forgotten_paramlist.dart",
             "4" => "4.plus_is_not_prefix.dart",
             x => panic!("Unknown failtest: {}", x)
         };
-        let mut input = String::new();
-        let mut f = File::open(format!("{}{}", FAILTESTPATH, filename)).expect(format!("File not found: {}.", filename).as_str());
-        f.read_to_string(&mut input).expect("Error when reading input file.");
-        return input;
+        return format!("{}/{}", FAILTESTPATH, filename);
     }
 
 
-    fn read_testfile(s: &str) -> String {
+    fn get_testfilepath(s: String) -> String {
 
-        let filename = match s {
+        let filename = match s.as_str() {
             "1" => "1.hello.dart",
             "2" => "2.variable.dart",
             "3" => "3.addition.dart",
@@ -281,9 +292,6 @@ fn main() {
             s => s
         };
 
-        let mut input = String::new();
-        let mut f = File::open(format!("{}{}", TESTPATH, filename)).expect(format!("File not found: {}.", filename).as_str());
-        f.read_to_string(&mut input).expect("Error when reading input file.");
-        return input;
+        return format!("{}/{}", TESTPATH, filename);
     }
 }
