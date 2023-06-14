@@ -489,7 +489,7 @@ fn term(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
                     (list_node, i + 1)
                 }
 
-                x => {
+                _ => {
                     while i < tokens.len() {
 
                         if expect_sep {
