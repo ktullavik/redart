@@ -1,4 +1,5 @@
-use evaluator::Object;
+use std::process;
+use object::Object;
 
 
 pub fn has_function(name: &str) -> bool {

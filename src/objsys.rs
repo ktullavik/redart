@@ -1,6 +1,6 @@
 use std::collections::HashMap;
-use evaluator::*;
 use utils::dprint;
+use object::Object;
 
 
 // #[derive(Clone)]

@@ -1,6 +1,7 @@
 extern crate rustyline;
 extern crate nuid;
 extern crate queues;
+extern crate core;
 
 use std::io::prelude::*;
 use std::env;
@@ -16,8 +17,9 @@ mod objsys;
 mod expression;
 mod token;
 mod node;
+mod object;
 
-use evaluator::Object;
+use object::Object;
 use stack::Stack;
 use objsys::ClassMap;
 use objsys::InstanceMap;

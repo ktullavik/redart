@@ -1,5 +1,5 @@
 use std::collections::HashMap;
-use evaluator::Object;
+use object::Object;
 
 
 pub struct Stack {
