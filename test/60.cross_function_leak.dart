@@ -1,11 +1,10 @@
 
-// Dart error:
+// dart run prints:
 //
-// lib/main.dart:9:9:
-// Error: Undefined name 'a'.
+// lib/main.dart:9:9: Error: Undefined name 'a'.
 // print(a);
 //       ^
-// Error: Compilation failed.
+
 
 void main() {
   int a = 1;
