@@ -57,7 +57,7 @@ pub fn lex(input: &str) -> Vec<Token> {
 }
 
 
-pub fn lex_real(input: &str, startpos: usize, interpol: usize, mut linenum: usize, mut symnum: usize) -> (Vec<Token>, usize) {
+fn lex_real(input: &str, startpos: usize, interpol: usize, mut linenum: usize, mut symnum: usize) -> (Vec<Token>, usize) {
 
     dprint(" ");
     dprint("LEX");
