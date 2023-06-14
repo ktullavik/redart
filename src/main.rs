@@ -279,8 +279,6 @@ fn main() {
             "60" => "60.string_interpolation4.dart",
             "61" => "61.semicolon_king.dart",
 
-            "100" => "100.list_replace.dart",
-
             s => s
         };
 
