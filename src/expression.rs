@@ -36,7 +36,7 @@ fn disjunction(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
     let t: &Token = &tokens[next_pos];
 
     return match t {
-        Token::LogOr => {
+        Token::LogOr(_, _) => {
 
             let (right, i) = disjunction(tokens, next_pos + 1);
 
@@ -64,7 +64,7 @@ fn conjunction(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
     let t: &Token = &tokens[next_pos];
 
     return match t {
-        Token::LogAnd => {
+        Token::LogAnd(_, _) => {
 
             let (right, i) = conjunction(tokens, next_pos + 1);
 
@@ -92,7 +92,7 @@ fn equality(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
     let t: &Token = &tokens[next_pos];
 
     return match t {
-        Token::Equal => {
+        Token::Equal(_, _) => {
 
             let (right, i) = comparison(tokens, next_pos + 1);
 
@@ -120,7 +120,7 @@ fn comparison(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
     let t: &Token = &tokens[next_pos];
 
     return match t {
-        Token::LessThan => {
+        Token::LessThan(_, _) => {
 
             let (right, i) = bit_or(tokens, next_pos + 1);
 
@@ -130,7 +130,7 @@ fn comparison(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
 
             (connode, i)
         }
-        Token::GreaterThan => {
+        Token::GreaterThan(_, _) => {
 
             let (right, i) = bit_or(tokens, next_pos + 1);
 
@@ -140,7 +140,7 @@ fn comparison(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
 
             (connode, i)
         }
-        Token::LessOrEq => {
+        Token::LessOrEq(_, _) => {
 
             let (right, i) = bit_or(tokens, next_pos + 1);
 
@@ -150,7 +150,7 @@ fn comparison(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
 
             (connode, i)
         }
-        Token::GreaterOrEq => {
+        Token::GreaterOrEq(_, _) => {
 
             let (right, i) = bit_or(tokens, next_pos + 1);
 
@@ -178,7 +178,7 @@ fn bit_or(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
     let c: &Token = tokens.get(next_pos).unwrap();
 
     return match c {
-        Token::BitOr => {
+        Token::BitOr(_, _) => {
             let mut node = Node::new(NodeType::BitOr);
             node.children.push(left);
 
@@ -204,7 +204,7 @@ fn bit_xor(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
     let c: &Token = tokens.get(next_pos).unwrap();
 
     return match c {
-        Token::BitXor => {
+        Token::BitXor(_, _) => {
             let mut node = Node::new(NodeType::BitXor);
             node.children.push(left);
 
@@ -230,7 +230,7 @@ fn bit_and(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
     let c: &Token = tokens.get(next_pos).unwrap();
 
     return match c {
-        Token::BitAnd => {
+        Token::BitAnd(_, _) => {
             let mut node = Node::new(NodeType::BitAnd);
             node.children.push(left);
 
@@ -264,7 +264,7 @@ fn sum_help(tokens: &Vec<Token>, pos: usize, righties: &mut Queue<Node>, ops: &m
 
     return match c {
 
-        Token::Add => {
+        Token::Add(_, _) => {
 
             ops.add(Node::new(NodeType::Add)).ok();
 
@@ -275,7 +275,7 @@ fn sum_help(tokens: &Vec<Token>, pos: usize, righties: &mut Queue<Node>, ops: &m
             node.children.push(righties.remove().unwrap());
             (node, i)
         }
-        Token::Sub => {
+        Token::Sub(_, _) => {
 
             ops.add(Node::new(NodeType::Sub)).ok();
 
@@ -315,7 +315,7 @@ fn product_help(tokens: &Vec<Token>, pos: usize, righties: &mut Queue<Node>, ops
 
     return match c {
 
-        Token::Mul => {
+        Token::Mul(_, _) => {
 
             ops.add(Node::new(NodeType::Mul)).ok();
 
@@ -327,7 +327,7 @@ fn product_help(tokens: &Vec<Token>, pos: usize, righties: &mut Queue<Node>, ops
 
             (node, i)
         }
-        Token::Div => {
+        Token::Div(_, _) => {
 
             ops.add(Node::new(NodeType::Div)).ok();
 
@@ -354,22 +354,22 @@ fn term(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
 
     match t {
 
-        &Token::Int(ref s) => {
+        &Token::Int(ref s, _, _) => {
             let node = Node::new(NodeType::Int(s.clone()));
             return (node, pos+1)
         }
 
-        &Token::Double(ref s) => {
+        &Token::Double(ref s, _, _) => {
             let node = Node::new(NodeType::Double(s.clone()));
             return (node, pos+1)
         }
 
-        &Token::Add => {
+        &Token::Add(_, _) => {
             // As Dart.
             darterror("Error: '+' is not a prefix operator.");
         }
 
-        &Token::Sub => {
+        &Token::Sub(_, _) => {
             // This handles unary minus.
             let mut unary = Node::new(NodeType::Sub);
             let (next, new_pos) = term(tokens, pos+1);
@@ -377,14 +377,14 @@ fn term(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
             return (unary, new_pos)
         }
 
-        &Token::Not => {
+        &Token::Not(_, _) => {
             let mut notnode = Node::new(NodeType::Not);
             let (next, new_pos) = term(tokens, pos+1);
             notnode.children.push(next);
             return (notnode, new_pos)
         }
 
-        &Token::Str(ref s, ref interpols) => {
+        &Token::Str(ref s, ref interpols, _, _) => {
             return if interpols.is_empty() {
                 let node = Node::new(NodeType::Str(s.clone()));
                 (node, pos + 1)
@@ -399,24 +399,24 @@ fn term(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
             }
         }
 
-        &Token::Bool(v) => {
+        &Token::Bool(v, _, _) => {
             let node = Node::new(NodeType::Bool(v));
             return (node, pos+1)
         }
 
-        &Token::Name(ref s) => {
+        &Token::Name(ref s, _, _) => {
 
             // Postfixed inc/dec should be bound tightly, so handle
             // it here rather than in expression.
 
             if tokens.len() > pos + 1 {
-                if let Token::Increment = tokens[pos + 1] {
+                if let Token::Increment(_, _) = tokens[pos + 1] {
                     let mut incnode = Node::new(NodeType::PostIncrement);
                     let node = Node::new(NodeType::Name(s.clone()));
                     incnode.children.push(node);
                     return (incnode, pos + 2);
                 }
-                if let Token::Decrement = tokens[pos + 1] {
+                if let Token::Decrement(_, _) = tokens[pos + 1] {
                     let mut decnode = Node::new(NodeType::PostDecrement);
                     let node = Node::new(NodeType::Name(s.clone()));
                     decnode.children.push(node);
@@ -424,7 +424,7 @@ fn term(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
                 }
 
 
-                if let Token::Paren1 = tokens[pos + 1] {
+                if let Token::Paren1(_, _) = tokens[pos + 1] {
                     // Function call.
                     let (args_node, new_pos) = arglist(tokens, pos + 1);
                     let mut funcall_node = Node::new(NodeType::FunCall(s.to_string()));
@@ -439,11 +439,11 @@ fn term(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
             return (node, pos+1)
         }
 
-        &Token::Increment => {
+        &Token::Increment(_, _) => {
 
             let next = &tokens[pos+1];
             return match next {
-                Token::Name(s) => {
+                Token::Name(s, _, _) => {
                     let namenode = Node::new(NodeType::Name(s.clone()));
                     let mut incnode = Node::new(NodeType::PreIncrement);
                     incnode.children.push(namenode);
@@ -453,11 +453,11 @@ fn term(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
             }
         }
 
-        &Token::Decrement => {
+        &Token::Decrement(_, _) => {
 
             let next = &tokens[pos+1];
             return match next {
-                Token::Name(s) => {
+                Token::Name(s, _, _) => {
                     let namenode = Node::new(NodeType::Name(s.clone()));
                     let mut incnode = Node::new(NodeType::PreDecrement);
                     incnode.children.push(namenode);
@@ -467,9 +467,9 @@ fn term(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
             }
         }
 
-        &Token::Paren1 => {
+        &Token::Paren1(_, _) => {
             let (wnode, new_pos) = expression(tokens, pos+1);
-            if let &Token::Paren2 = &tokens[new_pos] {
+            if let &Token::Paren2(_, _) = &tokens[new_pos] {
                 return (wnode, new_pos + 1)
             }
             else {
@@ -477,44 +477,82 @@ fn term(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
             }
         }
 
-        &Token::Brack1 => {
+        &Token::Brack1(_, _) => {
 
             let mut i = pos + 1;
             let mut list_node = Node::new(NodeType::List);
             let mut expect_sep = false;
 
-            if tokens[i] == Token::Brack2 {
-                return (list_node, i + 1)
-            }
+            return match &tokens[i] {
 
-            while i < tokens.len() {
-
-                if expect_sep {
-                    match &tokens[i] {
-
-                        Token::Comma => {
-                            if !expect_sep {
-                                panic!("Expected an identifier, but got ','");
-                            }
-                            i += 1;
-                            expect_sep = false;
-                            continue;
-                        }
-
-                        Token::Brack2 => {
-                            i += 1;
-                            break;
-                        }
-                        _ => panic!("Unexpected token when parsing list: {}", &tokens[i])
-                    }
+                Token::Brack2(_, _) => {
+                    (list_node, i + 1)
                 }
-                expect_sep = true;
-                let (entry, new_pos) = expression(tokens, i);
-                list_node.children.push(entry);
-                i = new_pos;
+
+                x => {
+                    while i < tokens.len() {
+
+                        if expect_sep {
+                            match &tokens[i] {
+
+                                Token::Comma(_, _) => {
+                                    if !expect_sep {
+                                        panic!("Expected an identifier, but got ','");
+                                    }
+                                    i += 1;
+                                    expect_sep = false;
+                                    continue;
+                                }
+
+                                Token::Brack2(_, _) => {
+                                    i += 1;
+                                    break;
+                                }
+                                _ => panic!("Unexpected token when parsing list: {}", &tokens[i])
+                            }
+                        }
+                        expect_sep = true;
+                        let (entry, new_pos) = expression(tokens, i);
+                        list_node.children.push(entry);
+                        i = new_pos;
+                    }
+                    (list_node, i)
+                }
             }
 
-            return (list_node, i)
+
+            // if tokens[i] == Token::Brack2 {
+            //     return (list_node, i + 1)
+            // }
+
+            // while i < tokens.len() {
+            //
+            //     if expect_sep {
+            //         match &tokens[i] {
+            //
+            //             Token::Comma(_, _) => {
+            //                 if !expect_sep {
+            //                     panic!("Expected an identifier, but got ','");
+            //                 }
+            //                 i += 1;
+            //                 expect_sep = false;
+            //                 continue;
+            //             }
+            //
+            //             Token::Brack2(_, _) => {
+            //                 i += 1;
+            //                 break;
+            //             }
+            //             _ => panic!("Unexpected token when parsing list: {}", &tokens[i])
+            //         }
+            //     }
+            //     expect_sep = true;
+            //     let (entry, new_pos) = expression(tokens, i);
+            //     list_node.children.push(entry);
+            //     i = new_pos;
+            // }
+            //
+            // return (list_node, i)
         }
 
         _ => {

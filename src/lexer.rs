@@ -8,7 +8,7 @@ fn is_legal_namechar(c: char) -> bool {
 }
 
 
-fn read_word(tokens: &mut Vec<Token>, chars: &[char], start: usize) -> usize {
+fn read_word(tokens: &mut Vec<Token>, chars: &[char], start: usize, linenum: usize, symnum: usize) -> usize {
     let mut len: usize = 0;
     let mut sym = String::from("");
 
@@ -23,41 +23,41 @@ fn read_word(tokens: &mut Vec<Token>, chars: &[char], start: usize) -> usize {
     }
 
     if &sym == "import" {
-        tokens.push(Token::Import);
+        tokens.push(Token::Import(linenum, symnum));
     }
     else if &sym == "true" {
-        tokens.push(Token::Bool(true));
+        tokens.push(Token::Bool(true, linenum, symnum));
     }
     else if &sym == "false" {
-        tokens.push(Token::Bool(false));
+        tokens.push(Token::Bool(false, linenum, symnum));
     }
     else if &sym == "if" {
-        tokens.push(Token::If);
+        tokens.push(Token::If(linenum, symnum));
     }
     else if &sym == "else" {
-        tokens.push(Token::Else);
+        tokens.push(Token::Else(linenum, symnum));
     }
     else if &sym == "return" {
-        tokens.push(Token::Return);
+        tokens.push(Token::Return(linenum, symnum));
     }
     else if &sym == "class" {
-        tokens.push(Token::Class);
+        tokens.push(Token::Class(linenum, symnum));
     }
     else {
-        tokens.push(Token::Name(sym));
+        tokens.push(Token::Name(sym, linenum, symnum));
     }
     return len;
 }
 
 
 pub fn lex(input: &str) -> Vec<Token> {
-    let (tokens, pos) = lex_real(input, 0, 0);
+    let (tokens, pos) = lex_real(input, 0, 0, 0, 0);
     assert_eq!(pos, input.chars().count(), "Lexer with leftover input.");
     return tokens;
 }
 
 
-pub fn lex_real(input: &str, startpos: usize, interpol: usize) -> (Vec<Token>, usize) {
+pub fn lex_real(input: &str, startpos: usize, interpol: usize, mut linenum: usize, mut symnum: usize) -> (Vec<Token>, usize) {
 
     dprint(" ");
     dprint("LEX");
@@ -76,13 +76,20 @@ pub fn lex_real(input: &str, startpos: usize, interpol: usize) -> (Vec<Token>, u
 
         match c {
 
-            ' ' | '\n' => {}
+            ' ' => {}
+
+            '\n' => {
+                assert_eq!(interpol, 0, "Unexpected newline in interpolation.");
+                linenum += 1;
+                symnum = 0;
+            }
 
             '"' => {
                 let mut s = String::new();
                 let mut closed = false;
                 let mut subs: Vec<Vec<Token>> = Vec::new();
                 i += 1;
+                symnum += 1;
 
                 while i < inp_length {
 
@@ -91,22 +98,26 @@ pub fn lex_real(input: &str, startpos: usize, interpol: usize) -> (Vec<Token>, u
                     if nc == '"' {
                         closed = true;
                         i += 1;
+                        symnum += 1;
                         break;
                     }
 
                     s.push(nc);
                     i += 1;
+                    symnum += 1;
 
                     if nc == '$' && chars[i] == '{' {
-                        let (sublex, new_pos) = lex_real(input, i + 1, interpol + 1);
+                        let (sublex, new_pos) = lex_real(input, i + 1, interpol + 1, linenum, symnum);
                         subs.push(sublex);
+                        // Assuming string interpol does not cross lines.
+                        symnum += new_pos - i;
                         i = new_pos;
                     }
                 }
                 if !closed {
                     panic!("Unclosed quote!");
                 }
-                tokens.push(Token::Str(s, subs));
+                tokens.push(Token::Str(s, subs, linenum, symnum));
                 continue;
             }
 
@@ -115,6 +126,7 @@ pub fn lex_real(input: &str, startpos: usize, interpol: usize) -> (Vec<Token>, u
                 let mut closed = false;
                 let mut subs: Vec<Vec<Token>> = Vec::new();
                 i += 1;
+                symnum += 1;
 
                 while i < inp_length {
 
@@ -123,40 +135,49 @@ pub fn lex_real(input: &str, startpos: usize, interpol: usize) -> (Vec<Token>, u
                     if nc == '\'' {
                         closed = true;
                         i += 1;
+                        symnum += 1;
                         break;
                     }
 
                     s.push(nc);
                     i += 1;
+                    symnum += 1;
 
                     if nc == '$' && chars[i] == '{' {
-                        let (sublex, new_pos) = lex_real(input, i + 1, interpol + 1);
+                        let (sublex, new_pos) = lex_real(input, i + 1, interpol + 1, linenum, symnum);
                         subs.push(sublex);
+                        // Assuming string interpol does not cross lines.
+                        symnum += new_pos - i;
                         i = new_pos;
                     }
                 }
                 if !closed {
                     panic!("Unclosed quote!");
                 }
-                tokens.push(Token::Str(s, subs));
+                tokens.push(Token::Str(s, subs, linenum, symnum));
                 continue;
             }
 
             '/' => {
-                i = i + 1;
+                i += 1;
+                symnum += 1;
                 if inp_length > i {
                     if chars[i] == '/' {
                         i += 1;
+                        symnum += 1;
                         while i < inp_length  {
                             if chars[i] == '\n' {
                                 i += 1;
+                                linenum += 1;
+                                symnum = 0;
                                 break;
                             }
                             i += 1;
+                            symnum += 1;
                         }
                     }
                     else {
-                        tokens.push(Token::Div);
+                        tokens.push(Token::Div(linenum, symnum));
                     }
                 }
                 else {
@@ -166,117 +187,124 @@ pub fn lex_real(input: &str, startpos: usize, interpol: usize) -> (Vec<Token>, u
             }
 
             '(' => {
-                tokens.push(Token::Paren1);
+                tokens.push(Token::Paren1(linenum, symnum));
             }
 
             ')' => {
-                tokens.push(Token::Paren2);
+                tokens.push(Token::Paren2(linenum, symnum));
             }
 
             '{' => {
-                tokens.push(Token::Block1);
+                tokens.push(Token::Block1(linenum, symnum));
             }
 
             '}' => {
                 if interpol > 0 {
                     return (tokens, i+1);
                 }
-                tokens.push(Token::Block2);
+                tokens.push(Token::Block2(linenum, symnum));
             }
 
             '[' => {
-                tokens.push(Token::Brack1);
+                tokens.push(Token::Brack1(linenum, symnum));
             }
 
             ']' => {
-                tokens.push(Token::Brack2);
+                tokens.push(Token::Brack2(linenum, symnum));
             }
 
             '.' => {
-                tokens.push(Token::Access);
+                tokens.push(Token::Access(linenum, symnum));
             }
 
             ',' => {
-                tokens.push(Token::Comma);
+                tokens.push(Token::Comma(linenum, symnum));
             }
 
             ';' => {
-                tokens.push(Token::EndSt);
+                tokens.push(Token::EndSt(linenum, symnum));
             }
 
             '=' => {
                 if chars[i+1] == '=' {
-                    tokens.push(Token::Equal);
+                    tokens.push(Token::Equal(linenum, symnum));
                     i += 2;
+                    symnum += 2;
                     continue;
                 }
-                tokens.push(Token::Assign);
+                tokens.push(Token::Assign(linenum, symnum));
             }
 
             '+' => {
                 if chars[i+1] == '+' {
-                    tokens.push(Token::Increment);
+                    tokens.push(Token::Increment(linenum, symnum));
                     i += 2;
+                    symnum += 2;
                     continue;
                 }
-                tokens.push(Token::Add);
+                tokens.push(Token::Add(linenum, symnum));
             }
 
             '-' => {
                 if chars[i+1] == '-' {
-                    tokens.push(Token::Decrement);
+                    tokens.push(Token::Decrement(linenum, symnum));
                     i += 2;
+                    symnum += 2;
                     continue;
                 }
-                tokens.push(Token::Sub);
+                tokens.push(Token::Sub(linenum, symnum));
             }
 
             '*' => {
-                tokens.push(Token::Mul);
+                tokens.push(Token::Mul(linenum, symnum));
             }
 
             '<' => {
                 if chars[i+1] == '=' {
-                    tokens.push(Token::LessOrEq);
+                    tokens.push(Token::LessOrEq(linenum, symnum));
                     i += 2;
+                    symnum += 2;
                     continue;
                 }
-                tokens.push(Token::LessThan);
+                tokens.push(Token::LessThan(linenum, symnum));
             }
 
             '>' => {
                 if chars[i+1] == '=' {
-                    tokens.push(Token::GreaterOrEq);
+                    tokens.push(Token::GreaterOrEq(linenum, symnum));
                     i += 2;
+                    symnum += 2;
                     continue;
                 }
-                tokens.push(Token::GreaterThan);
+                tokens.push(Token::GreaterThan(linenum, symnum));
             }
 
             '|' => {
                 if chars[i+1] == '|' {
-                    tokens.push(Token::LogOr);
+                    tokens.push(Token::LogOr(linenum, symnum));
                     i += 2;
+                    symnum += 2;
                     continue;
                 }
-                tokens.push(Token::BitOr);
+                tokens.push(Token::BitOr(linenum, symnum));
             }
 
             '&' => {
                 if chars[i+1] == '&' {
-                    tokens.push(Token::LogAnd);
+                    tokens.push(Token::LogAnd(linenum, symnum));
                     i += 2;
+                    symnum += 2;
                     continue;
                 }
-                tokens.push(Token::BitAnd);
+                tokens.push(Token::BitAnd(linenum, symnum));
             }
 
             '^' => {
-                tokens.push(Token::BitXor);
+                tokens.push(Token::BitXor(linenum, symnum));
             }
 
             '!' => {
-                tokens.push(Token::Not);
+                tokens.push(Token::Not(linenum, symnum));
             }
 
             x if x.is_digit(10) => {
@@ -288,6 +316,7 @@ pub fn lex_real(input: &str, startpos: usize, interpol: usize) -> (Vec<Token>, u
                     nc = input.get(i + nl .. i + nl + 1).unwrap().chars().next().unwrap();
                     if nc.is_digit(10) {
                         nl += 1;
+                        symnum += 1;
                         continue;
                     }
                     else if nc == '.' {
@@ -296,6 +325,7 @@ pub fn lex_real(input: &str, startpos: usize, interpol: usize) -> (Vec<Token>, u
                         }
                         is_int = false;
                         nl += 1;
+                        symnum += 1;
                         continue;
                     }
                     break;
@@ -303,19 +333,20 @@ pub fn lex_real(input: &str, startpos: usize, interpol: usize) -> (Vec<Token>, u
 
                 let val: &str = input.get(i .. i + nl).unwrap();
                 if is_int {
-                    tokens.push(Token::Int(String::from(val)));
+                    tokens.push(Token::Int(String::from(val), linenum, symnum));
                 }
                 else {
-                    tokens.push(Token::Double(String::from(val)));
+                    tokens.push(Token::Double(String::from(val), linenum, symnum));
                 }
                 i += nl;
                 continue;
             }
 
             x if x.is_alphabetic() => {
-                let word_len: usize = read_word(&mut tokens, &chars, i);
+                let word_len: usize = read_word(&mut tokens, &chars, i, linenum, symnum);
                 if word_len > 0 {
                     i += word_len;
+                    symnum += word_len;
                     continue;
                 }
             }
@@ -326,6 +357,7 @@ pub fn lex_real(input: &str, startpos: usize, interpol: usize) -> (Vec<Token>, u
         }
 
         i += 1;
+        symnum += 1;
     }
 
     tokens.push(Token::End);
