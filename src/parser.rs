@@ -1,7 +1,7 @@
 use token::Token;
 use node::{NodeType, Node};
 use expression::expression;
-use utils::{dprint, darterror};
+use utils::{dprint, dart_parseerror};
 
 
 pub fn parse(tokens: &Vec<Token>) -> Result<Node, String> {
@@ -341,7 +341,12 @@ fn paramlist(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
         }
     }
     else {
-        darterror("A function declaration needs an explicit list of parameters.")
+        dart_parseerror(
+            "A function declaration needs an explicit list of parameters.",
+            "filename",
+            tokens,
+            i - 1
+        )
     }
     panic!("Error when reading param list.")
 }

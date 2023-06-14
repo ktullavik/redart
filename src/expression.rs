@@ -1,7 +1,7 @@
 use token::Token;
 use node::{NodeType, Node};
 use parser::arglist;
-use utils::{dprint, darterror};
+use utils::{dprint, dart_parseerror};
 use queues::*;
 
 
@@ -366,7 +366,7 @@ fn term(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
 
         &Token::Add(_, _) => {
             // As Dart.
-            darterror("Error: '+' is not a prefix operator.");
+            dart_parseerror("'+' is not a prefix operator.", "filename", tokens, pos);
         }
 
         &Token::Sub(_, _) => {

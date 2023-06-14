@@ -1,6 +1,6 @@
 use node::{NodeType, Node};
 use builtin;
-use utils::{dprint, darterror};
+use utils::{dprint, dart_evalerror};
 use stack::Stack;
 use objsys::Class;
 use objsys::ClassMap;
@@ -231,7 +231,7 @@ pub fn eval(node: &Node, globals: &mut HashMap<String, Object>, store: &mut Stac
 
                     if store.has_in_lexscope(s1.as_str()) {
                         // As dart.
-                        darterror(format!("'{}' is already declared in this scope.", s1));
+                        dart_evalerror(format!("'{}' is already declared in this scope.", s1));
                     }
                     else {
                         if instlist.has_this() {
@@ -970,7 +970,7 @@ pub fn eval(node: &Node, globals: &mut HashMap<String, Object>, store: &mut Stac
             else {
                 store.printstack();
                 // As dart.
-                darterror(format!("Undefined name: '{}'.", s));
+                dart_evalerror(format!("Undefined name: '{}'.", s));
             }
         }
 
