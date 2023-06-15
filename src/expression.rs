@@ -3,12 +3,13 @@ use node::{NodeType, Node};
 use parser::arglist;
 use utils::{dprint, dart_parseerror};
 use queues::*;
+use std::collections::HashMap;
 
 
-pub fn expression(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
+pub fn expression(tokens: &Vec<Token>, pos: usize, ctx: &HashMap<&str, String>) -> (Node, usize) {
     dprint(format!("Parse: expression: {}", &tokens[pos]));
 
-    disjunction(tokens, pos)
+    disjunction(tokens, pos, ctx)
 }
 
 
@@ -24,10 +25,10 @@ pub fn expression(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
 // This is also the case for bit-or, bit-xor and bit-and.
 // Use the simpler right-tree parsing until proven stupid.
 
-fn disjunction(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
+fn disjunction(tokens: &Vec<Token>, pos: usize, ctx: &HashMap<&str, String>) -> (Node, usize) {
     dprint(format!("Parse: disjunction: {}", &tokens[pos]));
 
-    let (left, next_pos) = conjunction(tokens, pos);
+    let (left, next_pos) = conjunction(tokens, pos, ctx);
 
     if tokens.len() <= next_pos {
         return (left, next_pos);
@@ -38,7 +39,7 @@ fn disjunction(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
     return match t {
         Token::LogOr(_, _) => {
 
-            let (right, i) = disjunction(tokens, next_pos + 1);
+            let (right, i) = disjunction(tokens, next_pos + 1, ctx);
 
             let mut disnode = Node::new(NodeType::LogOr);
             disnode.children.push(left);
@@ -52,10 +53,10 @@ fn disjunction(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
 }
 
 
-fn conjunction(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
+fn conjunction(tokens: &Vec<Token>, pos: usize, ctx: &HashMap<&str, String>) -> (Node, usize) {
     dprint(format!("Parse: conjunction: {}", &tokens[pos]));
 
-    let (left, next_pos) = equality(tokens, pos);
+    let (left, next_pos) = equality(tokens, pos, ctx);
 
     if tokens.len() <= next_pos {
         return (left, next_pos);
@@ -66,7 +67,7 @@ fn conjunction(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
     return match t {
         Token::LogAnd(_, _) => {
 
-            let (right, i) = conjunction(tokens, next_pos + 1);
+            let (right, i) = conjunction(tokens, next_pos + 1, ctx);
 
             let mut connode = Node::new(NodeType::LogAnd);
             connode.children.push(left);
@@ -80,10 +81,10 @@ fn conjunction(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
 }
 
 
-fn equality(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
+fn equality(tokens: &Vec<Token>, pos: usize, ctx: &HashMap<&str, String>) -> (Node, usize) {
     dprint(format!("Parse: equality: {}", &tokens[pos]));
 
-    let (left, next_pos) = comparison(tokens, pos);
+    let (left, next_pos) = comparison(tokens, pos, ctx);
 
     if tokens.len() <= next_pos {
         return (left, next_pos);
@@ -94,7 +95,7 @@ fn equality(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
     return match t {
         Token::Equal(_, _) => {
 
-            let (right, i) = comparison(tokens, next_pos + 1);
+            let (right, i) = comparison(tokens, next_pos + 1, ctx);
 
             let mut eqnode = Node::new(NodeType::Equal);
             eqnode.children.push(left);
@@ -108,10 +109,10 @@ fn equality(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
 }
 
 
-fn comparison(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
+fn comparison(tokens: &Vec<Token>, pos: usize, ctx: &HashMap<&str, String>) -> (Node, usize) {
     dprint(format!("Parse: comparison: {}", &tokens[pos]));
 
-    let (left, next_pos) = bit_or(tokens, pos);
+    let (left, next_pos) = bit_or(tokens, pos, ctx);
 
     if tokens.len() <= next_pos {
         return (left, next_pos);
@@ -122,7 +123,7 @@ fn comparison(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
     return match t {
         Token::LessThan(_, _) => {
 
-            let (right, i) = bit_or(tokens, next_pos + 1);
+            let (right, i) = bit_or(tokens, next_pos + 1, ctx);
 
             let mut connode = Node::new(NodeType::LessThan);
             connode.children.push(left);
@@ -132,7 +133,7 @@ fn comparison(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
         }
         Token::GreaterThan(_, _) => {
 
-            let (right, i) = bit_or(tokens, next_pos + 1);
+            let (right, i) = bit_or(tokens, next_pos + 1, ctx);
 
             let mut connode = Node::new(NodeType::GreaterThan);
             connode.children.push(left);
@@ -142,7 +143,7 @@ fn comparison(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
         }
         Token::LessOrEq(_, _) => {
 
-            let (right, i) = bit_or(tokens, next_pos + 1);
+            let (right, i) = bit_or(tokens, next_pos + 1, ctx);
 
             let mut connode = Node::new(NodeType::LessOrEq);
             connode.children.push(left);
@@ -152,7 +153,7 @@ fn comparison(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
         }
         Token::GreaterOrEq(_, _) => {
 
-            let (right, i) = bit_or(tokens, next_pos + 1);
+            let (right, i) = bit_or(tokens, next_pos + 1, ctx);
 
             let mut connode = Node::new(NodeType::GreaterOrEq);
             connode.children.push(left);
@@ -166,10 +167,10 @@ fn comparison(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
 }
 
 
-fn bit_or(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
+fn bit_or(tokens: &Vec<Token>, pos: usize, ctx: &HashMap<&str, String>) -> (Node, usize) {
     dprint(format!("Parse: bit_or: {}", &tokens[pos]));
 
-    let (left, next_pos) = bit_xor(tokens, pos);
+    let (left, next_pos) = bit_xor(tokens, pos, ctx);
 
     if tokens.len() <= next_pos {
         return (left, next_pos);
@@ -182,7 +183,7 @@ fn bit_or(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
             let mut node = Node::new(NodeType::BitOr);
             node.children.push(left);
 
-            let (right, i) = bit_or(tokens, next_pos + 1);
+            let (right, i) = bit_or(tokens, next_pos + 1, ctx);
             node.children.push(right);
 
             (node, i)
@@ -192,10 +193,10 @@ fn bit_or(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
 }
 
 
-fn bit_xor(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
+fn bit_xor(tokens: &Vec<Token>, pos: usize, ctx: &HashMap<&str, String>) -> (Node, usize) {
     dprint(format!("Parse: bit_xor: {}", &tokens[pos]));
 
-    let (left, next_pos) = bit_and(tokens, pos);
+    let (left, next_pos) = bit_and(tokens, pos, ctx);
 
     if tokens.len() <= next_pos {
         return (left, next_pos);
@@ -208,7 +209,7 @@ fn bit_xor(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
             let mut node = Node::new(NodeType::BitXor);
             node.children.push(left);
 
-            let (right, i) = bit_xor(tokens, next_pos + 1);
+            let (right, i) = bit_xor(tokens, next_pos + 1, ctx);
             node.children.push(right);
 
             (node, i)
@@ -218,10 +219,10 @@ fn bit_xor(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
 }
 
 
-fn bit_and(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
+fn bit_and(tokens: &Vec<Token>, pos: usize, ctx: &HashMap<&str, String>) -> (Node, usize) {
     dprint(format!("Parse: bit_and: {}", &tokens[pos]));
 
-    let (left, next_pos) = sum(tokens, pos);
+    let (left, next_pos) = sum(tokens, pos, ctx);
 
     if tokens.len() <= next_pos {
         return (left, next_pos);
@@ -234,7 +235,7 @@ fn bit_and(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
             let mut node = Node::new(NodeType::BitAnd);
             node.children.push(left);
 
-            let (right, i) = bit_and(tokens, next_pos + 1);
+            let (right, i) = bit_and(tokens, next_pos + 1, ctx);
             node.children.push(right);
 
             (node, i)
@@ -244,16 +245,16 @@ fn bit_and(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
 }
 
 
-fn sum(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
+fn sum(tokens: &Vec<Token>, pos: usize, ctx: &HashMap<&str, String>) -> (Node, usize) {
     dprint(format!("Parse: sum: {}", &tokens[pos]));
 
-    sum_help(tokens, pos, &mut queue![], &mut queue![])
+    sum_help(tokens, pos, &mut queue![], &mut queue![], ctx)
 }
 
 
-fn sum_help(tokens: &Vec<Token>, pos: usize, righties: &mut Queue<Node>, ops: &mut Queue<Node>) -> (Node, usize) {
+fn sum_help(tokens: &Vec<Token>, pos: usize, righties: &mut Queue<Node>, ops: &mut Queue<Node>, ctx: &HashMap<&str, String>) -> (Node, usize) {
 
-    let (n, next_pos) = product(tokens, pos);
+    let (n, next_pos) = product(tokens, pos, ctx);
     righties.add(n).ok();
 
     if tokens.len() <= next_pos {
@@ -268,7 +269,7 @@ fn sum_help(tokens: &Vec<Token>, pos: usize, righties: &mut Queue<Node>, ops: &m
 
             ops.add(Node::new(NodeType::Add)).ok();
 
-            let (deeper, i) = sum_help(tokens, next_pos + 1, righties, ops);
+            let (deeper, i) = sum_help(tokens, next_pos + 1, righties, ops, ctx);
 
             let mut node = ops.remove().unwrap();
             node.children.push(deeper);
@@ -279,7 +280,7 @@ fn sum_help(tokens: &Vec<Token>, pos: usize, righties: &mut Queue<Node>, ops: &m
 
             ops.add(Node::new(NodeType::Sub)).ok();
 
-            let (deeper, i) = sum_help(tokens, next_pos + 1, righties, ops);
+            let (deeper, i) = sum_help(tokens, next_pos + 1, righties, ops, ctx);
 
             let mut node = ops.remove().unwrap();
             node.children.push(deeper);
@@ -295,16 +296,16 @@ fn sum_help(tokens: &Vec<Token>, pos: usize, righties: &mut Queue<Node>, ops: &m
 }
 
 
-fn product(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
+fn product(tokens: &Vec<Token>, pos: usize, ctx: &HashMap<&str, String>) -> (Node, usize) {
     dprint(format!("Parse: product: {}", &tokens[pos]));
 
-    product_help(tokens, pos, &mut queue![], &mut queue![])
+    product_help(tokens, pos, &mut queue![], &mut queue![], ctx)
 }
 
 
-fn product_help(tokens: &Vec<Token>, pos: usize, righties: &mut Queue<Node>, ops: &mut Queue<Node>) -> (Node, usize) {
+fn product_help(tokens: &Vec<Token>, pos: usize, righties: &mut Queue<Node>, ops: &mut Queue<Node>, ctx: &HashMap<&str, String>) -> (Node, usize) {
 
-    let (n, next_pos) = term(tokens, pos);
+    let (n, next_pos) = term(tokens, pos, ctx);
     righties.add(n).ok();
 
     if tokens.len() <= next_pos {
@@ -319,7 +320,7 @@ fn product_help(tokens: &Vec<Token>, pos: usize, righties: &mut Queue<Node>, ops
 
             ops.add(Node::new(NodeType::Mul)).ok();
 
-            let (deeper, i) = product_help(tokens, next_pos + 1, righties, ops);
+            let (deeper, i) = product_help(tokens, next_pos + 1, righties, ops, ctx);
 
             let mut node = ops.remove().unwrap();
             node.children.push(deeper);
@@ -331,7 +332,7 @@ fn product_help(tokens: &Vec<Token>, pos: usize, righties: &mut Queue<Node>, ops
 
             ops.add(Node::new(NodeType::Div)).ok();
 
-            let (deeper, i) = product_help(tokens, next_pos + 1, righties, ops);
+            let (deeper, i) = product_help(tokens, next_pos + 1, righties, ops, ctx);
 
             let mut node = ops.remove().unwrap();
             node.children.push(deeper);
@@ -347,7 +348,7 @@ fn product_help(tokens: &Vec<Token>, pos: usize, righties: &mut Queue<Node>, ops
 }
 
 
-fn term(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
+fn term(tokens: &Vec<Token>, pos: usize, ctx: &HashMap<&str, String>) -> (Node, usize) {
     dprint(format!("Parse: term: {}", &tokens[pos]));
 
     let t: &Token = tokens.get(pos).expect("No token for term!");
@@ -372,14 +373,14 @@ fn term(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
         &Token::Sub(_, _) => {
             // This handles unary minus.
             let mut unary = Node::new(NodeType::Sub);
-            let (next, new_pos) = term(tokens, pos+1);
+            let (next, new_pos) = term(tokens, pos+1, ctx);
             unary.children.push(next);
             return (unary, new_pos)
         }
 
         &Token::Not(_, _) => {
             let mut notnode = Node::new(NodeType::Not);
-            let (next, new_pos) = term(tokens, pos+1);
+            let (next, new_pos) = term(tokens, pos+1, ctx);
             notnode.children.push(next);
             return (notnode, new_pos)
         }
@@ -392,7 +393,7 @@ fn term(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
                 let mut node = Node::new(NodeType::Str(s.clone()));
 
                 for itp in interpols {
-                    let (itpn, _) = expression(&itp, 0);
+                    let (itpn, _) = expression(&itp, 0, ctx);
                     node.children.push(itpn);
                 }
                 (node, pos + 1)
@@ -426,7 +427,7 @@ fn term(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
 
                 if let Token::Paren1(_, _) = tokens[pos + 1] {
                     // Function call.
-                    let (args_node, new_pos) = arglist(tokens, pos + 1);
+                    let (args_node, new_pos) = arglist(tokens, pos + 1, ctx);
                     let mut funcall_node = Node::new(NodeType::FunCall(s.to_string()));
                     funcall_node.nodetype = NodeType::FunCall(s.to_string());
                     funcall_node.children.push(args_node);
@@ -468,7 +469,7 @@ fn term(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
         }
 
         &Token::Paren1(_, _) => {
-            let (wnode, new_pos) = expression(tokens, pos+1);
+            let (wnode, new_pos) = expression(tokens, pos+1, ctx);
             if let &Token::Paren2(_, _) = &tokens[new_pos] {
                 return (wnode, new_pos + 1)
             }
@@ -512,7 +513,7 @@ fn term(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
                             }
                         }
                         expect_sep = true;
-                        let (entry, new_pos) = expression(tokens, i);
+                        let (entry, new_pos) = expression(tokens, i, ctx);
                         list_node.children.push(entry);
                         i = new_pos;
                     }

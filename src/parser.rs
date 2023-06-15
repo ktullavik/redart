@@ -2,9 +2,10 @@ use token::Token;
 use node::{NodeType, Node};
 use expression::expression;
 use utils::{dprint, dart_parseerror};
+use std::collections::HashMap;
 
 
-pub fn parse(tokens: &Vec<Token>) -> Result<Node, String> {
+pub fn parse(tokens: &Vec<Token>, ctx: &HashMap<&str, String>) -> Result<Node, String> {
     dprint(" ");
     dprint("PARSE");
     dprint(" ");
@@ -16,7 +17,7 @@ pub fn parse(tokens: &Vec<Token>) -> Result<Node, String> {
 
 
     while i < tokens.len() - 1 {
-        let (funnode, new_pos) = fundef(tokens, i);
+        let (funnode, new_pos) = fundef(tokens, i, ctx);
         root.children.push(funnode);
 
         dprint(format!("Parse: read len: {}", new_pos));
@@ -73,7 +74,7 @@ fn directives(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
 }
 
 
-fn fundef(tokens: &Vec<Token>, pos: usize) -> (Node, usize)  {
+fn fundef(tokens: &Vec<Token>, pos: usize, ctx: &HashMap<&str, String>) -> (Node, usize)  {
 
     let mut i: usize = pos;
     let t: &Token = tokens.get(i).unwrap();
@@ -102,7 +103,7 @@ fn fundef(tokens: &Vec<Token>, pos: usize) -> (Node, usize)  {
                         Token::Block1(_, _) => {
                             // Could increment i here. But is it better for block parse to
                             // just expect starting at '{'?
-                            let (body, new_pos) = block(tokens, i);
+                            let (body, new_pos) = block(tokens, i, ctx);
                             node.children.push(body);
                             i = new_pos;
                             dprint(format!("Parse: fundef parsed to {}", new_pos));
@@ -122,7 +123,7 @@ fn fundef(tokens: &Vec<Token>, pos: usize) -> (Node, usize)  {
         }
 
         Token::Class(_, _) => {
-            let (cnode, new_pos) = class(tokens, i);
+            let (cnode, new_pos) = class(tokens, i, ctx);
             dprint(format!("parsed class to pos {}", new_pos));
             return (cnode, new_pos);
         }
@@ -139,7 +140,7 @@ fn fundef(tokens: &Vec<Token>, pos: usize) -> (Node, usize)  {
 }
 
 
-fn class(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
+fn class(tokens: &Vec<Token>, pos: usize, ctx: &HashMap<&str, String>) -> (Node, usize) {
 
     let mut i = pos;
 
@@ -152,7 +153,7 @@ fn class(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
             if let Token::Block1(_, _) = tokens[i] {
                 i += 1;
 
-                let (members, new_pos) = readmembers(classname.clone(), tokens, i);
+                let (members, new_pos) = readmembers(classname.clone(), tokens, i, ctx);
                 classnode.children = members;
                 i = new_pos;
                 // }
@@ -174,7 +175,7 @@ fn class(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
 }
 
 
-fn readmembers(classname: String, tokens: &Vec<Token>, pos: usize) -> (Vec<Node>, usize) {
+fn readmembers(classname: String, tokens: &Vec<Token>, pos: usize, ctx: &HashMap<&str, String>) -> (Vec<Node>, usize) {
     // Expecting member declaration - field or method.
 
     let mut i = pos;
@@ -194,7 +195,7 @@ fn readmembers(classname: String, tokens: &Vec<Token>, pos: usize) -> (Vec<Node>
 
                     let mut constructor_node = Node::new(NodeType::Constructor(classname.clone()));
                     let (params, new_pos) = paramlist(tokens, i);
-                    let (body, new_pos)  = block(tokens, new_pos + 1);
+                    let (body, new_pos)  = block(tokens, new_pos + 1, ctx);
                     i = new_pos;
 
                     constructor_node.children.push(params);
@@ -223,7 +224,7 @@ fn readmembers(classname: String, tokens: &Vec<Token>, pos: usize) -> (Vec<Node>
 
                                 if let Token::Block1(_, _) = tokens[i] {
                                     i += 1;
-                                    let (body, new_pos) = block(tokens, i);
+                                    let (body, new_pos) = block(tokens, i, ctx);
                                     i = new_pos;
 
                                     method_node.children.push(param_node);
@@ -253,7 +254,7 @@ fn readmembers(classname: String, tokens: &Vec<Token>, pos: usize) -> (Vec<Node>
 
                                 i += 1;
 
-                                let (val, new_pos) = expression(tokens, i);
+                                let (val, new_pos) = expression(tokens, i, ctx);
                                 i = new_pos;
 
                                 if let Token::EndSt(_, _) = tokens[i] {
@@ -352,7 +353,7 @@ fn paramlist(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
 }
 
 
-pub fn arglist(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
+pub fn arglist(tokens: &Vec<Token>, pos: usize, ctx: &HashMap<&str, String>) -> (Node, usize) {
 
     let mut i = pos;
 
@@ -382,7 +383,7 @@ pub fn arglist(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
                     if expect_comma {
                         panic!("Error: Expected separator in arg list.");
                     }
-                    let (arg, new_pos) = expression(tokens, i);
+                    let (arg, new_pos) = expression(tokens, i, ctx);
                     node.children.push(arg);
                     i = new_pos;
                     expect_comma = true;
@@ -401,7 +402,7 @@ pub fn arglist(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
 ///
 /// Expects first token after block started by {.
 /// Consumes the end-block token }.
-fn block(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
+fn block(tokens: &Vec<Token>, pos: usize, ctx: &HashMap<&str, String>) -> (Node, usize) {
 
     let mut node = Node::new(NodeType::Block);
     let mut i = pos;
@@ -433,7 +434,7 @@ fn block(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
             }
 
             _ => {
-                let (snode, new_pos) = statement(tokens, i);
+                let (snode, new_pos) = statement(tokens, i, ctx);
                 node.children.push(snode);
 
                 i = new_pos;
@@ -459,7 +460,7 @@ fn block(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
 }
 
 
-fn statement(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
+fn statement(tokens: &Vec<Token>, pos: usize, ctx: &HashMap<&str, String>) -> (Node, usize) {
 
     dprint(format!("Parse: statement: {}", &tokens[pos]));
 
@@ -487,7 +488,7 @@ fn statement(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
                         Token::Assign(_, _) => {
                             let mut ass_node = Node::new(NodeType::Assign);
                             ass_node.children.push(typed_var);
-                            let (right_node, i) = expression(tokens, i);
+                            let (right_node, i) = expression(tokens, i, ctx);
                             ass_node.children.push(right_node);
                             dprint(format!("Parse: returning statement at token {}", i));
                             return (ass_node, i)
@@ -502,7 +503,7 @@ fn statement(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
                     let mut ass_node = Node::new(NodeType::Assign);
 
                     let var = Node::new(NodeType::Name(s.to_string()));
-                    let (right_node, i) = expression(tokens, i);
+                    let (right_node, i) = expression(tokens, i, ctx);
 
                     ass_node.children.push(var);
                     ass_node.children.push(right_node);
@@ -513,7 +514,7 @@ fn statement(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
                 Token::Paren1(_, _) => {
                     // Function call.
                     // These are also handled in term. Maybe we can just pass this along?
-                    let (args_node, new_pos) = arglist(tokens, i);
+                    let (args_node, new_pos) = arglist(tokens, i, ctx);
                     i = new_pos;
                     let mut funcall_node = Node::new(NodeType::FunCall(s.to_string()));
                     funcall_node.nodetype = NodeType::FunCall(s.to_string());
@@ -538,7 +539,7 @@ fn statement(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
                                 Token::Paren1(_, _) => {
 
                                     // method call
-                                    let (args, new_pos) = arglist(tokens, i);
+                                    let (args, new_pos) = arglist(tokens, i, ctx);
                                     i = new_pos;
                                     let mut methcall_node = Node::new(NodeType::MethodCall(s.to_string(), acc_name.to_string()));
                                     methcall_node.children.push(args);
@@ -573,7 +574,7 @@ fn statement(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
                         }
                     }
                 }
-                _ => return expression(tokens, pos)
+                _ => return expression(tokens, pos, ctx)
             }
         }
 
@@ -582,7 +583,7 @@ fn statement(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
 
             let mut condnode = Node::new(NodeType::Conditional);
 
-            let (condpart, next_pos) = conditional(tokens, i);
+            let (condpart, next_pos) = conditional(tokens, i, ctx);
             condnode.children.push(condpart);
             i = next_pos;
 
@@ -596,7 +597,7 @@ fn statement(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
                     Token::Else(_, _) => {
                         dprint("Parse: if-else");
 
-                        let (lastcond, last_pos) = conditional(tokens, i);
+                        let (lastcond, last_pos) = conditional(tokens, i, ctx);
                         condnode.children.push(lastcond);
                         i = last_pos;
                     }
@@ -610,20 +611,20 @@ fn statement(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
         }
 
         Token::Return(_, _) => {
-            let (val, new_pos) = expression(tokens, i + 1);
+            let (val, new_pos) = expression(tokens, i + 1, ctx);
             let mut ret = Node::new(NodeType::Return);
             ret.children.push(val);
             return (ret, new_pos);
         }
 
         _ => {
-            return expression(tokens, pos);
+            return expression(tokens, pos, ctx);
         }
     }
 }
 
 
-fn conditional(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
+fn conditional(tokens: &Vec<Token>, pos: usize, ctx: &HashMap<&str, String>) -> (Node, usize) {
 
     let mut i = pos;
 
@@ -636,7 +637,7 @@ fn conditional(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
             match tokens[i] {
                 Token::Paren1(_, _) => {
                     i += 1;
-                    let (boolnode, new_pos) = expression(tokens, i);
+                    let (boolnode, new_pos) = expression(tokens, i, ctx);
 
                     match tokens[new_pos] {
                         Token::Paren2(_, _) => {
@@ -645,7 +646,7 @@ fn conditional(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
                             match tokens[i] {
                                 Token::Block1(_, _) => {
                                     i += 1;
-                                    let (bodynode, new_pos) = block(tokens, i);
+                                    let (bodynode, new_pos) = block(tokens, i, ctx);
 
                                     i = new_pos;
 
@@ -676,7 +677,7 @@ fn conditional(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
                     match tokens[i] {
                         Token::Paren1(_, _) => {
                             i += 1;
-                            let (boolnode, new_pos) = expression(tokens, i);
+                            let (boolnode, new_pos) = expression(tokens, i, ctx);
 
                             match tokens[new_pos] {
                                 Token::Paren2(_, _) => {
@@ -685,7 +686,7 @@ fn conditional(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
                                     match tokens[i] {
                                         Token::Block1(_, _) => {
                                             i += 1;
-                                            let (bodynode, new_pos) = block(tokens, i);
+                                            let (bodynode, new_pos) = block(tokens, i, ctx);
                                             i = new_pos;
 
                                             let mut elseifnode = Node::new(NodeType::ElseIf);
@@ -708,7 +709,7 @@ fn conditional(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
 
                     i += 1;
 
-                    let (bodynode, new_pos) = block(tokens, i);
+                    let (bodynode, new_pos) = block(tokens, i, ctx);
                     i = new_pos;
 
                     let mut elsenode = Node::new(NodeType::Else);

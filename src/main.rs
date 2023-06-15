@@ -152,7 +152,7 @@ fn main() {
             }
             "parse" => {
                 let tokens = lexer::lex(&input);
-                let tree = parser::parse(&tokens).unwrap();
+                let tree = parser::parse(&tokens, ctx).unwrap();
                 println!("\n{}\n", tree);
             }
             "eval" => {
@@ -169,7 +169,7 @@ fn main() {
     fn evaluate(input: &String, ctx: &HashMap<&str, String>) {
 
         let tokens = lexer::lex(&input);
-        let tree = parser::parse(&tokens).unwrap();
+        let tree = parser::parse(&tokens, ctx).unwrap();
 
         let mut store = Stack::new();
         let mut classlist = ClassMap::new();
