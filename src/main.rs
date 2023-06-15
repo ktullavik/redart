@@ -137,7 +137,6 @@ fn main() {
 }
 
 
-
 fn do_task(action: &str, input: String, ctx: &HashMap<&str, String>) {
 
     match action {
@@ -159,7 +158,6 @@ fn do_task(action: &str, input: String, ctx: &HashMap<&str, String>) {
         x => {
             println!("Unknown action: {}", x);
         }
-
     }
 }
 
