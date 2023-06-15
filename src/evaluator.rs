@@ -1182,6 +1182,37 @@ pub fn eval(
             return Object::Null;
         }
 
+        NodeType::While => {
+            dprint("Eval: NodeType::While");
+
+            let boolnode = &node.children[0];
+            let block = &node.children[1];
+
+            let mut cond = eval(boolnode, globals, store, classlist, instlist, ctx);
+
+            match &cond {
+
+                Object::Bool(mut v) => {
+
+                    while v {
+                        eval(block, globals, store, classlist, instlist, ctx);
+                        cond = eval(boolnode, globals, store, classlist, instlist, ctx);
+
+                        match &cond {
+                            Object::Bool(newcond) => {
+                                v = *newcond;
+                            }
+                            _ => {
+                                panic!("Conditional no longer bool: {}", cond)
+                            }
+                        }
+                    }
+                }
+                _ => panic!("Expected bool in conditional")
+            }
+            return Object::Null;
+        }
+
         NodeType::Block => {
             dprint("Eval: NodeType::Block");
 

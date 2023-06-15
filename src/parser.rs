@@ -610,6 +610,35 @@ fn statement(tokens: &Vec<Token>, pos: usize, ctx: &Ctx) -> (Node, usize) {
             return (condnode, i)
         }
 
+        Token::While(_, _) => {
+            i += 1;
+            if let Token::Paren1(_, _) = tokens[i] {
+
+                i += 1;
+                let (boolexpr, next_pos) = expression(tokens, i, ctx);
+
+                if let Token::Paren2(_, _) = tokens[next_pos] {
+
+                    i = next_pos + 1;
+
+                    if let Token::Block1(_, _) = tokens[i] {
+                        i += 1;
+                        let (blocknode, next_pos) = block(tokens, i, ctx);
+
+                        let mut node = Node::new(NodeType::While);
+                        node.children.push(boolexpr);
+                        node.children.push(blocknode);
+
+                        return (node, next_pos);
+                    }
+                    dart_parseerror(format!("Unexpected token1: {}", tokens[next_pos]), String::from(&ctx.filepath), tokens, i);
+                }
+                dart_parseerror(format!("Unexpected token: {}", tokens[next_pos]), String::from(&ctx.filepath), tokens, i);
+            }
+            // As dart.
+            dart_parseerror("Expected to find '('", &ctx.filepath, tokens, i);
+        }
+
         Token::Return(_, _) => {
             let (val, new_pos) = expression(tokens, i + 1, ctx);
             let mut ret = Node::new(NodeType::Return);
