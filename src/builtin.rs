@@ -1,6 +1,6 @@
+use context::Ctx;
 use std::process;
 use object::Object;
-use std::collections::HashMap;
 
 
 pub fn has_function(name: &str) -> bool {
@@ -12,7 +12,7 @@ pub fn has_function(name: &str) -> bool {
 }
 
 
-pub fn call(name: &str, args: &Vec<Object>, ctx: &HashMap<&str, String>) -> Object {
+pub fn call(name: &str, args: &Vec<Object>, ctx: &Ctx) -> Object {
     match name {
 
         "assert" => {
@@ -33,10 +33,9 @@ pub fn call(name: &str, args: &Vec<Object>, ctx: &HashMap<&str, String>) -> Obje
                             msg = format!("{}", &args[1]);
                         }
 
-                        let filepath = ctx.get("filepath").unwrap();
+                        let filepath = &ctx.filepath;
                         let linenum = 0;
                         let sympos = 0;
-
                         println!("'file://{}': Failed assertion: line {} pos {}: argument: {}", filepath, linenum, sympos, msg);
                         // TODO: Dart manages to get the variable name in here.
                         // println!("'file://{}': Failed assertion: line {} pos {}: 'argname': {}.", filename, linenum, sympos, msg);
@@ -48,7 +47,7 @@ pub fn call(name: &str, args: &Vec<Object>, ctx: &HashMap<&str, String>) -> Obje
                     // Should be caught generally, by type system. For now, msg like dart.
                     // TODO, get line number, symbol number and object type.
 
-                    let filepath = ctx.get("filepath").unwrap();
+                    let filepath = &ctx.filepath;
                     let linenum = 0;
                     let sympos = 0;
                     let objtype = "unknown";

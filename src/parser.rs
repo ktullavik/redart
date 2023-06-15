@@ -1,11 +1,11 @@
+use context::Ctx;
 use token::Token;
 use node::{NodeType, Node};
 use expression::expression;
 use utils::{dprint, dart_parseerror};
-use std::collections::HashMap;
 
 
-pub fn parse(tokens: &Vec<Token>, ctx: &HashMap<&str, String>) -> Result<Node, String> {
+pub fn parse(tokens: &Vec<Token>, ctx: &Ctx) -> Result<Node, String> {
     dprint(" ");
     dprint("PARSE");
     dprint(" ");
@@ -74,7 +74,7 @@ fn directives(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
 }
 
 
-fn fundef(tokens: &Vec<Token>, pos: usize, ctx: &HashMap<&str, String>) -> (Node, usize)  {
+fn fundef(tokens: &Vec<Token>, pos: usize, ctx: &Ctx) -> (Node, usize)  {
 
     let mut i: usize = pos;
     let t: &Token = tokens.get(i).unwrap();
@@ -140,7 +140,7 @@ fn fundef(tokens: &Vec<Token>, pos: usize, ctx: &HashMap<&str, String>) -> (Node
 }
 
 
-fn class(tokens: &Vec<Token>, pos: usize, ctx: &HashMap<&str, String>) -> (Node, usize) {
+fn class(tokens: &Vec<Token>, pos: usize, ctx: &Ctx) -> (Node, usize) {
 
     let mut i = pos;
 
@@ -175,7 +175,7 @@ fn class(tokens: &Vec<Token>, pos: usize, ctx: &HashMap<&str, String>) -> (Node,
 }
 
 
-fn readmembers(classname: String, tokens: &Vec<Token>, pos: usize, ctx: &HashMap<&str, String>) -> (Vec<Node>, usize) {
+fn readmembers(classname: String, tokens: &Vec<Token>, pos: usize, ctx: &Ctx) -> (Vec<Node>, usize) {
     // Expecting member declaration - field or method.
 
     let mut i = pos;
@@ -301,7 +301,7 @@ fn readmembers(classname: String, tokens: &Vec<Token>, pos: usize, ctx: &HashMap
 }
 
 
-fn paramlist(tokens: &Vec<Token>, pos: usize, ctx: &HashMap<&str, String>) -> (Node, usize) {
+fn paramlist(tokens: &Vec<Token>, pos: usize, ctx: &Ctx) -> (Node, usize) {
     dprint(format!("Paramlist on {}", tokens[pos]));
 
     let mut i = pos;
@@ -344,7 +344,7 @@ fn paramlist(tokens: &Vec<Token>, pos: usize, ctx: &HashMap<&str, String>) -> (N
     else {
         dart_parseerror(
             "A function declaration needs an explicit list of parameters.",
-            ctx.get("filepath").unwrap(),
+            &ctx.filepath,
             tokens,
             i - 1
         )
@@ -353,7 +353,7 @@ fn paramlist(tokens: &Vec<Token>, pos: usize, ctx: &HashMap<&str, String>) -> (N
 }
 
 
-pub fn arglist(tokens: &Vec<Token>, pos: usize, ctx: &HashMap<&str, String>) -> (Node, usize) {
+pub fn arglist(tokens: &Vec<Token>, pos: usize, ctx: &Ctx) -> (Node, usize) {
 
     let mut i = pos;
 
@@ -402,7 +402,7 @@ pub fn arglist(tokens: &Vec<Token>, pos: usize, ctx: &HashMap<&str, String>) -> 
 ///
 /// Expects first token after block started by {.
 /// Consumes the end-block token }.
-fn block(tokens: &Vec<Token>, pos: usize, ctx: &HashMap<&str, String>) -> (Node, usize) {
+fn block(tokens: &Vec<Token>, pos: usize, ctx: &Ctx) -> (Node, usize) {
 
     let mut node = Node::new(NodeType::Block);
     let mut i = pos;
@@ -460,7 +460,7 @@ fn block(tokens: &Vec<Token>, pos: usize, ctx: &HashMap<&str, String>) -> (Node,
 }
 
 
-fn statement(tokens: &Vec<Token>, pos: usize, ctx: &HashMap<&str, String>) -> (Node, usize) {
+fn statement(tokens: &Vec<Token>, pos: usize, ctx: &Ctx) -> (Node, usize) {
 
     dprint(format!("Parse: statement: {}", &tokens[pos]));
 
@@ -624,7 +624,7 @@ fn statement(tokens: &Vec<Token>, pos: usize, ctx: &HashMap<&str, String>) -> (N
 }
 
 
-fn conditional(tokens: &Vec<Token>, pos: usize, ctx: &HashMap<&str, String>) -> (Node, usize) {
+fn conditional(tokens: &Vec<Token>, pos: usize, ctx: &Ctx) -> (Node, usize) {
 
     let mut i = pos;
 

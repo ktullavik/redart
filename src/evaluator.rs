@@ -1,3 +1,4 @@
+use context::Ctx;
 use node::{NodeType, Node};
 use builtin;
 use utils::{dprint, dart_evalerror};
@@ -18,7 +19,7 @@ pub fn preval(
     store: &mut Stack,
     classlist: &mut ClassMap,
     instlist: &mut InstanceMap,
-    ctx: &HashMap<&str, String>) {
+    ctx: &Ctx) {
 
     dprint(" ");
     dprint("PREVAL");
@@ -83,7 +84,7 @@ fn preval_class(
     store: &mut Stack, classnode: &Node,
     classlist: &mut ClassMap,
     instlist: &mut InstanceMap,
-    ctx: &HashMap<&str, String>) {
+    ctx: &Ctx) {
 
     for member in &classnode.children {
         let t: &NodeType = &member.nodetype;
@@ -171,11 +172,12 @@ fn preval_class(
 
 
 pub fn eval(
-    node: &Node, globals: &mut HashMap<String, Object>,
+    node: &Node,
+    globals: &mut HashMap<String, Object>,
     store: &mut Stack,
     classlist: &mut ClassMap,
     instlist: &mut InstanceMap,
-    ctx: &HashMap<&str, String>) -> Object {
+    ctx: &Ctx) -> Object {
 
     let t: &NodeType = &node.nodetype;
 

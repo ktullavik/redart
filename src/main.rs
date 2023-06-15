@@ -18,7 +18,9 @@ mod token;
 mod node;
 mod object;
 mod testlist;
+mod context;
 
+use context::Ctx;
 use object::Object;
 use stack::Stack;
 use objsys::ClassMap;
@@ -34,8 +36,7 @@ fn main() {
         panic!("Argument expected.");
     }
 
-    let mut ctx = HashMap::new();
-    ctx.insert("filename", String::from(""));
+    let mut ctx = Ctx{filepath: String::from("")};
 
     let a1 = &args[1];
 
@@ -45,7 +46,7 @@ fn main() {
                 println!("Please specify file ...");
                 return;
             }
-            ctx.insert("filepath", String::from(&args[2]));
+            ctx.filepath = String::from(&args[2]);
             do_task("lex", read_file(&args[2]), &ctx);
         }
         "parse" => {
@@ -53,7 +54,7 @@ fn main() {
                 println!("Please specify file...");
                 return;
             }
-            ctx.insert("filepath", String::from(&args[2]));
+            ctx.filepath = String::from(&args[2]);
             do_task("parse", read_file(&args[2]), &ctx);
         }
         "test" => {
@@ -62,7 +63,7 @@ fn main() {
                 for testindex in 1 .. 62 {
                     println!("Running test: {}", testindex);
                     let filepath = testlist::get_filepath(testindex.to_string());
-                    ctx.insert("filepath", filepath.clone());
+                    ctx.filepath = filepath.clone();
                     do_task("eval", read_file(filepath.as_str()), &ctx);
                 }
                 return;
@@ -90,7 +91,7 @@ fn main() {
             }
 
             let filepath = testlist::get_filepath(nextarg.clone());
-            ctx.insert("filepath", filepath.clone());
+            ctx.filepath = filepath.clone();
             do_task(task, read_file(filepath.as_str()), &ctx);
         }
         "testfail" => {
@@ -99,7 +100,7 @@ fn main() {
                 for testindex in 1 .. 5 {
                     println!("Running test: {}", testindex);
                     let filepath = testlist::get_failfilepath(testindex.to_string());
-                    ctx.insert("filepath", filepath.clone());
+                    ctx.filepath = filepath.clone();
                     do_task("eval", read_file(filepath.as_str()), &ctx);
                 }
                 return;
@@ -127,7 +128,7 @@ fn main() {
             }
 
             let filepath = testlist::get_failfilepath(nextarg.clone());
-            ctx.insert("filepath", filepath.clone());
+            ctx.filepath = filepath.clone();
             do_task(task, read_file(filepath.as_str()), &ctx);
         }
         _ => {
@@ -137,7 +138,7 @@ fn main() {
 }
 
 
-fn do_task(action: &str, input: String, ctx: &HashMap<&str, String>) {
+fn do_task(action: &str, input: String, ctx: &Ctx) {
 
     match action {
         "lex" => {
@@ -162,7 +163,7 @@ fn do_task(action: &str, input: String, ctx: &HashMap<&str, String>) {
 }
 
 
-fn evaluate(input: &String, ctx: &HashMap<&str, String>) {
+fn evaluate(input: &String, ctx: &Ctx) {
 
     let tokens = lexer::lex(&input);
     let tree = parser::parse(&tokens, ctx).unwrap();
