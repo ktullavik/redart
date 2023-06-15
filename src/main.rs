@@ -26,7 +26,6 @@ use objsys::InstanceMap;
 use std::collections::HashMap;
 
 
-
 fn main() {
 
     let args: Vec<String> = env::args().collect();
@@ -135,76 +134,77 @@ fn main() {
             println!("Illegal argument: {}", a1);
         }
     }
+}
 
 
-    fn do_task(action: &str, input: String, ctx: &HashMap<&str, String>) {
 
-        match action {
-            "lex" => {
-                let tokens = lexer::lex(&input);
-                for t in tokens {
-                    print!("{} ", t);
-                }
-                println!();
+fn do_task(action: &str, input: String, ctx: &HashMap<&str, String>) {
+
+    match action {
+        "lex" => {
+            let tokens = lexer::lex(&input);
+            for t in tokens {
+                print!("{} ", t);
             }
-            "parse" => {
-                let tokens = lexer::lex(&input);
-                let tree = parser::parse(&tokens, ctx).unwrap();
-                println!("\n{}\n", tree);
-            }
-            "eval" => {
-                evaluate(&input, ctx);
+            println!();
+        }
+        "parse" => {
+            let tokens = lexer::lex(&input);
+            let tree = parser::parse(&tokens, ctx).unwrap();
+            println!("\n{}\n", tree);
+        }
+        "eval" => {
+            evaluate(&input, ctx);
+        }
+        x => {
+            println!("Unknown action: {}", x);
+        }
+
+    }
+}
+
+
+fn evaluate(input: &String, ctx: &HashMap<&str, String>) {
+
+    let tokens = lexer::lex(&input);
+    let tree = parser::parse(&tokens, ctx).unwrap();
+
+    let mut store = Stack::new();
+    let mut classlist = ClassMap::new();
+    let mut instlist = InstanceMap::new();
+    let mut globals : HashMap<String, Object> = HashMap::new();
+
+    evaluator::preval(&tree, &mut globals, &mut store, &mut classlist, &mut instlist, ctx);
+
+    if globals.contains_key("main") {
+        let mainfunc = &globals.get("main").unwrap().clone();
+
+        match mainfunc {
+            Object::Function(_, n, _) => {
+                utils::dprint(" ");
+                utils::dprint("EVALUATE");
+                utils::dprint(" ");
+
+                store.push_call();
+                evaluator::eval(n, &mut globals, &mut store, &mut classlist, &mut instlist, ctx);
+                store.pop_call();
             }
             x => {
-                println!("Unknown action: {}", x);
-            }
-
-        }
-    }
-
-
-    fn evaluate(input: &String, ctx: &HashMap<&str, String>) {
-
-        let tokens = lexer::lex(&input);
-        let tree = parser::parse(&tokens, ctx).unwrap();
-
-        let mut store = Stack::new();
-        let mut classlist = ClassMap::new();
-        let mut instlist = InstanceMap::new();
-        let mut globals : HashMap<String, Object> = HashMap::new();
-
-        evaluator::preval(&tree, &mut globals, &mut store, &mut classlist, &mut instlist, ctx);
-
-        if globals.contains_key("main") {
-            let mainfunc = &globals.get("main").unwrap().clone();
-
-            match mainfunc {
-                Object::Function(_, n, _) => {
-                    utils::dprint(" ");
-                    utils::dprint("EVALUATE");
-                    utils::dprint(" ");
-
-                    store.push_call();
-                    evaluator::eval(n, &mut globals, &mut store, &mut classlist, &mut instlist, ctx);
-                    store.pop_call();
-                }
-                x => {
-                    panic!("Unexpected type of 'main': {:?}", x)
-                }
+                panic!("Unexpected type of 'main': {:?}", x)
             }
         }
-        else {
-            // As Dart.
-            panic!("Error: No 'main' method found.");
-        }
     }
-
-
-    fn read_file(filepath: &str) -> String {
-        let mut input = String::new();
-        let mut f = File::open(filepath).expect(format!("File not found: {}.", filepath).as_str());
-        f.read_to_string(&mut input).expect("Error when reading input file.");
-        return input;
+    else {
+        // As Dart.
+        panic!("Error: No 'main' method found.");
     }
-
 }
+
+
+fn read_file(filepath: &str) -> String {
+    let mut input = String::new();
+    let mut f = File::open(filepath).expect(format!("File not found: {}.", filepath).as_str());
+    f.read_to_string(&mut input).expect("Error when reading input file.");
+    return input;
+}
+
