@@ -524,7 +524,7 @@ fn term(tokens: &Vec<Token>, pos: usize, ctx: &Ctx) -> (Node, usize) {
 
 
         _ => {
-            panic!("Unexpected token {}, expected paren or number.", {t})
+            panic!("Unexpected token {}.", t)
         }
     }
 }
