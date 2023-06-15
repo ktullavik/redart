@@ -5,7 +5,7 @@ use object::Object;
 
 pub fn has_function(name: &str) -> bool {
     match name {
-        "assert" => true,
+        "assert" |
         "print" => true,
         _ => false
     }
