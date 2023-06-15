@@ -92,7 +92,7 @@ fn fundef(tokens: &Vec<Token>, pos: usize, ctx: &HashMap<&str, String>) -> (Node
                 Token::Name(fname, _, _) => {
                     let mut node = Node::new(NodeType::FunDef(fname.to_string()));
                     dprint("Calling paramlist from fundef");
-                    let (params, new_pos) = paramlist(tokens, i);
+                    let (params, new_pos) = paramlist(tokens, i, ctx);
                     i = new_pos;
                     node.children.push(params);
 
@@ -194,7 +194,7 @@ fn readmembers(classname: String, tokens: &Vec<Token>, pos: usize, ctx: &HashMap
                     i += 1;
 
                     let mut constructor_node = Node::new(NodeType::Constructor(classname.clone()));
-                    let (params, new_pos) = paramlist(tokens, i);
+                    let (params, new_pos) = paramlist(tokens, i, ctx);
                     let (body, new_pos)  = block(tokens, new_pos + 1, ctx);
                     i = new_pos;
 
@@ -219,7 +219,7 @@ fn readmembers(classname: String, tokens: &Vec<Token>, pos: usize, ctx: &HashMap
                                 dprint("Found method");
 
                                 let mut method_node = Node::new(NodeType::FunDef(fieldname.clone()));
-                                let (param_node, new_pos) = paramlist(tokens, i);
+                                let (param_node, new_pos) = paramlist(tokens, i, ctx);
                                 i = new_pos;
 
                                 if let Token::Block1(_, _) = tokens[i] {
@@ -301,7 +301,7 @@ fn readmembers(classname: String, tokens: &Vec<Token>, pos: usize, ctx: &HashMap
 }
 
 
-fn paramlist(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
+fn paramlist(tokens: &Vec<Token>, pos: usize, ctx: &HashMap<&str, String>) -> (Node, usize) {
     dprint(format!("Paramlist on {}", tokens[pos]));
 
     let mut i = pos;
@@ -344,7 +344,7 @@ fn paramlist(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
     else {
         dart_parseerror(
             "A function declaration needs an explicit list of parameters.",
-            "filename",
+            ctx.get("filepath").unwrap(),
             tokens,
             i - 1
         )
