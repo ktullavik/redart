@@ -72,21 +72,17 @@ fn directives(reader: &mut Reader) -> Node {
 
 fn fundef(reader: &mut Reader, ctx: &Ctx) -> Node  {
 
-    let t = reader.sym();
-    reader.next();
+    match reader.sym() {
 
-    match t {
-        Token::Name(s, _, _) => {
-            dprint(format!("fundef found NAME {}", s));
+        Token::Name(_, _, _) => {
 
-            let t2 = reader.sym();
-            reader.next();
+            let t2 = reader.next();
 
             match t2 {
 
                 Token::Name(fname, _, _) => {
+                    reader.next();
                     let mut node = Node::new(NodeType::FunDef(fname.to_string()));
-                    dprint("Calling paramlist from fundef");
                     let params = paramlist(reader, ctx);
                     node.children.push(params);
 
@@ -99,7 +95,6 @@ fn fundef(reader: &mut Reader, ctx: &Ctx) -> Node  {
                             // just expect starting at '{'?
                             let body = block(reader, ctx);
                             node.children.push(body);
-                            dprint(format!("Parse: fundef parsed to {}", reader.position()));
                             return node;
                         }
 
@@ -116,9 +111,8 @@ fn fundef(reader: &mut Reader, ctx: &Ctx) -> Node  {
         }
 
         Token::Class(_, _) => {
-            let cnode = class(reader, ctx);
-            dprint(format!("parsed class to pos {}", reader.position()));
-            return cnode;
+            reader.next();
+            return class(reader, ctx);
         }
 
         Token::Import(_, _) => {
