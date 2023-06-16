@@ -26,6 +26,7 @@ pub fn parse(reader: &mut Reader, ctx: &Ctx) -> Result<Node, String> {
 
 
 fn directives(reader: &mut Reader) -> Node {
+    dprint(format!("Parse: directives: {}", reader.sym()));
 
     let mut directives_node = Node::new(NodeType::Directives);
 
@@ -62,6 +63,7 @@ fn directives(reader: &mut Reader) -> Node {
 
 
 fn decl(reader: &mut Reader, ctx: &Ctx) -> Node  {
+    dprint(format!("Parse: decl: {}", reader.sym()));
 
     match reader.sym() {
 
@@ -124,6 +126,7 @@ fn decl(reader: &mut Reader, ctx: &Ctx) -> Node  {
 
 
 fn class(reader: &mut Reader, ctx: &Ctx) -> Node {
+    dprint(format!("Parse: class: {}", reader.sym()));
 
     match reader.sym() {
         Token::Name(classname, _, _) => {
@@ -156,8 +159,9 @@ fn class(reader: &mut Reader, ctx: &Ctx) -> Node {
 }
 
 
+// Expecting member declaration - field or method.
 fn readmembers(classname: String, reader: &mut Reader, ctx: &Ctx) -> Vec<Node> {
-    // Expecting member declaration - field or method.
+    dprint(format!("Parse: readmembers: {}", reader.sym()));
 
     let mut members : Vec<Node> = Vec::new();
 
@@ -273,7 +277,7 @@ fn readmembers(classname: String, reader: &mut Reader, ctx: &Ctx) -> Vec<Node> {
 
 
 fn paramlist(reader: &mut Reader, ctx: &Ctx) -> Node {
-    dprint(format!("Paramlist on {}", reader.sym()));
+    dprint(format!("Parse: paramlist: {}", reader.sym()));
 
     if let Token::Paren1(_, _) = reader.sym() {
 
@@ -372,6 +376,7 @@ pub fn arglist(reader: &mut Reader, ctx: &Ctx) -> Node {
 /// Expects first token after block started by {.
 /// Consumes the end-block token }.
 fn block(reader: &mut Reader, ctx: &Ctx) -> Node {
+    dprint(format!("Parse: block: {}", reader.sym()));
 
     let mut node = Node::new(NodeType::Block);
 
@@ -428,7 +433,6 @@ fn block(reader: &mut Reader, ctx: &Ctx) -> Node {
 
 
 fn statement(reader: &mut Reader, ctx: &Ctx) -> Node {
-
     dprint(format!("Parse: statement: {}", reader.sym()));
 
     match reader.sym() {
@@ -618,6 +622,7 @@ fn statement(reader: &mut Reader, ctx: &Ctx) -> Node {
 
 
 fn conditional(reader: &mut Reader, ctx: &Ctx) -> Node {
+    dprint(format!("Parse: conditional: {}", reader.sym()));
 
     match reader.sym() {
 
