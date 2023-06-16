@@ -185,13 +185,12 @@ fn readmembers(classname: String, reader: &mut Reader, ctx: &Ctx) -> Vec<Node> {
                     continue;
                 }
 
-                reader.next();
+                match reader.next() {
 
-                match reader.sym() {
                     Token::Name(fieldname, _, _) => {
-                        reader.next();
 
-                        match reader.sym() {
+                        match reader.next() {
+
                             Token::Paren1(_, _) => {
                                 // Method
                                 dprint("Found method");
@@ -216,16 +215,15 @@ fn readmembers(classname: String, reader: &mut Reader, ctx: &Ctx) -> Vec<Node> {
                             Token::EndSt(_, _) => {
                                 // Uninitialized field declare
                                 dprint("Found uninitialized field");
+                                reader.next();
 
                                 let fieldnode = Node::new(NodeType::TypedVar(mtype.clone(), fieldname.clone()));
                                 members.push(fieldnode);
-                                reader.next();
                             }
 
                             Token::Assign(_, _) => {
                                 // Initialized field declare
                                 dprint("Found initialized field");
-
                                 reader.next();
 
                                 let val = expression(reader, ctx);
