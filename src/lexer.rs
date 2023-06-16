@@ -1,4 +1,5 @@
 use token::Token;
+use reader::Reader;
 use utils::dprint;
 
 
@@ -53,10 +54,11 @@ fn read_word(tokens: &mut Vec<Token>, chars: &[char], start: usize, linenum: usi
 }
 
 
-pub fn lex(input: &str) -> Vec<Token> {
+pub fn lex(input: &str) -> Reader {
     let (tokens, pos) = lex_real(input, 0, 0, 1, 1);
+    let reader = Reader::new(tokens);
     assert_eq!(pos, input.chars().count(), "Lexer with leftover input.");
-    return tokens;
+    return reader;
 }
 
 
@@ -67,6 +69,7 @@ fn lex_real(input: &str, startpos: usize, interpol: usize, mut linenum: usize, m
     dprint(" ");
 
     let mut tokens: Vec<Token> = Vec::new();
+
     let chars: Vec<char> = input.chars().collect();
     let inp_length = chars.len();
     let mut i: usize = startpos;

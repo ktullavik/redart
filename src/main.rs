@@ -19,6 +19,7 @@ mod node;
 mod object;
 mod testlist;
 mod context;
+mod reader;
 
 use context::Ctx;
 use object::Object;
@@ -142,15 +143,15 @@ fn do_task(action: &str, input: String, ctx: &Ctx) {
 
     match action {
         "lex" => {
-            let tokens = lexer::lex(&input);
-            for t in tokens {
+            let reader = lexer::lex(&input);
+            for t in reader.tokens() {
                 print!("{} ", t);
             }
             println!();
         }
         "parse" => {
-            let tokens = lexer::lex(&input);
-            let tree = parser::parse(&tokens, ctx).unwrap();
+            let mut tokens = lexer::lex(&input);
+            let tree = parser::parse(&mut tokens, ctx).unwrap();
             println!("\n{}\n", tree);
         }
         "eval" => {
@@ -165,8 +166,8 @@ fn do_task(action: &str, input: String, ctx: &Ctx) {
 
 fn evaluate(input: &String, ctx: &Ctx) {
 
-    let tokens = lexer::lex(&input);
-    let tree = parser::parse(&tokens, ctx).unwrap();
+    let mut tokens = lexer::lex(&input);
+    let tree = parser::parse(&mut tokens, ctx).unwrap();
 
     let mut store = Stack::new();
     let mut classlist = ClassMap::new();

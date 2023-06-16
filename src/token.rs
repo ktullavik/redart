@@ -5,6 +5,7 @@ use std::fmt;
 // the token within the line.
 
 #[derive(PartialEq)]
+#[derive(Clone)]
 pub enum Token {
   // Arithmetic
   Add(usize, usize),
@@ -121,6 +122,7 @@ impl fmt::Display for Token {
   }
 }
 
+
 impl Token {
 
   pub fn find_token_position(&self) -> (usize, usize) {
@@ -174,4 +176,5 @@ impl Token {
       Token::End => panic!("Requested position of End token")
     }
   }
+
 }

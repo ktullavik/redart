@@ -1,61 +1,56 @@
 use context::Ctx;
+use reader::Reader;
 use token::Token;
 use node::{NodeType, Node};
 use expression::expression;
 use utils::{dprint, dart_parseerror};
 
 
-pub fn parse(tokens: &Vec<Token>, ctx: &Ctx) -> Result<Node, String> {
+pub fn parse(reader: &mut Reader, ctx: &Ctx) -> Result<Node, String> {
     dprint(" ");
     dprint("PARSE");
     dprint(" ");
 
     let mut root = Node::new(NodeType::Module);
-    let directive_node = directives(tokens, 0);
-    let mut i = directive_node.1;
-    root.children.push(directive_node.0);
+    let directive_node = directives(reader);
+    root.children.push(directive_node);
 
-
-    while i < tokens.len() - 1 {
-        let (funnode, new_pos) = fundef(tokens, i, ctx);
+    while reader.position() < reader.len() - 1 {
+        let funnode= fundef(reader, ctx);
         root.children.push(funnode);
-
-        dprint(format!("Parse: read len: {}", new_pos));
-        i = new_pos;
+        dprint(format!("Parse: read len: {}", reader.position()));
     }
 
-    if i < tokens.len() - 1 {
-        return Err(format!("Expected end of input, found {} at {}", tokens[i], i))
+    if reader.position() < reader.len() - 1 {
+        return Err(format!("Expected end of input, found {} at {}", reader.sym(), reader.position()))
     }
-    else if i > tokens.len() - 1 {
-        return Err(format!("Index returned beyond end of token array. Index: {}, len: {}", i, tokens.len()))
+    else if reader.position() > reader.len() - 1 {
+        return Err(format!("Index returned beyond end of token array. Index: {}, len: {}", reader.position(), reader.len()))
     }
 
-    dprint(format!("Parse: finished at index: {}", i));
+    dprint(format!("Parse: finished at index: {}", reader.position()));
     Ok(root)
 }
 
 
-fn directives(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
+fn directives(reader: &mut Reader) -> Node {
 
-    let mut i = pos;
     let mut directives_node = Node::new(NodeType::Directives);
 
-    while i < tokens.len() {
+    while reader.position() < reader.len() {
 
-        match &tokens[i] {
+        match reader.sym() {
             Token::Import(_, _) => {
 
                 let mut node = Node::new(NodeType::Import);
 
-                i += 1;
-                if let Token::Str(s, _, _, _) = &tokens[i] {
+                reader.next();
+                if let Token::Str(s, _, _, _) = reader.sym() {
                     node.children.push(Node::new(NodeType::Str(s.clone())));
 
-                    i += 1;
-                    if let Token::EndSt(_, _) = tokens[i] {
-                        i += 1;
-
+                    reader.next();
+                    if let Token::EndSt(_, _) = reader.sym() {
+                        reader.next();
                         directives_node.children.push(node);
                     }
                     else {
@@ -69,45 +64,41 @@ fn directives(tokens: &Vec<Token>, pos: usize) -> (Node, usize) {
             _  => break
         }
     }
-
-    (directives_node, i)
+    directives_node
 }
 
 
-fn fundef(tokens: &Vec<Token>, pos: usize, ctx: &Ctx) -> (Node, usize)  {
+fn fundef(reader: &mut Reader, ctx: &Ctx) -> Node  {
 
-    let mut i: usize = pos;
-    let t: &Token = tokens.get(i).unwrap();
-    i += 1;
+    let t = reader.sym();
+    reader.next();
 
     match t {
         Token::Name(s, _, _) => {
             dprint(format!("fundef found NAME {}", s));
 
-            let t2: &Token = tokens.get(i).unwrap();
-            i += 1;
+            let t2 = reader.sym();
+            reader.next();
 
             match t2 {
 
                 Token::Name(fname, _, _) => {
                     let mut node = Node::new(NodeType::FunDef(fname.to_string()));
                     dprint("Calling paramlist from fundef");
-                    let (params, new_pos) = paramlist(tokens, i, ctx);
-                    i = new_pos;
+                    let params = paramlist(reader, ctx);
                     node.children.push(params);
 
-                    let t3: &Token = tokens.get(i).unwrap();
-                    i += 1;
+                    let t3 = reader.sym();
+                    reader.next();
 
                     match t3 {
                         Token::Block1(_, _) => {
                             // Could increment i here. But is it better for block parse to
                             // just expect starting at '{'?
-                            let (body, new_pos) = block(tokens, i, ctx);
+                            let body = block(reader, ctx);
                             node.children.push(body);
-                            i = new_pos;
-                            dprint(format!("Parse: fundef parsed to {}", new_pos));
-                            return (node, i)
+                            dprint(format!("Parse: fundef parsed to {}", reader.position()));
+                            return node;
                         }
 
                         _ => {
@@ -123,9 +114,9 @@ fn fundef(tokens: &Vec<Token>, pos: usize, ctx: &Ctx) -> (Node, usize)  {
         }
 
         Token::Class(_, _) => {
-            let (cnode, new_pos) = class(tokens, i, ctx);
-            dprint(format!("parsed class to pos {}", new_pos));
-            return (cnode, new_pos);
+            let cnode = class(reader, ctx);
+            dprint(format!("parsed class to pos {}", reader.position()));
+            return cnode;
         }
 
         Token::Import(_, _) => {
@@ -140,26 +131,24 @@ fn fundef(tokens: &Vec<Token>, pos: usize, ctx: &Ctx) -> (Node, usize)  {
 }
 
 
-fn class(tokens: &Vec<Token>, pos: usize, ctx: &Ctx) -> (Node, usize) {
+fn class(reader: &mut Reader, ctx: &Ctx) -> Node {
 
-    let mut i = pos;
-
-    match &tokens[i] {
+    match reader.sym() {
         Token::Name(classname, _, _) => {
 
+            reader.next();
+
             let mut classnode = Node::new(NodeType::Class(classname.clone()));
-            i += 1;
 
-            if let Token::Block1(_, _) = tokens[i] {
-                i += 1;
+            if let Token::Block1(_, _) = reader.sym() {
+                reader.next();
 
-                let (members, new_pos) = readmembers(classname.clone(), tokens, i, ctx);
+                let members = readmembers(classname.clone(), reader, ctx);
                 classnode.children = members;
-                i = new_pos;
-                // }
 
-                if let Token::Block2(_, _) = tokens[i] {
-                    return (classnode, i + 1)
+                if let Token::Block2(_, _) = reader.sym() {
+                    reader.next();
+                    return classnode;
                 }
                 panic!("{}", "Expected '}' to end class.")
             }
@@ -175,15 +164,14 @@ fn class(tokens: &Vec<Token>, pos: usize, ctx: &Ctx) -> (Node, usize) {
 }
 
 
-fn readmembers(classname: String, tokens: &Vec<Token>, pos: usize, ctx: &Ctx) -> (Vec<Node>, usize) {
+fn readmembers(classname: String, reader: &mut Reader, ctx: &Ctx) -> Vec<Node> {
     // Expecting member declaration - field or method.
 
-    let mut i = pos;
     let mut members : Vec<Node> = Vec::new();
 
-    while i < tokens.len() {
+    while reader.position() < reader.len() {
 
-        match &tokens[i] {
+        match reader.sym() {
 
             Token::Name(mtype, _, _) => {
 
@@ -191,47 +179,42 @@ fn readmembers(classname: String, tokens: &Vec<Token>, pos: usize, ctx: &Ctx) ->
                     // Constructor
                     dprint("Found constructor");
 
-                    i += 1;
+                    reader.next();
 
                     let mut constructor_node = Node::new(NodeType::Constructor(classname.clone()));
-                    let (params, new_pos) = paramlist(tokens, i, ctx);
-                    let (body, new_pos)  = block(tokens, new_pos + 1, ctx);
-                    i = new_pos;
+                    let params = paramlist(reader, ctx);
+                    reader.next();
+                    let body  = block(reader, ctx);
 
                     constructor_node.children.push(params);
                     constructor_node.children.push(body);
-
 
                     members.push(constructor_node);
                     continue;
                 }
 
-                i += 1;
+                reader.next();
 
-
-                match &tokens[i] {
+                match reader.sym() {
                     Token::Name(fieldname, _, _) => {
-                        i += 1;
+                        reader.next();
 
-                        match &tokens[i] {
+                        match reader.sym() {
                             Token::Paren1(_, _) => {
                                 // Method
                                 dprint("Found method");
 
                                 let mut method_node = Node::new(NodeType::FunDef(fieldname.clone()));
-                                let (param_node, new_pos) = paramlist(tokens, i, ctx);
-                                i = new_pos;
+                                let param_node = paramlist(reader, ctx);
 
-                                if let Token::Block1(_, _) = tokens[i] {
-                                    i += 1;
-                                    let (body, new_pos) = block(tokens, i, ctx);
-                                    i = new_pos;
+                                if let Token::Block1(_, _) = reader.sym() {
+                                    reader.next();
+                                    let body = block(reader, ctx);
 
                                     method_node.children.push(param_node);
                                     method_node.children.push(body);
 
                                     members.push(method_node);
-                                    // return (method_node, i)
                                 }
                                 else {
                                     panic!("{}", "Expected opening brace in method declaration: '{'")
@@ -244,22 +227,20 @@ fn readmembers(classname: String, tokens: &Vec<Token>, pos: usize, ctx: &Ctx) ->
 
                                 let fieldnode = Node::new(NodeType::TypedVar(mtype.clone(), fieldname.clone()));
                                 members.push(fieldnode);
-                                i += 1;
+                                reader.next();
                             }
 
                             Token::Assign(_, _) => {
                                 // Initialized field declare
                                 dprint("Found initialized field");
 
+                                reader.next();
 
-                                i += 1;
+                                let val = expression(reader, ctx);
 
-                                let (val, new_pos) = expression(tokens, i, ctx);
-                                i = new_pos;
-
-                                if let Token::EndSt(_, _) = tokens[i] {
+                                if let Token::EndSt(_, _) = reader.sym() {
                                     dprint("Got endst after field init");
-                                    i += 1;
+                                    reader.next();
                                 }
                                 else {
                                     panic!("Expected ';' after field initialization.")
@@ -297,34 +278,33 @@ fn readmembers(classname: String, tokens: &Vec<Token>, pos: usize, ctx: &Ctx) ->
         }
     }
 
-    (members, i)
+    members
 }
 
 
-fn paramlist(tokens: &Vec<Token>, pos: usize, ctx: &Ctx) -> (Node, usize) {
-    dprint(format!("Paramlist on {}", tokens[pos]));
+fn paramlist(reader: &mut Reader, ctx: &Ctx) -> Node {
+    dprint(format!("Paramlist on {}", reader.sym()));
 
-    let mut i = pos;
-
-    if let Token::Paren1(_, _) = &tokens[i] {
+    if let Token::Paren1(_, _) = reader.sym() {
 
         let mut node = Node::new(NodeType::ParamList);
         let mut expect_comma = false;
-        i += 1;
+        reader.next();
 
-        while i < tokens.len() {
+        while reader.position() < reader.len() {
 
-            match &tokens[i] {
+            match reader.sym() {
 
                 Token::Paren2(_, _) => {
-                    return (node, i + 1);
+                    reader.next();
+                    return node;
                 }
 
                 Token::Comma(_, _) => {
                     if !expect_comma {
                         panic!("Error: Unexpected separator in parameter list: ','.");
                     }
-                    i += 1;
+                    reader.next();
                     expect_comma = false;
                 }
 
@@ -332,11 +312,11 @@ fn paramlist(tokens: &Vec<Token>, pos: usize, ctx: &Ctx) -> (Node, usize) {
                     let paramnode= Node::new(NodeType::Name(s.to_string()));
                     node.children.push(paramnode);
                     expect_comma = true;
-                    i += 1;
+                    reader.next();
                 }
 
                 _ => {
-                    panic!("Unexpected token when reading parameters: {}", &tokens[i])
+                    panic!("Unexpected token when reading parameters: {}", reader.sym())
                 }
             }
         }
@@ -345,54 +325,57 @@ fn paramlist(tokens: &Vec<Token>, pos: usize, ctx: &Ctx) -> (Node, usize) {
         dart_parseerror(
             "A function declaration needs an explicit list of parameters.",
             &ctx.filepath,
-            tokens,
-            i - 1
+            reader.tokens(),
+            reader.position() - 1
         )
     }
     panic!("Error when reading param list.")
 }
 
 
-pub fn arglist(tokens: &Vec<Token>, pos: usize, ctx: &Ctx) -> (Node, usize) {
+pub fn arglist(reader: &mut Reader, ctx: &Ctx) -> Node {
+    dprint(format!("arglist on {}", reader.sym()));
 
-    let mut i = pos;
-
-    if let Token::Paren1(_, _) = &tokens[i] {
+    if let Token::Paren1(_, _) = reader.sym() {
 
         let mut node = Node::new(NodeType::ArgList);
         let mut expect_comma = false;
-        i += 1;
+        reader.next();
 
-        while i < tokens.len() {
+        while reader.position() < reader.len() {
 
-            match &tokens[i] {
+            println!("matching: {}", reader.sym());
+            match reader.sym() {
+
 
                 Token::Paren2(_, _) => {
-                    return (node, i + 1);
+                    reader.next();
+                    return node;
                 }
 
                 Token::Comma(_, _) => {
                     if !expect_comma {
                         panic!("Error: Unexpected separator in arg list: ','.");
                     }
-                    i += 1;
+                    println!("Closing comma");
+                    reader.next();
                     expect_comma = false;
                 }
 
-                _ => {
+                x => {
                     if expect_comma {
-                        panic!("Error: Expected separator in arg list.");
+                        panic!("Error: Expected separator in arg list. Got: {}", x);
                     }
-                    let (arg, new_pos) = expression(tokens, i, ctx);
+                    let arg = expression(reader, ctx);
+                    println!("returing from expression: {}, cur: {}, next: {}", arg, reader.sym(), reader.peek());
                     node.children.push(arg);
-                    i = new_pos;
                     expect_comma = true;
                 }
             }
         }
     }
     else {
-        panic!("Error: Expected start of arglist: '('. Found: {}", &tokens[i])
+        panic!("Error: Expected start of arglist: '('. Found: {}", reader.sym())
     }
     panic!("Error when reading arg list.")
 }
@@ -402,20 +385,18 @@ pub fn arglist(tokens: &Vec<Token>, pos: usize, ctx: &Ctx) -> (Node, usize) {
 ///
 /// Expects first token after block started by {.
 /// Consumes the end-block token }.
-fn block(tokens: &Vec<Token>, pos: usize, ctx: &Ctx) -> (Node, usize) {
+fn block(reader: &mut Reader, ctx: &Ctx) -> Node {
 
     let mut node = Node::new(NodeType::Block);
-    let mut i = pos;
 
-    while i < tokens.len() {
-        dprint(format!("Parse: block loop at: {}, token: {}", i, &tokens[i]));
+    while reader.position() < reader.len() {
+        dprint(format!("Parse: block loop at: {}, token: {}", reader.position(), reader.sym()));
 
-
-        match &tokens[i] {
+        match reader.sym() {
 
             Token::Block2(_, _) => {
                 dprint(String::from("Parse: token is end-of-block, breaking."));
-                i += 1;
+                reader.next();
                 break;
             }
 
@@ -429,25 +410,24 @@ fn block(tokens: &Vec<Token>, pos: usize, ctx: &Ctx) -> (Node, usize) {
                 // Warranted semicolons are handled below, when statement returns.
                 //
                 // Analyser("info • bin/redarter.dart:5:1 • Unnecessary empty statement. Try removing the empty statement or restructuring the code. • empty_statements");
-                i += 1;
+                reader.next();
                 continue;
             }
 
             _ => {
-                let (snode, new_pos) = statement(tokens, i, ctx);
+                let snode = statement(reader, ctx);
                 node.children.push(snode);
 
-                i = new_pos;
-
-                match &tokens[i] {
+                match reader.sym() {
 
                     Token::Block2(_, _) => {
                         // i += 1;
+                        reader.next();
                         continue;
                     }
                     Token::EndSt(_, _) => {
                         // ENDST should be consumed by statement?
-                        i += 1;
+                        reader.next();
                         continue;
                     }
                     _ => continue
@@ -456,30 +436,28 @@ fn block(tokens: &Vec<Token>, pos: usize, ctx: &Ctx) -> (Node, usize) {
         }
     }
 
-    return (node, i)
+    return node
 }
 
 
-fn statement(tokens: &Vec<Token>, pos: usize, ctx: &Ctx) -> (Node, usize) {
+fn statement(reader: &mut Reader, ctx: &Ctx) -> Node {
 
-    dprint(format!("Parse: statement: {}", &tokens[pos]));
+    dprint(format!("Parse: statement: {}", reader.sym()));
 
-    let mut i = pos;
-
-    match &tokens[i] {
+    match reader.sym() {
 
         Token::Name(s, _, _) => {
 
-            i = i + 1;
-            let t2 = &tokens[i];
+            reader.next();
+            let t2 = reader.sym();
 
             match t2 {
 
                 Token::Name(name, _, _) => {
                     // Two names in a row indicate a typed variable or function definition.
-                    i += 1;
-                    let t3 = &tokens[i];
-                    i += 1;
+                    reader.next();
+                    let t3 = reader.sym();
+                    reader.next();
 
 
                     let typed_var = Node::new(NodeType::TypedVar(s.to_string(), name.to_string()));
@@ -488,10 +466,10 @@ fn statement(tokens: &Vec<Token>, pos: usize, ctx: &Ctx) -> (Node, usize) {
                         Token::Assign(_, _) => {
                             let mut ass_node = Node::new(NodeType::Assign);
                             ass_node.children.push(typed_var);
-                            let (right_node, i) = expression(tokens, i, ctx);
+                            let right_node = expression(reader, ctx);
                             ass_node.children.push(right_node);
-                            dprint(format!("Parse: returning statement at token {}", i));
-                            return (ass_node, i)
+                            dprint(format!("Parse: returning statement at token {}", reader.position()));
+                            return ass_node;
                         }
 
                         _ => panic!("Unexpected token in statement. Expected: =. Got: {}", t3)
@@ -499,60 +477,56 @@ fn statement(tokens: &Vec<Token>, pos: usize, ctx: &Ctx) -> (Node, usize) {
                 }
 
                 Token::Assign(_, _) => {
-                    i += 1;
+                    reader.next();
                     let mut ass_node = Node::new(NodeType::Assign);
 
                     let var = Node::new(NodeType::Name(s.to_string()));
-                    let (right_node, i) = expression(tokens, i, ctx);
+                    let right_node = expression(reader, ctx);
 
                     ass_node.children.push(var);
                     ass_node.children.push(right_node);
 
-                    return (ass_node, i)
+                    return ass_node;
                 }
 
                 Token::Paren1(_, _) => {
                     // Function call.
                     // These are also handled in term. Maybe we can just pass this along?
-                    let (args_node, new_pos) = arglist(tokens, i, ctx);
-                    i = new_pos;
+                    let args_node = arglist(reader, ctx);
                     let mut funcall_node = Node::new(NodeType::FunCall(s.to_string()));
                     funcall_node.nodetype = NodeType::FunCall(s.to_string());
                     funcall_node.children.push(args_node);
-                    return (funcall_node, i)
+                    return funcall_node;
                 }
 
                 Token::Access(_, _) => {
 
-                    i += 1;
-                    let t3 = &tokens[i];
+                    reader.next();
+                    let t3 = reader.sym();
 
                     match t3 {
 
                         Token::Name(acc_name, _, _) => {
 
-
-                            i += 1;
-                            let t4 = &tokens[i];
+                            reader.next();
+                            let t4 = reader.sym();
 
                             return match t4 {
                                 Token::Paren1(_, _) => {
 
-                                    // method call
-                                    let (args, new_pos) = arglist(tokens, i, ctx);
-                                    i = new_pos;
+                                    // Method call
+                                    let args = arglist(reader, ctx);
                                     let mut methcall_node = Node::new(NodeType::MethodCall(s.to_string(), acc_name.to_string()));
                                     methcall_node.children.push(args);
 
-                                    match &tokens[i] {
+                                    match reader.sym() {
                                         Token::EndSt(_, _) => {
-                                            i += 1;
-
-                                            (methcall_node, i)
+                                            reader.next();
+                                            methcall_node
                                         }
 
                                         x => {
-                                            panic!("Unexpected token at pos {}: {}", i, x);
+                                            panic!("Unexpected token at pos {}: {}", reader.position(), x);
                                         }
                                     }
                                 }
@@ -563,8 +537,7 @@ fn statement(tokens: &Vec<Token>, pos: usize, ctx: &Ctx) -> (Node, usize) {
                                     let member_node = Node::new(NodeType::Name(acc_name.to_string()));
                                     acc_node.children.push(obj_node);
                                     acc_node.children.push(member_node);
-
-                                    (acc_node, i)
+                                    return acc_node;
                                 }
                             }
                         }
@@ -574,7 +547,11 @@ fn statement(tokens: &Vec<Token>, pos: usize, ctx: &Ctx) -> (Node, usize) {
                         }
                     }
                 }
-                _ => return expression(tokens, pos, ctx)
+
+                _ => {
+                    reader.back();
+                    return expression(reader, ctx)
+                }
             }
         }
 
@@ -583,23 +560,21 @@ fn statement(tokens: &Vec<Token>, pos: usize, ctx: &Ctx) -> (Node, usize) {
 
             let mut condnode = Node::new(NodeType::Conditional);
 
-            let (condpart, next_pos) = conditional(tokens, i, ctx);
+            let condpart = conditional(reader, ctx);
             condnode.children.push(condpart);
-            i = next_pos;
 
 
             loop {
 
-                let next_token = &tokens[i];
+                let next_token = reader.sym();
 
                 match next_token {
 
                     Token::Else(_, _) => {
                         dprint("Parse: if-else");
 
-                        let (lastcond, last_pos) = conditional(tokens, i, ctx);
+                        let lastcond = conditional(reader, ctx);
                         condnode.children.push(lastcond);
-                        i = last_pos;
                     }
 
                     _ => {
@@ -607,82 +582,79 @@ fn statement(tokens: &Vec<Token>, pos: usize, ctx: &Ctx) -> (Node, usize) {
                     }
                 }
             }
-            return (condnode, i)
+            return condnode;
         }
 
         Token::While(_, _) => {
-            i += 1;
-            if let Token::Paren1(_, _) = tokens[i] {
+            reader.next();
+            if let Token::Paren1(_, _) = reader.sym() {
 
-                i += 1;
-                let (boolexpr, next_pos) = expression(tokens, i, ctx);
+                reader.next();
+                let boolexpr = expression(reader, ctx);
 
-                if let Token::Paren2(_, _) = tokens[next_pos] {
+                if let Token::Paren2(_, _) = reader.sym() {
 
-                    i = next_pos + 1;
+                    reader.next();
 
-                    if let Token::Block1(_, _) = tokens[i] {
-                        i += 1;
-                        let (blocknode, next_pos) = block(tokens, i, ctx);
+                    if let Token::Block1(_, _) = reader.sym() {
+                        reader.next();
+                        let blocknode = block(reader, ctx);
 
                         let mut node = Node::new(NodeType::While);
                         node.children.push(boolexpr);
                         node.children.push(blocknode);
 
-                        return (node, next_pos);
+                        return node;
                     }
-                    dart_parseerror(format!("Unexpected token1: {}", tokens[next_pos]), String::from(&ctx.filepath), tokens, i);
+                    dart_parseerror(format!("Unexpected token1: {}", reader.sym()), String::from(&ctx.filepath), reader.tokens(), reader.position());
                 }
-                dart_parseerror(format!("Unexpected token: {}", tokens[next_pos]), String::from(&ctx.filepath), tokens, i);
+                dart_parseerror(format!("Unexpected token: {}", reader.sym()), String::from(&ctx.filepath), reader.tokens(), reader.position());
             }
             // As dart.
-            dart_parseerror("Expected to find '('", &ctx.filepath, tokens, i);
+            dart_parseerror("Expected to find '('", &ctx.filepath, reader.tokens(), reader.position());
         }
 
         Token::Return(_, _) => {
-            let (val, new_pos) = expression(tokens, i + 1, ctx);
+            reader.next();
+            let val = expression(reader, ctx);
             let mut ret = Node::new(NodeType::Return);
             ret.children.push(val);
-            return (ret, new_pos);
+            return ret;
         }
 
         _ => {
-            return expression(tokens, pos, ctx);
+            return expression(reader, ctx);
         }
     }
 }
 
 
-fn conditional(tokens: &Vec<Token>, pos: usize, ctx: &Ctx) -> (Node, usize) {
+fn conditional(reader: &mut Reader, ctx: &Ctx) -> Node {
 
-    let mut i = pos;
-
-    match &tokens[i] {
+    match reader.sym() {
 
         Token::If(_, _) => {
 
-            i += 1;
+            reader.next();
 
-            match tokens[i] {
+            match reader.sym() {
                 Token::Paren1(_, _) => {
-                    i += 1;
-                    let (boolnode, new_pos) = expression(tokens, i, ctx);
+                    reader.next();
+                    let boolnode = expression(reader, ctx);
 
-                    match tokens[new_pos] {
+                    match reader.sym() {
                         Token::Paren2(_, _) => {
-                            i = new_pos + 1;
+                            reader.next();
 
-                            match tokens[i] {
+                            match reader.sym() {
                                 Token::Block1(_, _) => {
-                                    i += 1;
-                                    let (bodynode, new_pos) = block(tokens, i, ctx);
-
-                                    i = new_pos;
+                                    reader.next();
+                                    let bodynode = block(reader, ctx);
 
                                     let mut ifnode = Node::new(NodeType::If);
                                     ifnode.children.push(boolnode);
                                     ifnode.children.push(bodynode);
-                                    return (ifnode, i)
+                                    return ifnode;
                                 }
                                 _ => panic!("Expected body of conditional")
                             }
@@ -695,34 +667,33 @@ fn conditional(tokens: &Vec<Token>, pos: usize, ctx: &Ctx) -> (Node, usize) {
         }
         Token::Else(_, _) => {
 
-            i += 1;
+            reader.next();
 
-            match &tokens[i] {
+            match reader.sym() {
 
                 Token::If(_, _) => {
 
-                    i += 1;
+                    reader.next();
 
-                    match tokens[i] {
+                    match reader.sym() {
                         Token::Paren1(_, _) => {
-                            i += 1;
-                            let (boolnode, new_pos) = expression(tokens, i, ctx);
+                            reader.next();
+                            let boolnode = expression(reader, ctx);
 
-                            match tokens[new_pos] {
+                            match reader.sym() {
                                 Token::Paren2(_, _) => {
-                                    i = new_pos + 1;
+                                    reader.next();
 
-                                    match tokens[i] {
+                                    match reader.sym() {
                                         Token::Block1(_, _) => {
-                                            i += 1;
-                                            let (bodynode, new_pos) = block(tokens, i, ctx);
-                                            i = new_pos;
+                                            reader.next();
+                                            let bodynode = block(reader, ctx);
 
                                             let mut elseifnode = Node::new(NodeType::ElseIf);
                                             elseifnode.children.push(boolnode);
                                             elseifnode.children.push(bodynode);
 
-                                            return (elseifnode, i)
+                                            return elseifnode;
                                         }
                                         _ => panic!("Expected body of conditional")
                                     }
@@ -736,15 +707,14 @@ fn conditional(tokens: &Vec<Token>, pos: usize, ctx: &Ctx) -> (Node, usize) {
 
                 Token::Block1(_, _) => {
 
-                    i += 1;
+                    reader.next();
 
-                    let (bodynode, new_pos) = block(tokens, i, ctx);
-                    i = new_pos;
+                    let bodynode = block(reader, ctx);
 
                     let mut elsenode = Node::new(NodeType::Else);
                     elsenode.children.push(bodynode);
 
-                    return (elsenode, i)
+                    return elsenode;
                 }
 
                 x => {
