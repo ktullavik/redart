@@ -344,9 +344,7 @@ pub fn arglist(reader: &mut Reader, ctx: &Ctx) -> Node {
 
         while reader.position() < reader.len() {
 
-            println!("matching: {}", reader.sym());
             match reader.sym() {
-
 
                 Token::Paren2(_, _) => {
                     reader.next();
@@ -357,7 +355,6 @@ pub fn arglist(reader: &mut Reader, ctx: &Ctx) -> Node {
                     if !expect_comma {
                         panic!("Error: Unexpected separator in arg list: ','.");
                     }
-                    println!("Closing comma");
                     reader.next();
                     expect_comma = false;
                 }
@@ -367,7 +364,6 @@ pub fn arglist(reader: &mut Reader, ctx: &Ctx) -> Node {
                         panic!("Error: Expected separator in arg list. Got: {}", x);
                     }
                     let arg = expression(reader, ctx);
-                    println!("returing from expression: {}, cur: {}, next: {}", arg, reader.sym(), reader.peek());
                     node.children.push(arg);
                     expect_comma = true;
                 }

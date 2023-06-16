@@ -449,7 +449,6 @@ fn term(reader: &mut Reader, ctx: &Ctx) -> Node {
             if reader.len() > reader.position() {
 
                 if let Token::Increment(_, _) = reader.sym() {
-                    println!("FOOUND INCNODE");
                     let mut incnode = Node::new(NodeType::PostIncrement);
                     let node = Node::new(NodeType::Name(s.clone()));
                     incnode.children.push(node);
