@@ -16,8 +16,8 @@ pub fn parse(reader: &mut Reader, ctx: &Ctx) -> Result<Node, String> {
     root.children.push(directive_node);
 
     while reader.more() {
-        let funnode= decl(reader, ctx);
-        root.children.push(funnode);
+        let node = decl(reader, ctx);
+        root.children.push(node);
     }
     assert_eq!(reader.position(), reader.len() - 1, "Undexpected index at end of parse: {} out of {}", reader.position(), reader.len());
 
