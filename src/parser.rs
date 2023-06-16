@@ -16,7 +16,7 @@ pub fn parse(reader: &mut Reader, ctx: &Ctx) -> Result<Node, String> {
     root.children.push(directive_node);
 
     while reader.position() < reader.len() - 1 {
-        let funnode= fundef(reader, ctx);
+        let funnode= decl(reader, ctx);
         root.children.push(funnode);
         dprint(format!("Parse: read len: {}", reader.position()));
     }
@@ -70,7 +70,7 @@ fn directives(reader: &mut Reader) -> Node {
 }
 
 
-fn fundef(reader: &mut Reader, ctx: &Ctx) -> Node  {
+fn decl(reader: &mut Reader, ctx: &Ctx) -> Node  {
 
     match reader.sym() {
 
