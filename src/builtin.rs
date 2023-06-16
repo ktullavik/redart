@@ -68,27 +68,7 @@ pub fn call(name: &str, args: &Vec<Object>, ctx: &Ctx) -> Object {
             if args.len() < 1 {
                 panic!("Argument expected by print().");
             }
-
-            let a0= &args[0];
-
-            match a0 {
-
-                Object::String(s) => {
-                    println!("{}", s);
-                }
-                Object::Int(n) => {
-                    println!("{}", n);
-                }
-                Object::Double(x) => {
-                    println!("{}", x);
-                }
-                Object::Bool(b) => {
-                    println!("{}", b);
-                }
-                _ => {
-                    panic!("Illegal argument for print: {:?}", a0)
-                }
-            }
+            println!("{}", &args[0]);
         }
 
         _ => panic!("Unknown command: {}", name)
