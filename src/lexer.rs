@@ -41,6 +41,9 @@ fn read_word(tokens: &mut Vec<Token>, chars: &[char], start: usize, linenum: usi
     else if &sym == "while" {
         tokens.push(Token::While(linenum, symnum));
     }
+    else if &sym == "do" {
+        tokens.push(Token::Do(linenum, symnum));
+    }
     else if &sym == "return" {
         tokens.push(Token::Return(linenum, symnum));
     }

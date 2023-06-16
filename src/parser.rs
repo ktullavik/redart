@@ -619,6 +619,57 @@ fn statement(reader: &mut Reader, ctx: &Ctx) -> Node {
             );
         }
 
+        Token::Do(_, _) => {
+
+            if let Token::Block1(_, _) = reader.next() {
+
+                reader.next();
+                let blocknode = block(reader, ctx);
+
+                if let Token::While(_, _) = reader.sym() {
+
+                    if let Token::Paren1(_, _) = reader.next() {
+                        reader.next();
+                        let boolexpr = expression(reader, ctx);
+
+                        if let Token::Paren2(_, _) = reader.sym() {
+                            reader.next();
+
+                            let mut node = Node::new(NodeType::DoWhile);
+                            node.children.push(blocknode);
+                            node.children.push(boolexpr);
+                            return node;
+                        }
+
+                        dart_parseerror(
+                            "Expected to find ')'",
+                            &ctx.filepath,
+                            &reader.tokens(),
+                            reader.position()
+                        );
+                    }
+                    dart_parseerror(
+                        "Expected to find '('",
+                        &ctx.filepath,
+                        &reader.tokens(),
+                        reader.position()
+                    );
+                }
+                dart_parseerror(
+                    "Expected to find 'while'",
+                    &ctx.filepath,
+                    &reader.tokens(),
+                    reader.position()
+                );
+            }
+            dart_parseerror(
+                "Expected to find '{'",
+                &ctx.filepath,
+                &reader.tokens(),
+                reader.position()
+            );
+        }
+
         Token::Return(_, _) => {
             reader.next();
             let val = expression(reader, ctx);
