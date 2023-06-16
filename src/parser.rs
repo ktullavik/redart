@@ -161,7 +161,7 @@ fn readmembers(classname: String, reader: &mut Reader, ctx: &Ctx) -> Vec<Node> {
 
     let mut members : Vec<Node> = Vec::new();
 
-    while reader.position() < reader.len() {
+    while reader.more() {
 
         match reader.sym() {
 
