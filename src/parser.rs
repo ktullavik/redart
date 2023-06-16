@@ -108,7 +108,12 @@ fn decl(reader: &mut Reader, ctx: &Ctx) -> Node  {
 
         Token::Import(_, _) => {
             // As Dart.
-            panic!("Directives must appear before any declarations.");
+            dart_parseerror(
+                "Directives must appear before any declarations.",
+                &ctx.filepath,
+                &reader.tokens(),
+                reader.position()
+            );
         }
 
         x => {
