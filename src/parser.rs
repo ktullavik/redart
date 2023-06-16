@@ -18,7 +18,6 @@ pub fn parse(reader: &mut Reader, ctx: &Ctx) -> Result<Node, String> {
     while reader.position() < reader.len() - 1 {
         let funnode= decl(reader, ctx);
         root.children.push(funnode);
-        dprint(format!("Parse: read len: {}", reader.position()));
     }
 
 
