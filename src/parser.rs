@@ -451,8 +451,7 @@ fn statement(reader: &mut Reader, ctx: &Ctx) -> Node {
                 Token::Name(name, _, _) => {
                     // Two names in a row indicate a typed variable or function definition.
                     reader.next();
-                    reader.next();
-                    let t3 = reader.sym();
+                    let t3 = reader.next();
                     reader.next();
 
 

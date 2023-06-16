@@ -23,8 +23,9 @@ impl Reader {
         return self.tokens[self.pos].clone();
     }
 
-    pub fn next(&mut self) {
+    pub fn next(&mut self) -> Token {
         self.pos += 1;
+        return self.tokens[self.pos].clone();
     }
 
     pub fn peek(&self) -> Token {

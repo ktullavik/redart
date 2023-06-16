@@ -429,7 +429,10 @@ fn term(reader: &mut Reader, ctx: &Ctx) -> Node {
                     let itpn = expression(&mut r, ctx);
                     node.children.push(itpn);
                 }
-                reader.next();
+                // May be empty when inside interpol recursion.
+                if reader.len() > reader.position() + 1 {
+                    reader.next();
+                }
                 return node;
             }
         }
@@ -445,8 +448,9 @@ fn term(reader: &mut Reader, ctx: &Ctx) -> Node {
             // Postfixed inc/dec should be bound tightly, so handle
             // it here rather than in expression.
 
-            reader.next();
-            if reader.len() > reader.position() {
+            if reader.len() > reader.position() + 1 {
+
+                reader.next();
 
                 if let Token::Increment(_, _) = reader.sym() {
                     let mut incnode = Node::new(NodeType::PostIncrement);
