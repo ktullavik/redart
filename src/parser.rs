@@ -15,20 +15,12 @@ pub fn parse(reader: &mut Reader, ctx: &Ctx) -> Result<Node, String> {
     let directive_node = directives(reader);
     root.children.push(directive_node);
 
-    while reader.position() < reader.len() - 1 {
+    while reader.more() {
         let funnode= decl(reader, ctx);
         root.children.push(funnode);
     }
+    assert_eq!(reader.position(), reader.len() - 1, "Undexpected index at end of parse: {} out of {}", reader.position(), reader.len());
 
-
-    if reader.more() {
-        return Err(format!("Expected end of input, found {} at {}", reader.sym(), reader.position()))
-    }
-    else if reader.position() >= reader.len() {
-        return Err(format!("Index returned beyond end of token array. Index: {}, len: {}", reader.position(), reader.len()))
-    }
-
-    dprint(format!("Parse: finished at index: {}", reader.position()));
     Ok(root)
 }
 
