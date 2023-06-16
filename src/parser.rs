@@ -578,17 +578,15 @@ fn statement(reader: &mut Reader, ctx: &Ctx) -> Node {
         }
 
         Token::While(_, _) => {
-            reader.next();
-            if let Token::Paren1(_, _) = reader.sym() {
+
+            if let Token::Paren1(_, _) = reader.next() {
 
                 reader.next();
                 let boolexpr = expression(reader, ctx);
 
                 if let Token::Paren2(_, _) = reader.sym() {
 
-                    reader.next();
-
-                    if let Token::Block1(_, _) = reader.sym() {
+                    if let Token::Block1(_, _) = reader.next() {
                         reader.next();
                         let blocknode = block(reader, ctx);
 
@@ -598,12 +596,27 @@ fn statement(reader: &mut Reader, ctx: &Ctx) -> Node {
 
                         return node;
                     }
-                    dart_parseerror(format!("Unexpected token1: {}", reader.sym()), String::from(&ctx.filepath), reader.tokens(), reader.position());
+                    dart_parseerror(
+                        format!("Unexpected token: {}", reader.sym()),
+                        String::from(&ctx.filepath),
+                        reader.tokens(),
+                        reader.position()
+                    );
                 }
-                dart_parseerror(format!("Unexpected token: {}", reader.sym()), String::from(&ctx.filepath), reader.tokens(), reader.position());
+                dart_parseerror(
+                    format!("Unexpected token: {}", reader.sym()),
+                    String::from(&ctx.filepath),
+                    reader.tokens(),
+                    reader.position()
+                );
             }
             // As dart.
-            dart_parseerror("Expected to find '('", &ctx.filepath, reader.tokens(), reader.position());
+            dart_parseerror(
+                "Expected to find '('",
+                &ctx.filepath,
+                &reader.tokens(),
+                reader.position()
+            );
         }
 
         Token::Return(_, _) => {
