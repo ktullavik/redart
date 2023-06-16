@@ -21,10 +21,11 @@ pub fn parse(reader: &mut Reader, ctx: &Ctx) -> Result<Node, String> {
         dprint(format!("Parse: read len: {}", reader.position()));
     }
 
-    if reader.position() < reader.len() - 1 {
+
+    if reader.more() {
         return Err(format!("Expected end of input, found {} at {}", reader.sym(), reader.position()))
     }
-    else if reader.position() > reader.len() - 1 {
+    else if reader.position() >= reader.len() {
         return Err(format!("Index returned beyond end of token array. Index: {}, len: {}", reader.position(), reader.len()))
     }
 
@@ -37,7 +38,8 @@ fn directives(reader: &mut Reader) -> Node {
 
     let mut directives_node = Node::new(NodeType::Directives);
 
-    while reader.position() < reader.len() {
+
+    while reader.more() {
 
         match reader.sym() {
             Token::Import(_, _) => {
@@ -291,7 +293,7 @@ fn paramlist(reader: &mut Reader, ctx: &Ctx) -> Node {
         let mut expect_comma = false;
         reader.next();
 
-        while reader.position() < reader.len() {
+        while reader.more() {
 
             match reader.sym() {
 
@@ -385,7 +387,8 @@ fn block(reader: &mut Reader, ctx: &Ctx) -> Node {
 
     let mut node = Node::new(NodeType::Block);
 
-    while reader.position() < reader.len() {
+
+    while reader.more() {
         dprint(format!("Parse: block loop at: {}, token: {}", reader.position(), reader.sym()));
 
         match reader.sym() {

@@ -43,4 +43,8 @@ impl Reader {
     pub fn len(&self) -> usize {
         return self.tokens.len();
     }
+
+    pub fn more(&self) -> bool {
+        return self.len() > self.pos + 1;
+    }
  }
