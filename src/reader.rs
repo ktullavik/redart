@@ -27,10 +27,6 @@ impl Reader {
         self.pos += 1;
     }
 
-    pub fn back(&mut self) {
-        self.pos -= 1;
-    }
-
     pub fn peek(&self) -> Token {
         return self.tokens[self.pos + 1].clone();
     }

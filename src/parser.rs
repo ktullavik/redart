@@ -444,13 +444,14 @@ fn statement(reader: &mut Reader, ctx: &Ctx) -> Node {
 
         Token::Name(s, _, _) => {
 
-            reader.next();
-            let t2 = reader.sym();
+            let t2 = reader.peek();
 
             match t2 {
 
                 Token::Name(name, _, _) => {
                     // Two names in a row indicate a typed variable or function definition.
+                    reader.next();
+
                     reader.next();
                     let t3 = reader.sym();
                     reader.next();
@@ -474,6 +475,7 @@ fn statement(reader: &mut Reader, ctx: &Ctx) -> Node {
 
                 Token::Assign(_, _) => {
                     reader.next();
+                    reader.next();
                     let mut ass_node = Node::new(NodeType::Assign);
 
                     let var = Node::new(NodeType::Name(s.to_string()));
@@ -486,6 +488,7 @@ fn statement(reader: &mut Reader, ctx: &Ctx) -> Node {
                 }
 
                 Token::Paren1(_, _) => {
+                    reader.next();
                     // Function call.
                     // These are also handled in term. Maybe we can just pass this along?
                     let args_node = arglist(reader, ctx);
@@ -497,6 +500,7 @@ fn statement(reader: &mut Reader, ctx: &Ctx) -> Node {
 
                 Token::Access(_, _) => {
 
+                    reader.next();
                     reader.next();
                     let t3 = reader.sym();
 
@@ -545,7 +549,6 @@ fn statement(reader: &mut Reader, ctx: &Ctx) -> Node {
                 }
 
                 _ => {
-                    reader.back();
                     return expression(reader, ctx)
                 }
             }
