@@ -179,27 +179,26 @@ fn evaluate(input: &String, ctx: &Ctx) {
 
     evaluator::preval(&tree, &mut globals, &mut store, &mut classlist, &mut instlist, ctx);
 
-    if globals.contains_key("main") {
-        let mainfunc = &globals.get("main").unwrap().clone();
-
-        match mainfunc {
-            Object::Function(_, n, _) => {
-                utils::dprint(" ");
-                utils::dprint("EVALUATE");
-                utils::dprint(" ");
-
-                store.push_call();
-                evaluator::eval(n, &mut globals, &mut store, &mut classlist, &mut instlist, ctx);
-                store.pop_call();
-            }
-            x => {
-                panic!("Unexpected type of 'main': {:?}", x)
-            }
-        }
-    }
-    else {
+    if !globals.contains_key("main") {
         // As Dart.
         panic!("Error: No 'main' method found.");
+    }
+
+    let mainfunc = &globals.get("main").unwrap().clone();
+
+    match mainfunc {
+        Object::Function(_, n, _) => {
+            utils::dprint(" ");
+            utils::dprint("EVALUATE");
+            utils::dprint(" ");
+
+            store.push_call();
+            evaluator::eval(n, &mut globals, &mut store, &mut classlist, &mut instlist, ctx);
+            store.pop_call();
+        }
+        x => {
+            panic!("Unexpected type of 'main': {:?}", x)
+        }
     }
 }
 
