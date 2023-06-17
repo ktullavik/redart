@@ -17,7 +17,7 @@ pub fn dart_parseerror<S: Into<String>>(msg: S, ctx: &Ctx, tokens: &Vec<Token>, 
     let (linenum, symnum) = &tokens[index].find_token_position();
 
     if ctx.debug {
-        panic!("{}", msg.into())
+        panic!("{}:{}:{}: Error: {}", ctx.filepath, linenum, symnum, msg.into());
     }
     else {
         println!("{}:{}:{}: Error: {}", ctx.filepath, linenum, symnum, msg.into());
@@ -29,10 +29,10 @@ pub fn dart_parseerror<S: Into<String>>(msg: S, ctx: &Ctx, tokens: &Vec<Token>, 
 pub fn dart_evalerror<S: Into<String>>(msg: S, ctx: &Ctx) -> ! {
 
     if ctx.debug {
-        panic!("{}", msg.into())
+        panic!("{}: Error: {}", ctx.filepath, msg.into());
     }
     else {
-        println!("{}", msg.into());
+        println!("{}: Error: {}", ctx.filepath, msg.into());
         process::exit(1);
     }
 }
