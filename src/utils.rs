@@ -1,5 +1,6 @@
 use std::process;
 use token::Token;
+use Ctx;
 
 
 pub fn dprint<S: Into<String>>(s: S) {
@@ -11,7 +12,7 @@ pub fn dprint<S: Into<String>>(s: S) {
 }
 
 
-pub fn dart_parseerror<S: Into<String>>(msg: S, filename: S, tokens: &Vec<Token>, index: usize) -> ! {
+pub fn dart_parseerror<S: Into<String>>(msg: S, ctx: &Ctx, tokens: &Vec<Token>, index: usize) -> ! {
     let debug = false;
 
     let (linenum, symnum) = &tokens[index].find_token_position();
@@ -20,7 +21,7 @@ pub fn dart_parseerror<S: Into<String>>(msg: S, filename: S, tokens: &Vec<Token>
         panic!("{}", msg.into())
     }
     else {
-        println!("{}:{}:{}: Error: {}", filename.into(), linenum, symnum, msg.into());
+        println!("{}:{}:{}: Error: {}", ctx.filepath, linenum, symnum, msg.into());
         process::exit(1);
     }
 }

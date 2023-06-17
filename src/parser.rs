@@ -112,7 +112,7 @@ fn decl(reader: &mut Reader, ctx: &Ctx) -> Node  {
             // As Dart.
             dart_parseerror(
                 "Directives must appear before any declarations.",
-                &ctx.filepath,
+                ctx,
                 &reader.tokens(),
                 reader.position()
             );
@@ -318,7 +318,7 @@ fn paramlist(reader: &mut Reader, ctx: &Ctx) -> Node {
     else {
         dart_parseerror(
             "A function declaration needs an explicit list of parameters.",
-            &ctx.filepath,
+            ctx,
             reader.tokens(),
             reader.position() - 1
         )
@@ -598,14 +598,14 @@ fn statement(reader: &mut Reader, ctx: &Ctx) -> Node {
                     }
                     dart_parseerror(
                         format!("Unexpected token: {}", reader.sym()),
-                        String::from(&ctx.filepath),
+                        ctx,
                         reader.tokens(),
                         reader.position()
                     );
                 }
                 dart_parseerror(
                     format!("Unexpected token: {}", reader.sym()),
-                    String::from(&ctx.filepath),
+                    ctx,
                     reader.tokens(),
                     reader.position()
                 );
@@ -613,7 +613,7 @@ fn statement(reader: &mut Reader, ctx: &Ctx) -> Node {
             // As dart.
             dart_parseerror(
                 "Expected to find '('",
-                &ctx.filepath,
+                ctx,
                 &reader.tokens(),
                 reader.position()
             );
@@ -643,28 +643,28 @@ fn statement(reader: &mut Reader, ctx: &Ctx) -> Node {
 
                         dart_parseerror(
                             "Expected to find ')'",
-                            &ctx.filepath,
+                            ctx,
                             &reader.tokens(),
                             reader.position()
                         );
                     }
                     dart_parseerror(
                         "Expected to find '('",
-                        &ctx.filepath,
+                        ctx,
                         &reader.tokens(),
                         reader.position()
                     );
                 }
                 dart_parseerror(
                     "Expected to find 'while'",
-                    &ctx.filepath,
+                    ctx,
                     &reader.tokens(),
                     reader.position()
                 );
             }
             dart_parseerror(
                 "Expected to find '{'",
-                &ctx.filepath,
+                ctx,
                 &reader.tokens(),
                 reader.position()
             );
