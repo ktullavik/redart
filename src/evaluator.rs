@@ -205,7 +205,7 @@ pub fn eval(
 
                     if store.has_in_lexscope(s1.as_str()) {
                         // As dart.
-                        dart_evalerror(format!("'{}' is already declared in this scope.", s1));
+                        dart_evalerror(format!("'{}' is already declared in this scope.", s1), ctx);
                     }
                     else {
                         if instlist.has_this() {
@@ -944,7 +944,7 @@ pub fn eval(
             else {
                 store.printstack();
                 // As dart.
-                dart_evalerror(format!("Undefined name: '{}'.", s));
+                dart_evalerror(format!("Undefined name: '{}'.", s), ctx);
             }
         }
 
