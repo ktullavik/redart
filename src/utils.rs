@@ -13,11 +13,10 @@ pub fn dprint<S: Into<String>>(s: S) {
 
 
 pub fn dart_parseerror<S: Into<String>>(msg: S, ctx: &Ctx, tokens: &Vec<Token>, index: usize) -> ! {
-    let debug = false;
 
     let (linenum, symnum) = &tokens[index].find_token_position();
 
-    if debug {
+    if ctx.debug {
         panic!("{}", msg.into())
     }
     else {

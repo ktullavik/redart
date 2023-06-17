@@ -37,7 +37,10 @@ fn main() {
         panic!("Argument expected.");
     }
 
-    let mut ctx = Ctx{filepath: String::from("")};
+    let mut ctx = Ctx{
+        filepath: String::from(""),
+        debug: true
+    };
 
     let a1 = &args[1];
 
