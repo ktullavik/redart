@@ -492,15 +492,12 @@ fn statement(reader: &mut Reader, ctx: &Ctx) -> Node {
                 Token::Access(_, _) => {
 
                     reader.next();
-                    let t3 = reader.next();
 
-                    match t3 {
+                    match reader.next() {
 
                         Token::Name(acc_name, _, _) => {
 
-                            let t4 = reader.next();
-
-                            return match t4 {
+                            return match reader.next() {
                                 Token::Paren1(_, _) => {
 
                                     // Method call
@@ -508,16 +505,10 @@ fn statement(reader: &mut Reader, ctx: &Ctx) -> Node {
                                     let mut methcall_node = Node::new(NodeType::MethodCall(s.to_string(), acc_name.to_string()));
                                     methcall_node.children.push(args);
 
-                                    match reader.sym() {
-                                        Token::EndSt(_, _) => {
-                                            reader.next();
-                                            methcall_node
-                                        }
+                                    // OBS: Consuming this seems funky.
+                                    reader.nexpect(";", ctx);
 
-                                        x => {
-                                            panic!("Unexpected token at pos {}: {}", reader.position(), x);
-                                        }
-                                    }
+                                    return methcall_node;
                                 }
 
                                 _ => {
@@ -531,8 +522,8 @@ fn statement(reader: &mut Reader, ctx: &Ctx) -> Node {
                             }
                         }
 
-                        _ => {
-                            panic!("Unexpected token following '.': {}", t3)
+                        x => {
+                            panic!("Unexpected token following '.': {}", x)
                         }
                     }
                 }
