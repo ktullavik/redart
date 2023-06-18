@@ -24,7 +24,7 @@ impl Reader {
 
         if format!("{}", t) != sym {
             dart_parseerror(
-                format!("Expected: {}. Got: {}", sym, t),
+                format!("Expected: '{}'. Got: '{}'.", sym, t),
                 ctx,
                 self.tokens(),
                 self.position()
