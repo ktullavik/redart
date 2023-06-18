@@ -64,7 +64,7 @@ fn main() {
         "test" => {
             if args.len() < 3 {
                 println!("Running all tests:");
-                for testindex in 1 .. 65 {
+                for testindex in 1 .. 66 {
                     println!("Running test: {}", testindex);
                     let filepath = testlist::get_filepath(testindex.to_string());
                     ctx.filepath = filepath.clone();
