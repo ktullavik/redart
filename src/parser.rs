@@ -12,7 +12,7 @@ pub fn parse(reader: &mut Reader, ctx: &Ctx) -> Result<Node, String> {
     dprint(" ");
 
     let mut root = Node::new(NodeType::Module);
-    let directive_node = directives(reader);
+    let directive_node = directives(reader, ctx);
     root.children.push(directive_node);
 
     while reader.more() {
@@ -25,11 +25,10 @@ pub fn parse(reader: &mut Reader, ctx: &Ctx) -> Result<Node, String> {
 }
 
 
-fn directives(reader: &mut Reader) -> Node {
+fn directives(reader: &mut Reader, ctx: &Ctx) -> Node {
     dprint(format!("Parse: directives: {}", reader.sym()));
 
     let mut directives_node = Node::new(NodeType::Directives);
-
 
     while reader.more() {
 
@@ -40,16 +39,11 @@ fn directives(reader: &mut Reader) -> Node {
 
                 reader.next();
                 if let Token::Str(s, _, _, _) = reader.sym() {
-                    node.children.push(Node::new(NodeType::Str(s.clone())));
-
                     reader.next();
-                    if let Token::EndSt(_, _) = reader.sym() {
-                        reader.next();
-                        directives_node.children.push(node);
-                    }
-                    else {
-                        panic!("Error: Expected ';' after import.")
-                    }
+                    reader.nexpect(";", ctx);
+
+                    node.children.push(Node::new(NodeType::Str(s.clone())));
+                    directives_node.children.push(node);
                 }
                 else {
                     panic!("Error: Expected string after 'import'.")
