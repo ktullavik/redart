@@ -580,15 +580,12 @@ fn statement(reader: &mut Reader, ctx: &Ctx) -> Node {
         Token::While(_, _) => {
 
             reader.next();
-            reader.expect("(", ctx);
-            reader.next();
+            reader.nexpect("(", ctx);
 
             let boolexpr = expression(reader, ctx);
 
-            reader.expect(")", ctx);
-            reader.next();
-            reader.expect("{", ctx);
-            reader.next();
+            reader.nexpect(")", ctx);
+            reader.nexpect("{", ctx);
 
             let blocknode = block(reader, ctx);
 
@@ -601,20 +598,16 @@ fn statement(reader: &mut Reader, ctx: &Ctx) -> Node {
         Token::Do(_, _) => {
 
             reader.next();
-            reader.expect("{", ctx);
-            reader.next();
+            reader.nexpect("{", ctx);
 
             let blocknode = block(reader, ctx);
 
-            reader.expect("while", ctx);
-            reader.next();
-            reader.expect("(", ctx);
-            reader.next();
+            reader.nexpect("while", ctx);
+            reader.nexpect("(", ctx);
 
             let boolexpr = expression(reader, ctx);
 
-            reader.expect(")", ctx);
-            reader.next();
+            reader.nexpect(")", ctx);
 
             let mut node = Node::new(NodeType::DoWhile);
             node.children.push(blocknode);
@@ -625,8 +618,7 @@ fn statement(reader: &mut Reader, ctx: &Ctx) -> Node {
         Token::For(_, _) => {
 
             reader.next();
-            reader.expect("(", ctx);
-            reader.next();
+            reader.nexpect("(", ctx);
 
             match reader.sym() {
 
@@ -639,8 +631,7 @@ fn statement(reader: &mut Reader, ctx: &Ctx) -> Node {
 
                             let typvar = Node::new(NodeType::TypedVar(n1, n2));
 
-                            reader.expect("=", ctx);
-                            reader.next();
+                            reader.nexpect("=", ctx);
 
                             let initexpr = expression(reader, ctx);
 
@@ -648,20 +639,16 @@ fn statement(reader: &mut Reader, ctx: &Ctx) -> Node {
                             assign.children.push(typvar);
                             assign.children.push(initexpr);
 
-                            reader.expect(";", ctx);
-                            reader.next();
+                            reader.nexpect(";", ctx);
 
                             let condexpr = expression(reader, ctx);
 
-                            reader.expect(";", ctx);
-                            reader.next();
+                            reader.nexpect(";", ctx);
 
                             let mutexpr = expression(reader, ctx);
 
-                            reader.expect(")", ctx);
-                            reader.next();
-                            reader.expect("{", ctx);
-                            reader.next();
+                            reader.nexpect(")", ctx);
+                            reader.nexpect("{", ctx);
 
                             let body = block(reader, ctx);
 
@@ -686,20 +673,16 @@ fn statement(reader: &mut Reader, ctx: &Ctx) -> Node {
                             assign.children.push(namenode);
                             assign.children.push(initexpr);
 
-                            reader.expect(";", ctx);
-                            reader.next();
+                            reader.nexpect(";", ctx);
 
                             let condexpr = expression(reader, ctx);
 
-                            reader.expect(";", ctx);
-                            reader.next();
+                            reader.nexpect(";", ctx);
 
                             let mutexpr = expression(reader, ctx);
 
-                            reader.expect(")", ctx);
-                            reader.next();
-                            reader.expect("{", ctx);
-                            reader.next();
+                            reader.nexpect(")", ctx);
+                            reader.nexpect("{", ctx);
 
                             let body = block(reader, ctx);
 

@@ -33,6 +33,12 @@ impl Reader {
     }
 
 
+    pub fn nexpect(&mut self, sym: &str, ctx: &Ctx) {
+        self.expect(sym, ctx);
+        self.next();
+    }
+
+
     pub fn sym(&self) -> Token {
         if self.pos >= self.tokens.len() {
 
