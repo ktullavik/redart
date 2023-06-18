@@ -579,44 +579,23 @@ fn statement(reader: &mut Reader, ctx: &Ctx) -> Node {
 
         Token::While(_, _) => {
 
-            if let Token::Paren1(_, _) = reader.next() {
+            reader.next();
+            reader.expect("(", ctx);
+            reader.next();
 
-                reader.next();
-                let boolexpr = expression(reader, ctx);
+            let boolexpr = expression(reader, ctx);
 
-                if let Token::Paren2(_, _) = reader.sym() {
+            reader.expect(")", ctx);
+            reader.next();
+            reader.expect("{", ctx);
+            reader.next();
 
-                    if let Token::Block1(_, _) = reader.next() {
-                        reader.next();
-                        let blocknode = block(reader, ctx);
+            let blocknode = block(reader, ctx);
 
-                        let mut node = Node::new(NodeType::While);
-                        node.children.push(boolexpr);
-                        node.children.push(blocknode);
-
-                        return node;
-                    }
-                    dart_parseerror(
-                        format!("Unexpected token: {}", reader.sym()),
-                        ctx,
-                        reader.tokens(),
-                        reader.position()
-                    );
-                }
-                dart_parseerror(
-                    format!("Unexpected token: {}", reader.sym()),
-                    ctx,
-                    reader.tokens(),
-                    reader.position()
-                );
-            }
-            // As dart.
-            dart_parseerror(
-                "Expected to find '('",
-                ctx,
-                &reader.tokens(),
-                reader.position()
-            );
+            let mut node = Node::new(NodeType::While);
+            node.children.push(boolexpr);
+            node.children.push(blocknode);
+            return node;
         }
 
         Token::Do(_, _) => {
