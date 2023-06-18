@@ -600,53 +600,26 @@ fn statement(reader: &mut Reader, ctx: &Ctx) -> Node {
 
         Token::Do(_, _) => {
 
-            if let Token::Block1(_, _) = reader.next() {
+            reader.next();
+            reader.expect("{", ctx);
+            reader.next();
 
-                reader.next();
-                let blocknode = block(reader, ctx);
+            let blocknode = block(reader, ctx);
 
-                if let Token::While(_, _) = reader.sym() {
+            reader.expect("while", ctx);
+            reader.next();
+            reader.expect("(", ctx);
+            reader.next();
 
-                    if let Token::Paren1(_, _) = reader.next() {
-                        reader.next();
-                        let boolexpr = expression(reader, ctx);
+            let boolexpr = expression(reader, ctx);
 
-                        if let Token::Paren2(_, _) = reader.sym() {
-                            reader.next();
+            reader.expect(")", ctx);
+            reader.next();
 
-                            let mut node = Node::new(NodeType::DoWhile);
-                            node.children.push(blocknode);
-                            node.children.push(boolexpr);
-                            return node;
-                        }
-
-                        dart_parseerror(
-                            "Expected to find ')'",
-                            ctx,
-                            &reader.tokens(),
-                            reader.position()
-                        );
-                    }
-                    dart_parseerror(
-                        "Expected to find '('",
-                        ctx,
-                        &reader.tokens(),
-                        reader.position()
-                    );
-                }
-                dart_parseerror(
-                    "Expected to find 'while'",
-                    ctx,
-                    &reader.tokens(),
-                    reader.position()
-                );
-            }
-            dart_parseerror(
-                "Expected to find '{'",
-                ctx,
-                &reader.tokens(),
-                reader.position()
-            );
+            let mut node = Node::new(NodeType::DoWhile);
+            node.children.push(blocknode);
+            node.children.push(boolexpr);
+            return node;
         }
 
         Token::For(_, _) => {
