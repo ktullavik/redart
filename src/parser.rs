@@ -336,7 +336,7 @@ pub fn arglist(reader: &mut Reader, ctx: &Ctx) -> Node {
         let mut expect_comma = false;
         reader.next();
 
-        while reader.position() < reader.len() {
+        while reader.more() {
 
             match reader.sym() {
 
