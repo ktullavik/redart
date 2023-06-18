@@ -732,7 +732,6 @@ fn statement(reader: &mut Reader, ctx: &Ctx) -> Node {
                     );
                 }
             }
-            panic!("It's a mess!");
         }
 
         Token::Return(_, _) => {
