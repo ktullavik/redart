@@ -413,7 +413,6 @@ fn block(reader: &mut Reader, ctx: &Ctx) -> Node {
                 match reader.sym() {
 
                     Token::Block2(_, _) => {
-                        // i += 1;
                         reader.next();
                         continue;
                     }
@@ -449,16 +448,16 @@ fn statement(reader: &mut Reader, ctx: &Ctx) -> Node {
                     let t3 = reader.next();
                     reader.next();
 
-
                     let typed_var = Node::new(NodeType::TypedVar(s.to_string(), name.to_string()));
 
                     match t3 {
                         Token::Assign(_, _) => {
+
+                            let right_node = expression(reader, ctx);
+
                             let mut ass_node = Node::new(NodeType::Assign);
                             ass_node.children.push(typed_var);
-                            let right_node = expression(reader, ctx);
                             ass_node.children.push(right_node);
-                            dprint(format!("Parse: returning statement at token {}", reader.position()));
                             return ass_node;
                         }
 
@@ -469,14 +468,13 @@ fn statement(reader: &mut Reader, ctx: &Ctx) -> Node {
                 Token::Assign(_, _) => {
                     reader.next();
                     reader.next();
-                    let mut ass_node = Node::new(NodeType::Assign);
 
-                    let var = Node::new(NodeType::Name(s.to_string()));
                     let right_node = expression(reader, ctx);
 
+                    let var = Node::new(NodeType::Name(s.to_string()));
+                    let mut ass_node = Node::new(NodeType::Assign);
                     ass_node.children.push(var);
                     ass_node.children.push(right_node);
-
                     return ass_node;
                 }
 
@@ -494,15 +492,13 @@ fn statement(reader: &mut Reader, ctx: &Ctx) -> Node {
                 Token::Access(_, _) => {
 
                     reader.next();
-                    reader.next();
-                    let t3 = reader.sym();
+                    let t3 = reader.next();
 
                     match t3 {
 
                         Token::Name(acc_name, _, _) => {
 
-                            reader.next();
-                            let t4 = reader.sym();
+                            let t4 = reader.next();
 
                             return match t4 {
                                 Token::Paren1(_, _) => {
