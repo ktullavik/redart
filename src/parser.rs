@@ -504,7 +504,7 @@ fn statement(reader: &mut Reader, ctx: &Ctx) -> Node {
                                     let args = arglist(reader, ctx);
                                     let mut methcall_node = Node::new(NodeType::MethodCall(s.to_string(), acc_name.to_string()));
                                     methcall_node.children.push(args);
-                                    return methcall_node;
+                                    methcall_node
                                 }
 
                                 _ => {
@@ -513,7 +513,7 @@ fn statement(reader: &mut Reader, ctx: &Ctx) -> Node {
                                     let member_node = Node::new(NodeType::Name(acc_name.to_string()));
                                     acc_node.children.push(obj_node);
                                     acc_node.children.push(member_node);
-                                    return acc_node;
+                                    acc_node
                                 }
                             }
                         }
