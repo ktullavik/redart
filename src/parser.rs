@@ -504,10 +504,6 @@ fn statement(reader: &mut Reader, ctx: &Ctx) -> Node {
                                     let args = arglist(reader, ctx);
                                     let mut methcall_node = Node::new(NodeType::MethodCall(s.to_string(), acc_name.to_string()));
                                     methcall_node.children.push(args);
-
-                                    // OBS: Consuming this seems funky.
-                                    reader.nexpect(";", ctx);
-
                                     return methcall_node;
                                 }
 
