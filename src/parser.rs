@@ -738,36 +738,20 @@ fn conditional(reader: &mut Reader, ctx: &Ctx) -> Node {
     match reader.sym() {
 
         Token::If(_, _) => {
-
             reader.next();
+            reader.nexpect("(", ctx);
 
-            match reader.sym() {
-                Token::Paren1(_, _) => {
-                    reader.next();
-                    let boolnode = expression(reader, ctx);
+            let boolnode = expression(reader, ctx);
 
-                    match reader.sym() {
-                        Token::Paren2(_, _) => {
-                            reader.next();
+            reader.nexpect(")", ctx);
+            reader.nexpect("{", ctx);
 
-                            match reader.sym() {
-                                Token::Block1(_, _) => {
-                                    reader.next();
-                                    let bodynode = block(reader, ctx);
+            let bodynode = block(reader, ctx);
 
-                                    let mut ifnode = Node::new(NodeType::If);
-                                    ifnode.children.push(boolnode);
-                                    ifnode.children.push(bodynode);
-                                    return ifnode;
-                                }
-                                _ => panic!("Expected body of conditional")
-                            }
-                        }
-                        _ => panic!("Expected closing paren after conditional expression")
-                    }
-                }
-                _ => panic!("Unexpected token after 'if'")
-            }
+            let mut ifnode = Node::new(NodeType::If);
+            ifnode.children.push(boolnode);
+            ifnode.children.push(bodynode);
+            return ifnode;
         }
         Token::Else(_, _) => {
 
