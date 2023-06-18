@@ -120,7 +120,7 @@ impl fmt::Display for Token {
       Token::Access(_, _) => write!(f, "."),
       Token::Return(_, _) => write!(f, "return"),
       Token::Import(_, _) => write!(f, "import"),
-      Token::EndSt(_, _) => write!(f, "ENDST"),
+      Token::EndSt(_, _) => write!(f, ";"),
       Token::End => write!(f, "END"),
     }
   }
