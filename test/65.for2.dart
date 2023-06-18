@@ -5,7 +5,7 @@ void main() {
   var c = 0;
   for (i=0; i<10; i++) {
     print(i);
-    c = c + 1;
+    c = c + i;
   }
   assert(c == 45);
 
