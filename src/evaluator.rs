@@ -1245,6 +1245,37 @@ pub fn eval(
             return Object::Null;
         }
 
+        NodeType::For => {
+            dprint("Eval: NodeType::For");
+
+            let assign = &node.children[0];
+            let condexpr = &node.children[1];
+            let mutexpr = &node.children[2];
+            let body = &node.children[3];
+
+            eval(assign, globals, store, classlist, instlist, ctx);
+
+            loop {
+
+                let condobj = eval(condexpr, globals, store, classlist, instlist, ctx);
+
+                match condobj {
+                    Object::Bool(b) => {
+
+                        if !b {
+                            break;
+                        }
+
+                        eval(body, globals, store, classlist, instlist, ctx);
+                        eval(mutexpr, globals, store, classlist, instlist, ctx);
+                    }
+                    x => dart_evalerror(format!("Expected bool. Got: {}", x), ctx)
+
+                }
+            }
+            return Object::Null;
+        }
+
         NodeType::Block => {
             dprint("Eval: NodeType::Block");
 

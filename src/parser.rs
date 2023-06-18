@@ -670,6 +670,204 @@ fn statement(reader: &mut Reader, ctx: &Ctx) -> Node {
             );
         }
 
+        Token::For(_, _) => {
+
+            // reader.next();
+
+            if let Token::Paren1(_, _) = reader.next() {
+                reader.next();
+            }
+            else {
+                dart_parseerror(
+                    "Expected '('.",
+                    ctx,
+                    &reader.tokens(),
+                    reader.position()
+                )
+            }
+
+            // if let Token::Name(n1, _, _) = reader.sym() {
+            match reader.sym() {
+
+                Token::Name(n1, _, _) => {
+                    reader.next();
+
+                    // if let Token::Name(n2, _, _) = reader.sym() {
+                    match reader.sym() {
+                        Token::Name(n2, _, _) => {
+                            reader.next();
+
+                            let typvar = Node::new(NodeType::TypedVar(n1, n2));
+
+
+                            if let Token::Assign(_, _) = reader.sym() {
+                                reader.next();
+                                let initexpr = expression(reader, ctx);
+
+
+                                let mut assign = Node::new(NodeType::Assign);
+                                assign.children.push(typvar);
+                                assign.children.push(initexpr);
+
+
+                                if let Token::EndSt(_, _) = reader.sym() {
+                                    reader.next();
+
+                                    let condexpr = expression(reader, ctx);
+
+                                    if let Token::EndSt(_, _) = reader.sym() {
+                                        reader.next();
+
+                                        let mutexpr = expression(reader, ctx);
+
+                                        if let Token::Paren2(_, _) = reader.sym() {
+                                            reader.next();
+
+                                            if let Token::Block1(_, _) = reader.sym() {
+                                                reader.next();
+
+                                                let body = block(reader, ctx);
+
+                                                let mut forloop = Node::new(NodeType::For);
+
+                                                forloop.children.push(assign);
+                                                forloop.children.push(condexpr);
+                                                forloop.children.push(mutexpr);
+                                                forloop.children.push(body);
+
+                                                return forloop;
+                                            }
+                                            dart_parseerror(
+                                                format!("Expected '{}'. Got: '{}'", "{", reader.sym()),
+                                                ctx,
+                                                &reader.tokens(),
+                                                reader.position()
+                                            )
+                                        }
+                                        dart_parseerror(
+                                            format!("Expected ')'. Got: '{}'", reader.sym()),
+                                            ctx,
+                                            &reader.tokens(),
+                                            reader.position()
+                                        )
+                                    }
+                                    dart_parseerror(
+                                        format!("Expected semicolon. Got: '{}'", reader.sym()),
+                                        ctx,
+                                        &reader.tokens(),
+                                        reader.position()
+                                    )
+                                }
+                                dart_parseerror(
+                                    format!("Expected semicolon. Got: '{}'", reader.sym()),
+                                    ctx,
+                                    &reader.tokens(),
+                                    reader.position()
+                                )
+                            }
+                            dart_parseerror(
+                                format!("Expected equal sign. Got: '{}'", reader.sym()),
+                                ctx,
+                                &reader.tokens(),
+                                reader.position()
+                            );
+                        }
+
+                        // Without declaration
+                        // for (i=x; ...
+                        Token::Assign(_, _) => {
+
+                            reader.next();
+                            let initexpr = expression(reader, ctx);
+
+                            let mut assign = Node::new(NodeType::Assign);
+                            let namenode = Node::new(NodeType::Name(n1));
+
+                            assign.children.push(namenode);
+                            assign.children.push(initexpr);
+
+
+                            if let Token::EndSt(_, _) = reader.sym() {
+                                reader.next();
+
+                                let condexpr = expression(reader, ctx);
+
+                                if let Token::EndSt(_, _) = reader.sym() {
+                                    reader.next();
+
+                                    let mutexpr = expression(reader, ctx);
+
+                                    if let Token::Paren2(_, _) = reader.sym() {
+                                        reader.next();
+
+                                        if let Token::Block1(_, _) = reader.sym() {
+                                            reader.next();
+
+                                            let body = block(reader, ctx);
+
+                                            let mut forloop = Node::new(NodeType::For);
+
+                                            forloop.children.push(assign);
+                                            forloop.children.push(condexpr);
+                                            forloop.children.push(mutexpr);
+                                            forloop.children.push(body);
+
+                                            return forloop;
+                                        }
+                                        dart_parseerror(
+                                            format!("Expected '{}'. Got: '{}'", "{", reader.sym()),
+                                            ctx,
+                                            &reader.tokens(),
+                                            reader.position()
+                                        )
+                                    }
+                                    dart_parseerror(
+                                        format!("Expected ')'. Got: '{}'", reader.sym()),
+                                        ctx,
+                                        &reader.tokens(),
+                                        reader.position()
+                                    )
+                                }
+                                dart_parseerror(
+                                    format!("Expected semicolon. Got: '{}'", reader.sym()),
+                                    ctx,
+                                    &reader.tokens(),
+                                    reader.position()
+                                )
+                            }
+                            dart_parseerror(
+                                format!("Expected semicolon. Got: '{}'", reader.sym()),
+                                ctx,
+                                &reader.tokens(),
+                                reader.position()
+                            )
+
+                        }
+
+                        x => {
+                            dart_parseerror(
+                                format!("Expected identifier or assignment. Got: {}", x),
+                                ctx,
+                                &reader.tokens(),
+                                reader.position()
+                            );
+                        }
+
+                    }
+                }
+
+                _ => {
+                    dart_parseerror(
+                        "Expected identifier.",
+                        ctx,
+                        &reader.tokens(),
+                        reader.position()
+                    );
+                }
+            }
+            panic!("It's a mess!");
+        }
+
         Token::Return(_, _) => {
             reader.next();
             let val = expression(reader, ctx);

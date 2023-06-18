@@ -84,6 +84,8 @@ pub fn get_filepath(s: String) -> String {
         "61" => "61.semicolon_king.dart",
         "62" => "62.while.dart",
         "63" => "63.dowhile.dart",
+        "64" => "64.for.dart",
+        "65" => "65.for2.dart",
 
         s => s
     };
