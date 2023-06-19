@@ -1,8 +1,8 @@
 
-static TESTPATH: &str = "/usr/home/kt/devel/redart/test";
-static FAILTESTPATH: &str = "/usr/home/kt/devel/redart/testfail";
+pub static TESTPATH: &str = "/usr/home/kt/devel/redart/test";
+pub static FAILTESTPATH: &str = "/usr/home/kt/devel/redart/testfail";
 
-const TESTS: &'static [&'static str] = &[
+pub const TESTS: &'static [&'static str] = &[
     "0.void.dart",
     "1.hello.dart",
     "2.variable.dart",
@@ -72,7 +72,7 @@ const TESTS: &'static [&'static str] = &[
 ];
 
 
-const FAILTESTS: &'static [&'static str] = &[
+pub const FAILTESTS: &'static [&'static str] = &[
     "1.cross_function_leak.dart",
     "2.double_declaration.dart",
     "3.forgotten_paramlist.dart",

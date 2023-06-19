@@ -64,11 +64,9 @@ fn main() {
         "test" => {
             if args.len() < 3 {
                 println!("Running all tests:");
-                for testindex in 1 .. 66 {
-                    println!("Running test: {}", testindex);
-                    let filepath = testlist::get_filepath(testindex.to_string());
-                    ctx.filepath = filepath.clone();
-                    do_task("eval", read_file(filepath.as_str()), &ctx);
+                for s in testlist::TESTS {
+                    let path = format!("{}/{}", testlist::TESTPATH, s);
+                    do_task("eval", read_file(path.as_str()), &ctx);
                 }
                 return;
             }
@@ -101,11 +99,9 @@ fn main() {
         "testfail" => {
             if args.len() < 3 {
                 println!("Running all fail tests:");
-                for testindex in 1 .. 5 {
-                    println!("Running test: {}", testindex);
-                    let filepath = testlist::get_failfilepath(testindex.to_string());
-                    ctx.filepath = filepath.clone();
-                    do_task("eval", read_file(filepath.as_str()), &ctx);
+                for s in testlist::FAILTESTS {
+                    let path = format!("{}/{}", testlist::FAILTESTPATH, s);
+                    do_task("eval", read_file(path.as_str()), &ctx);
                 }
                 return;
             }
