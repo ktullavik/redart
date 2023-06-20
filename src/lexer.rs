@@ -53,6 +53,9 @@ fn read_word(tokens: &mut Vec<Token>, chars: &[char], start: usize, linenum: usi
     else if &sym == "class" {
         tokens.push(Token::Class(linenum, symnum));
     }
+    else if &sym == "this" {
+        tokens.push(Token::This(linenum, symnum));
+    }
     else {
         tokens.push(Token::Name(sym, linenum, symnum));
     }

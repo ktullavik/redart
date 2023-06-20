@@ -50,6 +50,7 @@ pub enum Token {
   // Other
   Assign(usize, usize),
   Access(usize, usize),
+  This(usize, usize),
   Return(usize, usize),
   Import(usize, usize),
   EndSt(usize, usize),
@@ -118,6 +119,7 @@ impl fmt::Display for Token {
       // Other
       Token::Assign(_, _) => write!(f, "="),
       Token::Access(_, _) => write!(f, "."),
+      Token::This(_, _)   => write!(f, "this"),
       Token::Return(_, _) => write!(f, "return"),
       Token::Import(_, _) => write!(f, "import"),
       Token::EndSt(_, _) => write!(f, ";"),
@@ -174,6 +176,7 @@ impl Token {
       // Other
       Token::Assign(l, i) |
       Token::Access(l, i) |
+      Token::This(l, i) |
       Token::Return(l, i) |
       Token::Import(l, i) |
       Token::EndSt(l, i) => {

@@ -172,7 +172,7 @@ fn readmembers(classname: String, reader: &mut Reader, ctx: &Ctx) -> Vec<Node> {
                     reader.next();
 
                     let mut constructor_node = Node::new(NodeType::Constructor(classname.clone()));
-                    let params = paramlist(reader, ctx);
+                    let params = constructor_paramlist(reader, ctx);
                     reader.next();
                     let body  = block(reader, ctx);
 
@@ -267,6 +267,83 @@ fn readmembers(classname: String, reader: &mut Reader, ctx: &Ctx) -> Vec<Node> {
     }
 
     members
+}
+
+
+fn constructor_paramlist(reader: &mut Reader, ctx: &Ctx) -> Node {
+    dprint(format!("Parse: paramlist: {}", reader.sym()));
+
+    if let Token::Paren1(_, _) = reader.sym() {
+
+        let mut node = Node::new(NodeType::ParamList);
+        let mut expect_comma = false;
+        reader.next();
+
+        while reader.more() {
+
+            match reader.sym() {
+
+                Token::Paren2(_, _) => {
+                    reader.next();
+                    return node;
+                }
+
+                Token::This(_, _) => {
+                    reader.next();
+                    reader.expect(".", ctx);
+
+                    match reader.next() {
+
+                        Token::Name(s, _, _) => {
+                            // let fieldname = Node::new(NodeType::Name(s));
+                            let this_fieldinit = Node::new(NodeType::ThisFieldInit(s));
+                            // this_fieldinit.children.push(fieldname);
+                            node.children.push(this_fieldinit);
+                            expect_comma = true;
+                            reader.next();
+                        }
+
+                        x => {
+                            dart_parseerror(
+                                format!("Expected identifier. Got {}", x),
+                                ctx,
+                                reader.tokens(),
+                                reader.position()
+                            );
+                        }
+                    }
+                }
+
+                Token::Comma(_, _) => {
+                    if !expect_comma {
+                        panic!("Error: Unexpected separator in parameter list: ','.");
+                    }
+                    reader.next();
+                    expect_comma = false;
+                }
+
+                Token::Name(s, _, _) => {
+                    let paramnode= Node::new(NodeType::Name(s.to_string()));
+                    node.children.push(paramnode);
+                    expect_comma = true;
+                    reader.next();
+                }
+
+                _ => {
+                    panic!("Unexpected token when reading parameters: {}", reader.sym())
+                }
+            }
+        }
+    }
+    else {
+        dart_parseerror(
+            "A function declaration needs an explicit list of parameters.",
+            ctx,
+            reader.tokens(),
+            reader.position() - 1
+        )
+    }
+    panic!("Error when reading param list.")
 }
 
 
@@ -455,7 +532,15 @@ fn statement(reader: &mut Reader, ctx: &Ctx) -> Node {
                             return ass_node;
                         }
 
-                        _ => panic!("Unexpected token in statement. Expected: =. Got: {}", t3)
+                        x => {
+                            dart_parseerror(
+                                format!("Unexpected token in statement. Got: {}. Expected: {}", x, "="),
+                                ctx,
+                                reader.tokens(),
+                                reader.position()
+                            );
+                        }
+                        // _ => panic!("Unexpected token in statement. Expected: =. Got: {}", t3)
                     }
                 }
 

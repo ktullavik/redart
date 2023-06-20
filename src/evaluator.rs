@@ -3,7 +3,7 @@ use node::{NodeType, Node};
 use builtin;
 use utils::{dprint, dart_evalerror};
 use stack::Stack;
-use object::Object;
+use object::{Object, ParamObj};
 use objsys::Class;
 use objsys::ClassMap;
 use objsys::InstanceMap;
@@ -143,19 +143,24 @@ fn preval_class(
 
                 if let NodeType::ParamList = params.nodetype {
 
-                    let mut args: Vec<String> = Vec::new();
+                    let mut paramobjs : Vec<ParamObj> = Vec::new();
 
                     for i in 0..params.children.len() {
                         let p = &params.children[i];
                         match &p.nodetype {
                             NodeType::Name(s) => {
-                                args.push(s.clone());
+                                let po = ParamObj{ typ: String::from(""), name: s.clone(), fieldinit: false };
+                                paramobjs.push(po);
+                            }
+                            NodeType::ThisFieldInit(s) => {
+                                let po = ParamObj{ typ: String::from(""), name: s.clone(), fieldinit: true };
+                                paramobjs.push(po);
                             }
                             x => panic!("Invalid parameter: {}", x)
                         }
                     }
 
-                    let obj = Object::Constructor(cname.to_string(), body, args);
+                    let obj = Object::Constructor(cname.to_string(), body, paramobjs);
 
                     globals.insert(cname.to_string(), obj);
 
@@ -1067,7 +1072,6 @@ pub fn eval(
 
                     let argslist = &node.children[0];
 
-                    // store.push_call();
                     let mut evaled_args : Vec<Object> = Vec::new();
                     for i in 0 .. params.len() {
                         dprint(format!("about to eval argtree {}: {}", i, params[i]));
@@ -1081,7 +1085,11 @@ pub fn eval(
 
                     store.push_call();
                     for i in 0 .. params.len() {
-                        store.add(params[i].as_str(), evaled_args.remove(0));
+                        // Field initializers does not need to be in symbol table.
+                        // They are set directly on the instance. See below.
+                        if !params[i].fieldinit {
+                            store.add(params[i].name.as_str(), evaled_args[i].clone());
+                        }
                     }
 
                     // Lookup class.
@@ -1093,6 +1101,13 @@ pub fn eval(
                     match &instref {
                         Object::Reference(refid) => {
                             instlist.this = refid.clone();
+
+                            let inst = instlist.get_this();
+                            for i in 0 .. params.len() {
+                                if params[i].fieldinit {
+                                    inst.set_field(params[i].name.clone(), evaled_args[i].clone());
+                                }
+                            }
 
                             // Run body
                             eval(&body, globals, store, classlist, instlist, ctx);

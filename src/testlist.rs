@@ -69,6 +69,7 @@ pub const TESTS: &'static [&'static str] = &[
     "63.dowhile.dart",
     "64.for.dart",
     "65.for2.dart",
+    "66.this_constructor_arg.dart",
 ];
 
 
