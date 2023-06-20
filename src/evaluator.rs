@@ -889,14 +889,14 @@ pub fn eval(
             }
         }
 
-        NodeType::Int(s) => {
+        NodeType::Int(val) => {
             dprint("Eval: NodeType::Int");
-            Object::Int(s.parse().unwrap())
+            Object::Int(*val)
         },
 
-        NodeType::Double(s) => {
+        NodeType::Double(val) => {
             dprint("Eval: NodeType::Double");
-            Object::Double((s.as_str()).parse::<f64>().unwrap())
+            Object::Double(*val)
         },
 
         NodeType::Bool(v) => {

@@ -28,8 +28,8 @@ pub enum Token {
   GreaterOrEq(usize, usize),
   Equal(usize, usize),
   // Primitive
-  Int(String, usize, usize),
-  Double(String, usize, usize),
+  Int(i64, usize, usize),
+  Double(f64, usize, usize),
   Str(String, Vec<Vec<Token>>, usize, usize),
   Bool(bool, usize, usize),
   Name(String, usize, usize),

@@ -346,12 +346,14 @@ fn lex_real(input: &str, startpos: usize, interpol: usize, mut linenum: usize, m
                     break;
                 }
 
-                let val: &str = input.get(i .. i + nl).unwrap();
+                let valstr: &str = input.get(i .. i + nl).unwrap();
                 if is_int {
-                    tokens.push(Token::Int(String::from(val), linenum, symnum));
+                    let val = valstr.parse::<i64>().unwrap();
+                    tokens.push(Token::Int(val, linenum, symnum));
                 }
                 else {
-                    tokens.push(Token::Double(String::from(val), linenum, symnum));
+                    let val : f64 = valstr.parse::<f64>().unwrap() as f64;
+                    tokens.push(Token::Double(val, linenum, symnum));
                 }
                 i += nl;
                 continue;

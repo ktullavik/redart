@@ -380,14 +380,14 @@ fn term(reader: &mut Reader, ctx: &Ctx) -> Node {
 
     match t {
 
-        Token::Int(ref s, _, _) => {
-            let node = Node::new(NodeType::Int(s.clone()));
+        Token::Int(val, _, _) => {
+            let node = Node::new(NodeType::Int(val));
             reader.next();
             return node;
         }
 
-        Token::Double(ref s, _, _) => {
-            let node = Node::new(NodeType::Double(s.clone()));
+        Token::Double(val, _, _) => {
+            let node = Node::new(NodeType::Double(val));
             reader.next();
             return node;
         }
