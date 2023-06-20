@@ -540,7 +540,6 @@ fn statement(reader: &mut Reader, ctx: &Ctx) -> Node {
                                 reader.position()
                             );
                         }
-                        // _ => panic!("Unexpected token in statement. Expected: =. Got: {}", t3)
                     }
                 }
 
