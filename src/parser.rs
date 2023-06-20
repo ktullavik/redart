@@ -290,9 +290,9 @@ fn constructor_paramlist(reader: &mut Reader, ctx: &Ctx) -> Node {
 
                 Token::This(_, _) => {
                     reader.next();
-                    reader.expect(".", ctx);
+                    reader.skip(".", ctx);
 
-                    match reader.next() {
+                    match reader.sym() {
 
                         Token::Name(s, _, _) => {
                             // let fieldname = Node::new(NodeType::Name(s));
