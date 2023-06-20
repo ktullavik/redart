@@ -65,6 +65,7 @@ fn main() {
             if args.len() < 3 {
                 println!("Running all tests:");
                 for s in testlist::TESTS {
+                    println!("Running test: {}", s);
                     let path = format!("{}/{}", testlist::TESTPATH, s);
                     do_task("eval", read_file(path.as_str()), &ctx);
                 }
