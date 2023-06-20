@@ -19,7 +19,7 @@ pub fn parse(reader: &mut Reader, ctx: &Ctx) -> Result<Node, String> {
         let node = decl(reader, ctx);
         root.children.push(node);
     }
-    assert_eq!(reader.position(), reader.len() - 1, "Undexpected index at end of parse: {} out of {}", reader.position(), reader.len());
+    assert_eq!(reader.pos(), reader.len() - 1, "Undexpected index at end of parse: {} out of {}", reader.pos(), reader.len());
 
     Ok(root)
 }
@@ -108,7 +108,7 @@ fn decl(reader: &mut Reader, ctx: &Ctx) -> Node  {
                 "Directives must appear before any declarations.",
                 ctx,
                 &reader.tokens(),
-                reader.position()
+                reader.pos()
             );
         }
 
@@ -308,7 +308,7 @@ fn constructor_paramlist(reader: &mut Reader, ctx: &Ctx) -> Node {
                                 format!("Expected identifier. Got {}", x),
                                 ctx,
                                 reader.tokens(),
-                                reader.position()
+                                reader.pos()
                             );
                         }
                     }
@@ -340,7 +340,7 @@ fn constructor_paramlist(reader: &mut Reader, ctx: &Ctx) -> Node {
             "A function declaration needs an explicit list of parameters.",
             ctx,
             reader.tokens(),
-            reader.position() - 1
+            reader.pos() - 1
         )
     }
     panic!("Error when reading param list.")
@@ -391,7 +391,7 @@ fn paramlist(reader: &mut Reader, ctx: &Ctx) -> Node {
             "A function declaration needs an explicit list of parameters.",
             ctx,
             reader.tokens(),
-            reader.position() - 1
+            reader.pos() - 1
         )
     }
     panic!("Error when reading param list.")
@@ -453,7 +453,7 @@ fn block(reader: &mut Reader, ctx: &Ctx) -> Node {
 
 
     while reader.more() {
-        dprint(format!("Parse: block loop at: {}, token: {}", reader.position(), reader.sym()));
+        dprint(format!("Parse: block loop at: {}, token: {}", reader.pos(), reader.sym()));
 
         match reader.sym() {
 
@@ -537,7 +537,7 @@ fn statement(reader: &mut Reader, ctx: &Ctx) -> Node {
                                 format!("Unexpected token in statement. Got: {}. Expected: {}", x, "="),
                                 ctx,
                                 reader.tokens(),
-                                reader.position()
+                                reader.pos()
                             );
                         }
                     }
@@ -760,7 +760,7 @@ fn statement(reader: &mut Reader, ctx: &Ctx) -> Node {
                                 format!("Expected identifier or assignment. Got: {}", x),
                                 ctx,
                                 &reader.tokens(),
-                                reader.position()
+                                reader.pos()
                             );
                         }
 
@@ -772,7 +772,7 @@ fn statement(reader: &mut Reader, ctx: &Ctx) -> Node {
                         "Expected identifier.",
                         ctx,
                         &reader.tokens(),
-                        reader.position()
+                        reader.pos()
                     );
                 }
             }

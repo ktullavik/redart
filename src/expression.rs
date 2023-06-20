@@ -31,7 +31,7 @@ fn disjunction(reader: &mut Reader, ctx: &Ctx) -> Node {
 
     let left = conjunction(reader, ctx);
 
-    if reader.len() <= reader.position() {
+    if reader.len() <= reader.pos() {
         return left;
     }
 
@@ -60,7 +60,7 @@ fn conjunction(reader: &mut Reader, ctx: &Ctx) -> Node {
 
     let left = equality(reader, ctx);
 
-    if reader.len() <= reader.position() {
+    if reader.len() <= reader.pos() {
         return left;
     }
 
@@ -92,7 +92,7 @@ fn equality(reader: &mut Reader, ctx: &Ctx) -> Node {
 
     let left = comparison(reader, ctx);
 
-    if reader.len() <= reader.position() {
+    if reader.len() <= reader.pos() {
         return left;
     }
 
@@ -122,7 +122,7 @@ fn comparison(reader: &mut Reader, ctx: &Ctx) -> Node {
 
     let left = bit_or(reader, ctx);
 
-    if reader.len() <= reader.position() {
+    if reader.len() <= reader.pos() {
         return left;
     }
 
@@ -184,7 +184,7 @@ fn bit_or(reader: &mut Reader, ctx: &Ctx) -> Node {
 
     let left = bit_xor(reader, ctx);
 
-    if reader.len() <= reader.position() {
+    if reader.len() <= reader.pos() {
         return left;
     }
 
@@ -212,7 +212,7 @@ fn bit_xor(reader: &mut Reader, ctx: &Ctx) -> Node {
 
     let left = bit_and(reader, ctx);
 
-    if reader.len() <= reader.position() {
+    if reader.len() <= reader.pos() {
         return left;
     }
 
@@ -240,7 +240,7 @@ fn bit_and(reader: &mut Reader, ctx: &Ctx) -> Node {
 
     let left= sum(reader, ctx);
 
-    if reader.len() <= reader.position() {
+    if reader.len() <= reader.pos() {
         return left;
     }
 
@@ -274,7 +274,7 @@ fn sum_help(reader: &mut Reader, righties: &mut Queue<Node>, ops: &mut Queue<Nod
     let n = product(reader, ctx);
     righties.add(n).ok();
 
-    if reader.len() <= reader.position() {
+    if reader.len() <= reader.pos() {
         return righties.remove().unwrap();
     }
 
@@ -330,7 +330,7 @@ fn product_help(reader: &mut Reader, righties: &mut Queue<Node>, ops: &mut Queue
     let n = term(reader, ctx);
     righties.add(n).ok();
 
-    if reader.len() <= reader.position() {
+    if reader.len() <= reader.pos() {
         return righties.remove().unwrap();
     }
 
@@ -398,7 +398,7 @@ fn term(reader: &mut Reader, ctx: &Ctx) -> Node {
                 "'+' is not a prefix operator.",
                 ctx,
                 reader.tokens(),
-                reader.position()
+                reader.pos()
             );
         }
 
@@ -435,7 +435,7 @@ fn term(reader: &mut Reader, ctx: &Ctx) -> Node {
                     node.children.push(itpn);
                 }
                 // May be empty when inside interpol recursion.
-                if reader.len() > reader.position() + 1 {
+                if reader.len() > reader.pos() + 1 {
                     reader.next();
                 }
                 return node;
@@ -453,7 +453,7 @@ fn term(reader: &mut Reader, ctx: &Ctx) -> Node {
             // Postfixed inc/dec should be bound tightly, so handle
             // it here rather than in expression.
 
-            if reader.len() > reader.position() + 1 {
+            if reader.len() > reader.pos() + 1 {
 
                 reader.next();
 
@@ -523,7 +523,7 @@ fn term(reader: &mut Reader, ctx: &Ctx) -> Node {
                 return wnode;
             }
             else {
-                panic!("Expected closing parenthesis at {} but found {}", reader.position(), reader.sym())
+                panic!("Expected closing parenthesis at {} but found {}", reader.pos(), reader.sym())
             }
         }
 
@@ -542,7 +542,7 @@ fn term(reader: &mut Reader, ctx: &Ctx) -> Node {
 
                 _ => {
 
-                    while reader.position() < reader.len() {
+                    while reader.pos() < reader.len() {
 
                         if expect_sep {
                             match reader.sym() {

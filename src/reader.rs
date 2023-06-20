@@ -26,7 +26,7 @@ impl Reader {
                 format!("Expected: '{}'. Got: '{}'.", sym, t),
                 ctx,
                 self.tokens(),
-                self.position()
+                self.pos()
             );
         }
     }
@@ -56,7 +56,7 @@ impl Reader {
         return &self.tokens;
     }
 
-    pub fn position(&self) -> usize {
+    pub fn pos(&self) -> usize {
         return self.pos;
     }
 
