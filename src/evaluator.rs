@@ -1102,6 +1102,8 @@ pub fn eval(
                         Object::Reference(refid) => {
                             instlist.this = refid.clone();
 
+                            // Set fields from params that uses "this" to auto-init.
+                            // Ie Bike(this.gears)
                             let inst = instlist.get_this();
                             for i in 0 .. params.len() {
                                 if params[i].fieldinit {
