@@ -33,7 +33,7 @@ impl Reader {
     }
 
 
-    pub fn nexpect(&mut self, sym: &str, ctx: &Ctx) {
+    pub fn skip(&mut self, sym: &str, ctx: &Ctx) {
         self.expect(sym, ctx);
         self.next();
     }
