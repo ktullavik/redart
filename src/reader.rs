@@ -17,7 +17,6 @@ impl Reader {
         }
     }
 
-
     pub fn expect(&self, sym: &str, ctx: &Ctx) {
 
         let t = &self.tokens[self.pos];
@@ -32,12 +31,10 @@ impl Reader {
         }
     }
 
-
     pub fn skip(&mut self, sym: &str, ctx: &Ctx) {
         self.expect(sym, ctx);
         self.next();
     }
-
 
     pub fn sym(&self) -> Token {
         if self.pos >= self.tokens.len() {
