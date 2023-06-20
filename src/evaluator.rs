@@ -5,8 +5,7 @@ use utils::{dprint, dart_evalerror};
 use stack::Stack;
 use object::{Object, ParamObj};
 use objsys::Class;
-use objsys::ClassMap;
-use objsys::InstanceMap;
+use objsys::ObjSys;
 use std::collections::HashMap;
 use std::ops::{BitAnd, BitOr, BitXor};
 
@@ -17,8 +16,7 @@ pub fn preval(
     node: &Node,
     globals: &mut HashMap<String, Object>,
     store: &mut Stack,
-    classlist: &mut ClassMap,
-    instlist: &mut InstanceMap,
+    objsys: &mut ObjSys,
     ctx: &Ctx) {
 
     dprint(" ");
@@ -52,7 +50,6 @@ pub fn preval(
                     }
 
                     let obj = Object::Function(fname.to_string(), body, args);
-                    // store.add(fname, obj);
                     globals.insert(fname.to_string(), obj);
 
                     dprint(format!("Inserted to symtable: {}", fname));
@@ -64,11 +61,9 @@ pub fn preval(
 
             }
             NodeType::Class(cname) => {
-                let mut class = Class::new(cname.clone());
-                preval_class(&mut class, globals, store,n, classlist, instlist, ctx);
-
-                classlist.add(class);
-
+                let mut class = objsys.new_class(cname.clone());
+                preval_class(&mut class, n, globals, store, objsys, ctx);
+                objsys.register_class(class);
             }
             x => {
                 dprint(format!("Preval considering node {}", x));
@@ -80,10 +75,10 @@ pub fn preval(
 
 fn preval_class(
     classobj: &mut Class,
+    classnode: &Node,
     globals: &mut HashMap<String, Object>,
-    store: &mut Stack, classnode: &Node,
-    classlist: &mut ClassMap,
-    instlist: &mut InstanceMap,
+    store: &mut Stack,
+    objsys: &mut ObjSys,
     ctx: &Ctx) {
 
     for member in &classnode.children {
@@ -115,10 +110,7 @@ fn preval_class(
                     classobj.add_method(fname.clone(), obj);
                 } else {
                     panic!("Expected paramlist for FunDef in preeval.");
-
                 }
-
-
             }
             NodeType::Assign => {
                 let namenode = member.children[0].clone();
@@ -126,7 +118,7 @@ fn preval_class(
 
                     // What to do with store here?
                     // Field can reference some stuff.
-                    let val = eval(&member.children[1], globals, store, classlist, instlist, ctx);
+                    let val = eval(&member.children[1], globals, store, objsys, ctx);
 
                     classobj.add_field(ftype, fname, val);
                 }
@@ -180,8 +172,7 @@ pub fn eval(
     node: &Node,
     globals: &mut HashMap<String, Object>,
     store: &mut Stack,
-    classlist: &mut ClassMap,
-    instlist: &mut InstanceMap,
+    objsys: &mut ObjSys,
     ctx: &Ctx) -> Object {
 
     let t: &NodeType = &node.nodetype;
@@ -193,28 +184,28 @@ pub fn eval(
             match &node.children[0].nodetype {
                 NodeType::Name(ref s1) => {
 
-                    let right_obj = eval(&node.children[1], globals, store, classlist, instlist, ctx);
+                    let right_obj = eval(&node.children[1], globals, store, objsys, ctx);
 
                     if store.has(s1.as_str()) {
                         store.add(s1.as_str(), right_obj);
                     }
                     else {
-                        let this = instlist.get_this();
+                        let this = objsys.get_this();
                         this.set_field(s1.clone(), right_obj);
                     }
                     return Object::Null;
                 }
                 NodeType::TypedVar(_, ref s1) => {
 
-                    let right_obj = eval(&node.children[1], globals, store, classlist, instlist, ctx);
+                    let right_obj = eval(&node.children[1], globals, store, objsys, ctx);
 
                     if store.has_in_lexscope(s1.as_str()) {
                         // As dart.
                         dart_evalerror(format!("'{}' is already declared in this scope.", s1), ctx);
                     }
                     else {
-                        if instlist.has_this() {
-                            let this = instlist.get_this();
+                        if objsys.has_this() {
+                            let this = objsys.get_this();
                             if this.has_field(s1.clone()) {
                                 panic!("Variable with name {} already exists.", s1);
                             }
@@ -231,7 +222,7 @@ pub fn eval(
         NodeType::Not => {
             dprint("Eval: NodeType::Not");
 
-            let obj = eval(&node.children[0], globals, store, classlist, instlist, ctx);
+            let obj = eval(&node.children[0], globals, store, objsys, ctx);
 
             return match obj {
                 Object::Bool(b) => {
@@ -244,13 +235,13 @@ pub fn eval(
         NodeType::LogOr => {
             dprint("Eval: NodeType::LogOr");
 
-            let left_obj = eval(&node.children[0], globals, store, classlist, instlist, ctx);
+            let left_obj = eval(&node.children[0], globals, store, objsys, ctx);
 
             match left_obj {
 
                 Object::Bool(b1) => {
 
-                    let right_obj = eval(&node.children[1], globals, store, classlist, instlist, ctx);
+                    let right_obj = eval(&node.children[1], globals, store, objsys, ctx);
 
                     match right_obj {
 
@@ -267,13 +258,13 @@ pub fn eval(
         NodeType::LogAnd => {
             dprint("Eval: NodeType::LogAnd");
 
-            let left_obj = eval(&node.children[0], globals, store, classlist, instlist, ctx);
+            let left_obj = eval(&node.children[0], globals, store, objsys, ctx);
 
             match left_obj {
 
                 Object::Bool(b1) => {
 
-                    let right_obj = eval(&node.children[1], globals, store, classlist, instlist, ctx);
+                    let right_obj = eval(&node.children[1], globals, store, objsys, ctx);
 
                     match right_obj {
 
@@ -290,13 +281,13 @@ pub fn eval(
         NodeType::LessThan => {
             dprint("Eval: NodeType::LessThan");
 
-            let left_obj = eval(&node.children[0], globals, store, classlist, instlist, ctx);
+            let left_obj = eval(&node.children[0], globals, store, objsys, ctx);
 
             match left_obj {
 
                 Object::Int(n1) => {
 
-                    let right_obj = eval(&node.children[1], globals, store, classlist, instlist, ctx);
+                    let right_obj = eval(&node.children[1], globals, store, objsys, ctx);
 
                     match right_obj {
 
@@ -311,7 +302,7 @@ pub fn eval(
                 }
 
                 Object::Double(x1) => {
-                    let right_obj = eval(&node.children[1], globals, store, classlist, instlist, ctx);
+                    let right_obj = eval(&node.children[1], globals, store, objsys, ctx);
 
                     match right_obj {
 
@@ -331,13 +322,13 @@ pub fn eval(
         NodeType::GreaterThan => {
             dprint("Eval: NodeType::GreaterThan");
 
-            let left_obj = eval(&node.children[0], globals, store, classlist, instlist, ctx);
+            let left_obj = eval(&node.children[0], globals, store, objsys, ctx);
 
             match left_obj {
 
                 Object::Int(n1) => {
 
-                    let right_obj = eval(&node.children[1], globals, store, classlist, instlist, ctx);
+                    let right_obj = eval(&node.children[1], globals, store, objsys, ctx);
 
                     match right_obj {
 
@@ -352,7 +343,7 @@ pub fn eval(
                 }
 
                 Object::Double(x1) => {
-                    let right_obj = eval(&node.children[1], globals, store, classlist, instlist, ctx);
+                    let right_obj = eval(&node.children[1], globals, store, objsys, ctx);
 
                     match right_obj {
 
@@ -372,13 +363,13 @@ pub fn eval(
         NodeType::LessOrEq => {
             dprint("Eval: NodeType::LessOrEq");
 
-            let left_obj = eval(&node.children[0], globals, store, classlist, instlist, ctx);
+            let left_obj = eval(&node.children[0], globals, store, objsys, ctx);
 
             match left_obj {
 
                 Object::Int(n1) => {
 
-                    let right_obj = eval(&node.children[1], globals, store, classlist, instlist, ctx);
+                    let right_obj = eval(&node.children[1], globals, store, objsys, ctx);
 
                     match right_obj {
 
@@ -393,7 +384,7 @@ pub fn eval(
                 }
 
                 Object::Double(x1) => {
-                    let right_obj = eval(&node.children[1], globals, store, classlist, instlist, ctx);
+                    let right_obj = eval(&node.children[1], globals, store, objsys, ctx);
 
                     match right_obj {
 
@@ -413,13 +404,13 @@ pub fn eval(
         NodeType::GreaterOrEq => {
             dprint("Eval: NodeType::GreaterOrEq");
 
-            let left_obj = eval(&node.children[0], globals, store, classlist, instlist, ctx);
+            let left_obj = eval(&node.children[0], globals, store, objsys, ctx);
 
             match left_obj {
 
                 Object::Int(n1) => {
 
-                    let right_obj = eval(&node.children[1], globals, store, classlist, instlist, ctx);
+                    let right_obj = eval(&node.children[1], globals, store, objsys, ctx);
 
                     match right_obj {
 
@@ -434,7 +425,7 @@ pub fn eval(
                 }
 
                 Object::Double(x1) => {
-                    let right_obj = eval(&node.children[1], globals, store, classlist, instlist, ctx);
+                    let right_obj = eval(&node.children[1], globals, store, objsys, ctx);
 
                     match right_obj {
 
@@ -454,8 +445,8 @@ pub fn eval(
         NodeType::Equal => {
             dprint("Eval: NodeType::Equal");
 
-            let left_obj = eval(&node.children[0], globals, store, classlist, instlist, ctx);
-            let right_obj = eval(&node.children[1], globals, store, classlist, instlist, ctx);
+            let left_obj = eval(&node.children[0], globals, store, objsys, ctx);
+            let right_obj = eval(&node.children[1], globals, store, objsys, ctx);
 
             match left_obj {
 
@@ -505,13 +496,13 @@ pub fn eval(
         NodeType::BitAnd => {
             dprint("Eval: NodeType::BitAnd");
 
-            let left_obj = eval(&node.children[0], globals, store, classlist, instlist, ctx);
+            let left_obj = eval(&node.children[0], globals, store, objsys, ctx);
 
             match &left_obj {
 
                 Object::Int(s1) => {
 
-                    let right_obj = eval(&node.children[1], globals, store, classlist, instlist, ctx);
+                    let right_obj = eval(&node.children[1], globals, store, objsys, ctx);
 
                     match &right_obj {
 
@@ -528,13 +519,13 @@ pub fn eval(
         NodeType::BitOr => {
             dprint("Eval: NodeType::BitOr");
 
-            let left_obj = eval(&node.children[0], globals, store, classlist, instlist, ctx);
+            let left_obj = eval(&node.children[0], globals, store, objsys, ctx);
 
             match &left_obj {
 
                 Object::Int(s1) => {
 
-                    let right_obj = eval(&node.children[1], globals, store, classlist, instlist, ctx);
+                    let right_obj = eval(&node.children[1], globals, store, objsys, ctx);
 
                     match &right_obj {
 
@@ -551,13 +542,13 @@ pub fn eval(
         NodeType::BitXor => {
             dprint("Eval: NodeType::BitXor");
 
-            let left_obj = eval(&node.children[0], globals, store, classlist, instlist, ctx);
+            let left_obj = eval(&node.children[0], globals, store, objsys, ctx);
 
             match &left_obj {
 
                 Object::Int(s1) => {
 
-                    let right_obj = eval(&node.children[1], globals, store, classlist, instlist, ctx);
+                    let right_obj = eval(&node.children[1], globals, store, objsys, ctx);
 
                     match &right_obj {
 
@@ -574,12 +565,12 @@ pub fn eval(
         NodeType::Add => {
             dprint("Eval: NodeType::Add");
 
-            let left_obj = eval(&node.children[0], globals, store, classlist, instlist, ctx);
+            let left_obj = eval(&node.children[0], globals, store, objsys, ctx);
 
             match &left_obj {
                 Object::Int(s1) => {
 
-                    let right_obj = eval(&node.children[1], globals, store, classlist, instlist, ctx);
+                    let right_obj = eval(&node.children[1], globals, store, objsys, ctx);
 
                     match &right_obj {
                         Object::Int(s2) => {
@@ -592,7 +583,7 @@ pub fn eval(
                     }
                 },
                 Object::Double(s1) => {
-                    let right_obj = eval(&node.children[1], globals, store, classlist, instlist, ctx);
+                    let right_obj = eval(&node.children[1], globals, store, objsys, ctx);
 
                     match &right_obj {
                         Object::Int(s2) => {
@@ -605,7 +596,7 @@ pub fn eval(
                     }
                 }
                 Object::String(s1) => {
-                    let right_obj = eval(&node.children[1], globals, store, classlist, instlist, ctx);
+                    let right_obj = eval(&node.children[1], globals, store, objsys, ctx);
 
                     match &right_obj {
                         Object::String(s2) => {
@@ -623,7 +614,7 @@ pub fn eval(
         NodeType::Sub => {
             dprint("Eval: NodeType::Sub");
 
-            let left_obj = eval(&node.children[0], globals, store, classlist, instlist, ctx);
+            let left_obj = eval(&node.children[0], globals, store, objsys, ctx);
 
             if node.children.len() == 1 {
                 return match &left_obj {
@@ -640,7 +631,7 @@ pub fn eval(
             match &left_obj {
                 Object::Int(s1) => {
 
-                    let right_obj = eval(&node.children[1], globals, store, classlist, instlist, ctx);
+                    let right_obj = eval(&node.children[1], globals, store, objsys, ctx);
 
                     match &right_obj {
                         Object::Int(s2) => {
@@ -653,7 +644,7 @@ pub fn eval(
                     }
                 },
                 Object::Double(s1) => {
-                    let right_obj = eval(&node.children[1], globals, store, classlist, instlist, ctx);
+                    let right_obj = eval(&node.children[1], globals, store, objsys, ctx);
 
                     match &right_obj {
                         Object::Int(s2) => {
@@ -673,12 +664,12 @@ pub fn eval(
         NodeType::Mul => {
             dprint("Eval: NodeType::Mul");
 
-            let left_obj = eval(&node.children[0], globals, store, classlist, instlist, ctx);
+            let left_obj = eval(&node.children[0], globals, store, objsys, ctx);
 
             match &left_obj {
                 Object::Int(s1) => {
 
-                    let right_obj = eval(&node.children[1], globals, store, classlist, instlist, ctx);
+                    let right_obj = eval(&node.children[1], globals, store, objsys, ctx);
 
                     match &right_obj {
                         Object::Int(s2) => {
@@ -691,7 +682,7 @@ pub fn eval(
                     }
                 },
                 Object::Double(s1) => {
-                    let right_obj = eval(&node.children[1], globals, store, classlist, instlist, ctx);
+                    let right_obj = eval(&node.children[1], globals, store, objsys, ctx);
 
                     match &right_obj {
                         Object::Int(s2) => {
@@ -710,12 +701,12 @@ pub fn eval(
         NodeType::Div => {
             dprint("Eval: NodeType::Div");
 
-            let left_obj = eval(&node.children[0], globals, store, classlist, instlist, ctx);
+            let left_obj = eval(&node.children[0], globals, store, objsys, ctx);
 
             match &left_obj {
                 Object::Int(s1) => {
 
-                    let right_obj = eval(&node.children[1], globals, store, classlist, instlist, ctx);
+                    let right_obj = eval(&node.children[1], globals, store, objsys, ctx);
 
                     match &right_obj {
                         Object::Int(s2) => {
@@ -729,7 +720,7 @@ pub fn eval(
                 },
                 Object::Double(s1) => {
 
-                    let right_obj = eval(&node.children[1], globals, store, classlist, instlist, ctx);
+                    let right_obj = eval(&node.children[1], globals, store, objsys, ctx);
 
                     match &right_obj {
                         Object::Int(s2) => {
@@ -766,7 +757,7 @@ pub fn eval(
                         }
                     }
                     else {
-                        let this = instlist.get_this();
+                        let this = objsys.get_this();
                         let oldval = this.get_field(s.clone()).clone();
 
                         match oldval {
@@ -804,7 +795,7 @@ pub fn eval(
                         }
                     }
                     else {
-                        let this = instlist.get_this();
+                        let this = objsys.get_this();
                         let oldval = this.get_field(s.clone()).clone();
 
                         match oldval {
@@ -842,7 +833,7 @@ pub fn eval(
                         }
                     }
                     else {
-                        let this = instlist.get_this();
+                        let this = objsys.get_this();
                         let oldval = this.get_field(s.clone()).clone();
 
                         match oldval {
@@ -881,7 +872,7 @@ pub fn eval(
                         }
                     }
                     else {
-                        let this = instlist.get_this();
+                        let this = objsys.get_this();
                         let oldval = this.get_field(s.clone()).clone();
 
                         match oldval {
@@ -921,7 +912,7 @@ pub fn eval(
 
             let mut evaled_itps = Vec::new();
             for itp in &node.children {
-                evaled_itps.push(eval(itp, globals, store, classlist, instlist, ctx));
+                evaled_itps.push(eval(itp, globals, store, objsys, ctx));
             }
 
             let parts : Vec<&str> = s.as_str().split("$").collect();
@@ -942,8 +933,8 @@ pub fn eval(
                 dprint(format!("got value for {}", s));
                 return store.get(s).clone();
             }
-            else if instlist.has_this() {
-                let this = instlist.get_this();
+            else if objsys.has_this() {
+                let this = objsys.get_this();
                 return this.get_field(s.clone()).clone();
             }
             else {
@@ -955,7 +946,7 @@ pub fn eval(
 
         NodeType::Return => {
             dprint(format!("Eval: NodeType::Return"));
-            let retval = eval(&node.children[0], globals, store, classlist, instlist, ctx);
+            let retval = eval(&node.children[0], globals, store, objsys, ctx);
             return Object::Return(Box::new(retval));
         }
 
@@ -965,9 +956,8 @@ pub fn eval(
             let reference = store.get(qname);
             if let Object::Reference(refid) = reference {
 
-                let instance = instlist.get(refid);
-                let c = classlist.get(&instance.classname);
-
+                let instance = objsys.get_instance(refid);
+                let c = objsys.get_class(&instance.classname);
 
                 let meth = c.get_method(methname);
                 if let Object::Function(_, node, params) = meth {
@@ -975,22 +965,18 @@ pub fn eval(
                     let argslist = &node.children[0];
 
                     store.push_call();
-                    instlist.this = instance.id.clone();
-
+                    objsys.set_this(instance.id.clone());
 
                     for i in 0 .. params.len() {
-
                         let argtree = &argslist.children[i];
                         dprint(format!("about to eval method argtree: {}", argtree));
-
-                        let argobj = eval(argtree, globals, store, classlist, instlist, ctx);
+                        let argobj = eval(argtree, globals, store, objsys, ctx);
                         store.add(params[i].as_str(), argobj);
-
                     }
 
-                    let result = eval(&node, globals, store, classlist, instlist, ctx);
+                    let result = eval(&node, globals, store, objsys, ctx);
 
-                    instlist.this = String::from("");
+                    objsys.clear_this();
                     store.pop_call();
 
                     return match result {
@@ -1023,7 +1009,7 @@ pub fn eval(
                 let mut args: Vec<Object> = Vec::new();
 
                 for argtree in &node.children[0].children {
-                    args.push(eval(&argtree, globals, store, classlist, instlist, ctx));
+                    args.push(eval(&argtree, globals, store, objsys, ctx));
                 }
 
                 let res: Object = builtin::call(s, &args, ctx);
@@ -1043,7 +1029,7 @@ pub fn eval(
                         dprint(format!("about to eval function({}) argtree {}: {}", fname, i, params[i]));
 
                         let argtree = &argslist.children[i];
-                        let argobj = eval(argtree, globals, store, classlist, instlist, ctx);
+                        let argobj = eval(argtree, globals, store, objsys, ctx);
                         evaled_args.push(argobj);
                     }
 
@@ -1054,7 +1040,7 @@ pub fn eval(
                         store.add(params[i].as_str(), evaled_args.remove(0));
                     }
 
-                    let result = eval(&body, globals, store, classlist, instlist, ctx);
+                    let result = eval(&body, globals, store, objsys, ctx);
 
                     store.pop_call();
 
@@ -1077,7 +1063,7 @@ pub fn eval(
                         dprint(format!("about to eval argtree {}: {}", i, params[i]));
 
                         let argtree = &argslist.children[i];
-                        let argobj = eval(argtree, globals, store, classlist, instlist, ctx);
+                        let argobj = eval(argtree, globals, store, objsys, ctx);
                         evaled_args.push(argobj);
                     }
 
@@ -1093,18 +1079,19 @@ pub fn eval(
                     }
 
                     // Lookup class.
-                    let class = classlist.get(cname.as_str());
+                    // let class = classlist.get(cname.as_str());
+                    let class = objsys.get_class(cname.as_str());
 
                     // Creates instance with data fields.
-                    let instref = class.instantiate(instlist);
+                    let instref = objsys.register_instance(class.instantiate());
 
                     match &instref {
                         Object::Reference(refid) => {
-                            instlist.this = refid.clone();
+                            objsys.set_this(refid.clone());
 
                             // Set fields from params that uses "this" to auto-init.
                             // Ie Bike(this.gears)
-                            let inst = instlist.get_this();
+                            let inst = objsys.get_this();
                             for i in 0 .. params.len() {
                                 if params[i].fieldinit {
                                     inst.set_field(params[i].name.clone(), evaled_args[i].clone());
@@ -1112,10 +1099,9 @@ pub fn eval(
                             }
 
                             // Run body
-                            eval(&body, globals, store, classlist, instlist, ctx);
+                            eval(&body, globals, store, objsys, ctx);
 
-                            instlist.this = String::from("");
-
+                            objsys.clear_this();
                             store.pop_call();
 
                             return instref.clone();
@@ -1168,14 +1154,14 @@ pub fn eval(
                     NodeType::ElseIf => {
                         let boolnode= &condnode.children[0];
 
-                        let cond = eval(&boolnode, globals, store, classlist, instlist, ctx);
+                        let cond = eval(&boolnode, globals, store, objsys, ctx);
                         match cond {
 
                             Object::Bool(v) => {
                                 if v {
                                     let bodynode= &condnode.children[1];
                                     store.push_lex();
-                                    let ret = eval(&bodynode, globals, store, classlist, instlist, ctx);
+                                    let ret = eval(&bodynode, globals, store, objsys, ctx);
                                     store.pop_lex();
                                     return ret;
                                 }
@@ -1187,7 +1173,7 @@ pub fn eval(
                     NodeType::Else => {
                         let bodynode= &condnode.children[0];
                         store.push_lex();
-                        let ret = eval(&bodynode, globals, store, classlist, instlist, ctx);
+                        let ret = eval(&bodynode, globals, store, objsys, ctx);
                         store.pop_lex();
                         return ret;
                     }
@@ -1205,15 +1191,15 @@ pub fn eval(
             let boolnode = &node.children[0];
             let block = &node.children[1];
 
-            let mut cond = eval(boolnode, globals, store, classlist, instlist, ctx);
+            let mut cond = eval(boolnode, globals, store, objsys, ctx);
 
             match &cond {
 
                 Object::Bool(mut v) => {
 
                     while v {
-                        eval(block, globals, store, classlist, instlist, ctx);
-                        cond = eval(boolnode, globals, store, classlist, instlist, ctx);
+                        eval(block, globals, store, objsys, ctx);
+                        cond = eval(boolnode, globals, store, objsys, ctx);
 
                         match &cond {
                             Object::Bool(newcond) => {
@@ -1236,16 +1222,16 @@ pub fn eval(
             let block = &node.children[0];
             let boolnode = &node.children[1];
 
-            eval(block, globals, store, classlist, instlist, ctx);
+            eval(block, globals, store, objsys, ctx);
 
-            let mut cond = eval(boolnode, globals, store, classlist, instlist, ctx);
+            let mut cond = eval(boolnode, globals, store, objsys, ctx);
 
             if let Object::Bool(mut b) = cond {
 
                 while b {
 
-                    eval(block, globals, store, classlist, instlist, ctx);
-                    cond = eval(boolnode, globals, store, classlist, instlist, ctx);
+                    eval(block, globals, store, objsys, ctx);
+                    cond = eval(boolnode, globals, store, objsys, ctx);
 
                     match &cond {
                         Object::Bool(new_b) => {
@@ -1270,11 +1256,11 @@ pub fn eval(
             let mutexpr = &node.children[2];
             let body = &node.children[3];
 
-            eval(assign, globals, store, classlist, instlist, ctx);
+            eval(assign, globals, store, objsys, ctx);
 
             loop {
 
-                let condobj = eval(condexpr, globals, store, classlist, instlist, ctx);
+                let condobj = eval(condexpr, globals, store, objsys, ctx);
 
                 match condobj {
                     Object::Bool(b) => {
@@ -1283,8 +1269,8 @@ pub fn eval(
                             break;
                         }
 
-                        eval(body, globals, store, classlist, instlist, ctx);
-                        eval(mutexpr, globals, store, classlist, instlist, ctx);
+                        eval(body, globals, store, objsys, ctx);
+                        eval(mutexpr, globals, store, objsys, ctx);
                     }
                     x => dart_evalerror(format!("Expected bool. Got: {}", x), ctx)
 
@@ -1298,7 +1284,7 @@ pub fn eval(
 
             for c in &node.children {
 
-                let retval = eval(c, globals, store, classlist, instlist, ctx);
+                let retval = eval(c, globals, store, objsys, ctx);
 
                 match &retval {
                     Object::Return(_) => {
@@ -1313,7 +1299,7 @@ pub fn eval(
         NodeType::Module => {
             dprint("Eval: NodeType::Module");
 
-            eval(&node.children[1], globals, store, classlist, instlist, ctx)
+            eval(&node.children[1], globals, store, objsys, ctx)
         }
 
         _ => panic!("Unknown node type: {}", t)

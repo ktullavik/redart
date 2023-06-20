@@ -24,8 +24,7 @@ mod reader;
 use context::Ctx;
 use object::Object;
 use stack::Stack;
-use objsys::ClassMap;
-use objsys::InstanceMap;
+use objsys::ObjSys;
 use std::collections::HashMap;
 
 
@@ -170,11 +169,10 @@ fn evaluate(input: &String, ctx: &Ctx) {
     let tree = parser::parse(&mut tokens, ctx).unwrap();
 
     let mut store = Stack::new();
-    let mut classlist = ClassMap::new();
-    let mut instlist = InstanceMap::new();
+    let mut objsys = ObjSys::new();
     let mut globals : HashMap<String, Object> = HashMap::new();
 
-    evaluator::preval(&tree, &mut globals, &mut store, &mut classlist, &mut instlist, ctx);
+    evaluator::preval(&tree, &mut globals, &mut store, &mut objsys, ctx);
 
     if !globals.contains_key("main") {
         // As Dart.
@@ -190,7 +188,7 @@ fn evaluate(input: &String, ctx: &Ctx) {
             utils::dprint(" ");
 
             store.push_call();
-            evaluator::eval(n, &mut globals, &mut store, &mut classlist, &mut instlist, ctx);
+            evaluator::eval(n, &mut globals, &mut store, &mut objsys, ctx);
             store.pop_call();
         }
         x => {

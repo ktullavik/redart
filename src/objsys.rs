@@ -3,12 +3,10 @@ use utils::dprint;
 use object::Object;
 
 
-// #[derive(Clone)]
 pub struct Instance {
     pub id: String,
     pub classname: String,
     pub fields: HashMap<String, Object>
-
 }
 
 
@@ -23,7 +21,6 @@ impl Instance {
     }
 
 
-    // pub fn set_field(&mut self, name: String, value: Object) {
     pub fn set_field(&mut self, name: String, value: Object) {
         self.fields.insert(name, value);
     }
@@ -32,90 +29,9 @@ impl Instance {
         self.fields.get(name.as_str()).unwrap()
     }
 
-
     pub fn has_field(&self, name: String) -> bool {
         self.fields.contains_key(name.as_str())
     }
-
-}
-
-
-pub struct InstanceMap {
-    pub instance: HashMap<String, Instance>,
-    pub this: String
-}
-
-
-impl InstanceMap {
-
-    pub fn new() -> InstanceMap {
-
-        InstanceMap {
-            instance: HashMap::new(),
-            this: String::from("")
-        }
-    }
-
-
-    pub fn add(&mut self, id: String, inst: Instance) {
-        self.instance.insert(id, inst);
-    }
-
-
-    pub fn get(&mut self, id: &str) -> &Instance {
-        self.instance.get(id).unwrap()
-    }
-
-
-    pub fn has_this(&self) -> bool {
-        self.instance.contains_key(self.this.as_str())
-    }
-
-
-    pub fn get_this(&mut self) -> &mut Instance {
-        dprint(format!("Get this: {}", self.this));
-
-        if self.instance.contains_key(self.this.as_str()) {
-            let thisinst = self.instance.get_mut(self.this.as_str()).unwrap();
-            return thisinst;
-        }
-
-        dprint("Registered instances: ");
-        for (k, _) in &self.instance {
-            dprint(format!("    {}", k));
-        }
-        panic!("Could not get this instance: {}", self.this);
-
-    }
-
-}
-
-
-pub struct ClassMap {
-    pub class: HashMap<String, Class>
-}
-
-
-impl ClassMap {
-
-    pub fn new() -> ClassMap {
-
-        ClassMap {
-            class: HashMap::new()
-        }
-    }
-
-
-    pub fn get(&mut self, name: &str) -> &Class {
-        dprint(format!("Getting class: {}", name));
-        self.class.get(name).unwrap()
-    }
-
-
-    pub fn add(&mut self, c: Class) {
-        self.class.insert(c.name.clone(), c);
-    }
-
 }
 
 
@@ -169,20 +85,94 @@ impl Class {
     }
 
 
-    pub fn instantiate(&self, instmap: &mut InstanceMap) -> Object {
-        let id= nuid::next();
-
-        let mut instance = Instance::new(id.clone(), self.name.clone());
-
+    pub fn instantiate(&self) -> Instance {
+        let mut instance = Instance::new(nuid::next(), self.name.clone());
 
         for (_, fname, initval) in &self.fields {
             instance.set_field(fname.clone(), initval.clone())
         }
 
-        instmap.add(id.clone(), instance);
+        instance
+    }
+}
 
-        Object::Reference(id)
+
+pub struct ObjSys {
+    classmap: HashMap<String, Class>,
+    instancemap: HashMap<String, Instance>,
+    this: String
+}
+
+
+impl ObjSys {
+
+    pub fn new() -> ObjSys {
+        ObjSys {
+            classmap: HashMap::new(),
+            instancemap: HashMap::new(),
+            this: String::from("")
+        }
     }
 
+
+    pub fn new_class(&self, name: String) -> Class {
+        return Class::new(name);
+    }
+
+
+    pub fn register_class(&mut self, class: Class) {
+        self.classmap.insert(class.name.clone(), class);
+    }
+
+
+    pub fn get_class(&self, name: &str) -> &Class {
+        self.classmap.get(name).unwrap()
+    }
+
+
+    pub fn register_instance(&mut self, instance: Instance) -> Object {
+        let id = instance.id.clone();
+        self.instancemap.insert(id.clone(), instance);
+        return Object::Reference(id);
+    }
+
+
+    pub fn get_instance(&self, id: &str) -> &Instance {
+
+        if self.instancemap.contains_key(id) {
+            return self.instancemap.get(id).unwrap()
+        }
+
+        dprint("Registered instances: ");
+        for (k, _) in &self.instancemap {
+            dprint(format!("    {}", k));
+        }
+        panic!("Could not get this instance: {}", id);
+    }
+
+
+    pub fn has_instance(&self, id: &str) -> bool {
+        self.instancemap.contains_key(id)
+    }
+
+
+    pub fn has_this(&self) -> bool {
+        self.has_instance(self.this.as_str())
+    }
+
+
+    pub fn get_this(&mut self) -> &mut Instance {
+        return self.instancemap.get_mut(self.this.as_str()).unwrap();
+    }
+
+
+    pub fn set_this(&mut self, instance_id: String) {
+        self.this = instance_id;
+    }
+
+
+    pub fn clear_this(&mut self) {
+        self.this = String::from("");
+    }
 
 }
