@@ -172,7 +172,7 @@ fn evaluate(input: &String, ctx: &Ctx) {
     let mut objsys = ObjSys::new();
     let mut globals : HashMap<String, Object> = HashMap::new();
 
-    evaluator::preval(&tree, &mut globals, &mut store, &mut objsys, ctx);
+    evaluator::preval(&tree, &mut globals, &mut objsys, ctx);
 
     if !globals.contains_key("main") {
         // As Dart.

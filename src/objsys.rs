@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 use utils::dprint;
 use object::Object;
+use node::Node;
 
 
 pub struct Instance {
@@ -39,7 +40,7 @@ pub struct Class {
     pub name: String,
     pub classid: String,
     pub constructors: HashMap<String, Object>,
-    pub fields: Vec<(String, String, Object)>,
+    pub fields: Vec<(String, String, Node)>,
     pub methods: HashMap<String, Object>
 }
 
@@ -64,8 +65,8 @@ impl Class {
     }
 
 
-    pub fn add_field(&mut self, ftype: String, fname: String, initval: Object) {
-        self.fields.push((ftype.clone(), fname.clone(), initval));
+    pub fn add_field(&mut self, ftype: String, fname: String, initexpr: Node) {
+        self.fields.push((ftype.clone(), fname.clone(), initexpr));
         dprint(format!("Inserted to fieldtable: {}", fname));
     }
 
@@ -86,13 +87,7 @@ impl Class {
 
 
     pub fn instantiate(&self) -> Instance {
-        let mut instance = Instance::new(nuid::next(), self.name.clone());
-
-        for (_, fname, initval) in &self.fields {
-            instance.set_field(fname.clone(), initval.clone())
-        }
-
-        instance
+        return Instance::new(nuid::next(), self.name.clone());
     }
 }
 

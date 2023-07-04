@@ -15,7 +15,6 @@ use std::ops::{BitAnd, BitOr, BitXor};
 pub fn preval(
     node: &Node,
     globals: &mut HashMap<String, Object>,
-    store: &mut Stack,
     objsys: &mut ObjSys,
     ctx: &Ctx) {
 
@@ -62,7 +61,7 @@ pub fn preval(
             }
             NodeType::Class(cname) => {
                 let mut class = objsys.new_class(cname.clone());
-                preval_class(&mut class, n, globals, store, objsys, ctx);
+                preval_class(&mut class, n, globals, ctx);
                 objsys.register_class(class);
             }
             x => {
@@ -77,8 +76,6 @@ fn preval_class(
     classobj: &mut Class,
     classnode: &Node,
     globals: &mut HashMap<String, Object>,
-    store: &mut Stack,
-    objsys: &mut ObjSys,
     ctx: &Ctx) {
 
     for member in &classnode.children {
@@ -115,12 +112,7 @@ fn preval_class(
             NodeType::Assign => {
                 let namenode = member.children[0].clone();
                 if let NodeType::TypedVar(ftype, fname) = namenode.nodetype {
-
-                    // What to do with store here?
-                    // Field can reference some stuff.
-                    let val = eval(&member.children[1], globals, store, objsys, ctx);
-
-                    classobj.add_field(ftype, fname, val);
+                    classobj.add_field(ftype, fname, member.children[1].clone());
                 }
                 else {
                     panic!("Illegal left node in assignment.")
@@ -1078,12 +1070,21 @@ pub fn eval(
                         }
                     }
 
-                    // Lookup class.
-                    // let class = classlist.get(cname.as_str());
-                    let class = objsys.get_class(cname.as_str());
+                    // Make an instance.
 
-                    // Creates instance with data fields.
-                    let instref = objsys.register_instance(class.instantiate());
+                    let class = objsys.get_class(cname.as_str());
+                    let mut inst = class.instantiate();
+
+                    // Evaluate the initial field values.
+
+                    let field_nodes = class.fields.clone();
+                    for (_, fname, initexpr) in &field_nodes {
+                        inst.set_field(fname.clone(), eval(initexpr, globals, store, objsys, ctx));
+                    }
+
+                    let instref = objsys.register_instance(inst);
+
+                    // Run the constructor body.
 
                     match &instref {
                         Object::Reference(refid) => {
