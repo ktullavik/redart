@@ -14,7 +14,7 @@ use std::ops::{BitAnd, BitOr, BitXor};
 // and add them to the store for later lookup.
 pub fn preval(
     node: &Node,
-    globals: &mut HashMap<String, Object>,
+    globals: &mut HashMap<String, Node>,
     objsys: &mut ObjSys,
     ctx: &Ctx) {
 
@@ -29,35 +29,9 @@ pub fn preval(
             NodeType::FunDef(fname) => {
                 dprint(format!("Preval: NodeType::FunDef '{}'", fname));
 
-                let params = &n.children[0];
-                dprint(format!("{}", params));
+                globals.insert(fname.to_string(), n.clone());
 
-                let body = n.children[1].clone();
-
-                if let NodeType::ParamList = params.nodetype {
-
-                    let mut args: Vec<String> = Vec::new();
-
-                    for i in 0..params.children.len() {
-                        let p = &params.children[i];
-                        match &p.nodetype {
-                            NodeType::Name(s) => {
-                                args.push(s.clone());
-                            }
-                            x => panic!("Invalid parameter: {}", x)
-                        }
-                    }
-
-                    let obj = Object::Function(fname.to_string(), body, args);
-                    globals.insert(fname.to_string(), obj);
-
-                    dprint(format!("Inserted to symtable: {}", fname));
-
-                } else {
-                    panic!("Expected paramlist for FunDef in preeval.");
-                }
-
-
+                dprint(format!("Inserted to symtable: {}", fname));
             }
             NodeType::Class(cname) => {
                 let mut class = objsys.new_class(cname.clone());
@@ -75,7 +49,7 @@ pub fn preval(
 fn preval_class(
     classobj: &mut Class,
     classnode: &Node,
-    globals: &mut HashMap<String, Object>,
+    globals: &mut HashMap<String, Node>,
     ctx: &Ctx) {
 
     for member in &classnode.children {
@@ -119,38 +93,7 @@ fn preval_class(
                 }
             }
             NodeType::Constructor(cname) => {
-
-                let params = &member.children[0];
-                dprint(format!("{}", params));
-
-                let body = member.children[1].clone();
-
-                if let NodeType::ParamList = params.nodetype {
-
-                    let mut paramobjs : Vec<ParamObj> = Vec::new();
-
-                    for i in 0..params.children.len() {
-                        let p = &params.children[i];
-                        match &p.nodetype {
-                            NodeType::Name(s) => {
-                                let po = ParamObj{ typ: String::from(""), name: s.clone(), fieldinit: false };
-                                paramobjs.push(po);
-                            }
-                            NodeType::ThisFieldInit(s) => {
-                                let po = ParamObj{ typ: String::from(""), name: s.clone(), fieldinit: true };
-                                paramobjs.push(po);
-                            }
-                            x => panic!("Invalid parameter: {}", x)
-                        }
-                    }
-
-                    let obj = Object::Constructor(cname.to_string(), body, paramobjs);
-
-                    globals.insert(cname.to_string(), obj);
-
-                } else {
-                    panic!("Expected paramlist for Constructor in preeval.");
-                }
+                globals.insert(cname.to_string(), member.clone());
             }
             x => {
                 dprint(format!("preval_class considering node {}", x));
@@ -162,7 +105,7 @@ fn preval_class(
 
 pub fn eval(
     node: &Node,
-    globals: &mut HashMap<String, Object>,
+    globals: &mut HashMap<String, Node>,
     store: &mut Stack,
     objsys: &mut ObjSys,
     ctx: &Ctx) -> Object {
@@ -995,7 +938,61 @@ pub fn eval(
                 funcobj = store.get(s).clone();
             }
             else if globals.contains_key(s) {
-                funcobj = globals.get(s).unwrap().clone();
+
+                let funcnode = &globals.get(s).unwrap().clone();
+
+                if let NodeType::ParamList = funcnode.children[0].nodetype {
+
+                    let paramnodes = &funcnode.children[0];
+                    let bodynode = &funcnode.children[1];
+
+                    match &funcnode.nodetype {
+
+                        NodeType::FunDef(fname) => {
+
+                            let mut params : Vec<String> = Vec::new();
+
+                            for i in 0..paramnodes.children.len() {
+                                let p = &paramnodes.children[i];
+                                match &p.nodetype {
+                                    NodeType::Name(s) => {
+                                        params.push(s.clone());
+                                    }
+                                    x => panic!("Invalid parameter: {}", x)
+                                }
+                            }
+
+                            funcobj = Object::Function(s.clone(), bodynode.clone(), params);
+                        }
+                        NodeType::Constructor(cname) => {
+
+                            let mut paramobjs : Vec<ParamObj> = Vec::new();
+
+                            for i in 0..paramnodes.children.len() {
+                                let p = &paramnodes.children[i];
+                                match &p.nodetype {
+                                    NodeType::Name(s) => {
+                                        let po = ParamObj{ typ: String::from(""), name: s.clone(), fieldinit: false };
+                                        paramobjs.push(po);
+                                    }
+                                    NodeType::ThisFieldInit(s) => {
+                                        let po = ParamObj{ typ: String::from(""), name: s.clone(), fieldinit: true };
+                                        paramobjs.push(po);
+                                    }
+                                    x => panic!("Invalid parameter: {}", x)
+                                }
+                            }
+
+                            funcobj = Object::Constructor(cname.to_string(), bodynode.clone(), paramobjs);
+                        }
+                        _ => panic!("Expected function definition or constructor.")
+                    }
+
+                }
+                else {
+                    panic!("Expected paramlist.");
+                }
+
             }
             else if builtin::has_function(s) {
                 let mut args: Vec<Object> = Vec::new();

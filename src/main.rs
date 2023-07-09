@@ -26,6 +26,7 @@ use object::Object;
 use stack::Stack;
 use objsys::ObjSys;
 use std::collections::HashMap;
+use node::{Node, NodeType};
 
 
 fn main() {
@@ -170,7 +171,8 @@ fn evaluate(input: &String, ctx: &Ctx) {
 
     let mut store = Stack::new();
     let mut objsys = ObjSys::new();
-    let mut globals : HashMap<String, Object> = HashMap::new();
+    // let mut globals : HashMap<String, Object> = HashMap::new();
+    let mut globals : HashMap<String, Node> = HashMap::new();
 
     evaluator::preval(&tree, &mut globals, &mut objsys, ctx);
 
@@ -181,14 +183,16 @@ fn evaluate(input: &String, ctx: &Ctx) {
 
     let mainfunc = &globals.get("main").unwrap().clone();
 
-    match mainfunc {
-        Object::Function(_, n, _) => {
+    match &mainfunc.nodetype {
+        NodeType::FunDef(_) => {
             utils::dprint(" ");
             utils::dprint("EVALUATE");
             utils::dprint(" ");
 
+            let mainbody = &mainfunc.children[1];
+
             store.push_call();
-            evaluator::eval(n, &mut globals, &mut store, &mut objsys, ctx);
+            evaluator::eval(mainbody, &mut globals, &mut store, &mut objsys, ctx);
             store.pop_call();
         }
         x => {
