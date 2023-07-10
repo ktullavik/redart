@@ -556,17 +556,6 @@ fn statement(reader: &mut Reader, ctx: &Ctx) -> Node {
                     return ass_node;
                 }
 
-                Token::Paren1(_, _) => {
-                    reader.next();
-                    // Function call.
-                    // These are also handled in term. Maybe we can just pass this along?
-                    let args_node = arglist(reader, ctx);
-                    let mut funcall_node = Node::new(NodeType::FunCall(s.to_string()));
-                    funcall_node.nodetype = NodeType::FunCall(s.to_string());
-                    funcall_node.children.push(args_node);
-                    return funcall_node;
-                }
-
                 Token::Access(_, _) => {
 
                     reader.next();
