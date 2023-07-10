@@ -941,58 +941,50 @@ pub fn eval(
 
                 let funcnode = &globals.get(s).unwrap().clone();
 
-                if let NodeType::ParamList = funcnode.children[0].nodetype {
+                let paramnodes = &funcnode.children[0];
+                let bodynode = &funcnode.children[1];
 
-                    let paramnodes = &funcnode.children[0];
-                    let bodynode = &funcnode.children[1];
+                match &funcnode.nodetype {
 
-                    match &funcnode.nodetype {
+                    NodeType::FunDef(fname) => {
 
-                        NodeType::FunDef(fname) => {
+                        let mut params : Vec<String> = Vec::new();
 
-                            let mut params : Vec<String> = Vec::new();
-
-                            for i in 0..paramnodes.children.len() {
-                                let p = &paramnodes.children[i];
-                                match &p.nodetype {
-                                    NodeType::Name(s) => {
-                                        params.push(s.clone());
-                                    }
-                                    x => panic!("Invalid parameter: {}", x)
+                        for i in 0..paramnodes.children.len() {
+                            let p = &paramnodes.children[i];
+                            match &p.nodetype {
+                                NodeType::Name(s) => {
+                                    params.push(s.clone());
                                 }
+                                x => panic!("Invalid parameter: {}", x)
                             }
-
-                            funcobj = Object::Function(s.clone(), bodynode.clone(), params);
                         }
-                        NodeType::Constructor(cname) => {
 
-                            let mut paramobjs : Vec<ParamObj> = Vec::new();
-
-                            for i in 0..paramnodes.children.len() {
-                                let p = &paramnodes.children[i];
-                                match &p.nodetype {
-                                    NodeType::Name(s) => {
-                                        let po = ParamObj{ typ: String::from(""), name: s.clone(), fieldinit: false };
-                                        paramobjs.push(po);
-                                    }
-                                    NodeType::ThisFieldInit(s) => {
-                                        let po = ParamObj{ typ: String::from(""), name: s.clone(), fieldinit: true };
-                                        paramobjs.push(po);
-                                    }
-                                    x => panic!("Invalid parameter: {}", x)
-                                }
-                            }
-
-                            funcobj = Object::Constructor(cname.to_string(), bodynode.clone(), paramobjs);
-                        }
-                        _ => panic!("Expected function definition or constructor.")
+                        funcobj = Object::Function(s.clone(), bodynode.clone(), params);
                     }
+                    NodeType::Constructor(cname) => {
 
-                }
-                else {
-                    panic!("Expected paramlist.");
-                }
+                        let mut paramobjs : Vec<ParamObj> = Vec::new();
 
+                        for i in 0..paramnodes.children.len() {
+                            let p = &paramnodes.children[i];
+                            match &p.nodetype {
+                                NodeType::Name(s) => {
+                                    let po = ParamObj{ typ: String::from(""), name: s.clone(), fieldinit: false };
+                                    paramobjs.push(po);
+                                }
+                                NodeType::ThisFieldInit(s) => {
+                                    let po = ParamObj{ typ: String::from(""), name: s.clone(), fieldinit: true };
+                                    paramobjs.push(po);
+                                }
+                                x => panic!("Invalid parameter: {}", x)
+                            }
+                        }
+
+                        funcobj = Object::Constructor(cname.to_string(), bodynode.clone(), paramobjs);
+                    }
+                    _ => panic!("Expected function definition or constructor.")
+                }
             }
             else if builtin::has_function(s) {
                 let mut args: Vec<Object> = Vec::new();
