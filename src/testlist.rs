@@ -74,10 +74,10 @@ pub const TESTS: &'static [&'static str] = &[
 
 
 pub const FAILTESTS: &'static [&'static str] = &[
-    "1.cross_function_leak.dart",
-    "2.double_declaration.dart",
-    "3.forgotten_paramlist.dart",
-    "4.plus_is_not_prefix.dart",
+    "0.cross_function_leak.dart",
+    "1.double_declaration.dart",
+    "2.forgotten_paramlist.dart",
+    "3.plus_is_not_prefix.dart",
 ];
 
 
