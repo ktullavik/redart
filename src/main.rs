@@ -150,8 +150,9 @@ fn do_task(action: &str, input: String, ctx: &Ctx) {
         }
         "parse" => {
             let mut tokens = lexer::lex(&input);
+            let mut globals = HashMap::new();
             let mut objsys = ObjSys::new();
-            let globals = parser::parse(&mut tokens, &mut objsys, ctx);
+            parser::parse(&mut tokens, &mut globals, &mut objsys, ctx);
 
             for k in globals.keys() {
                 let tree = globals.get(k).unwrap();
@@ -171,9 +172,12 @@ fn do_task(action: &str, input: String, ctx: &Ctx) {
 fn evaluate(input: &String, ctx: &Ctx) {
 
     let mut tokens = lexer::lex(&input);
+
+    let mut globals = HashMap::new();
     let mut store = Stack::new();
     let mut objsys = ObjSys::new();
-    let mut globals = parser::parse(&mut tokens, &mut objsys, ctx);
+
+    parser::parse(&mut tokens, &mut globals, &mut objsys, ctx);
 
     if !globals.contains_key("main") {
         // As Dart.
