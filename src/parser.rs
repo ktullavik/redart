@@ -31,7 +31,7 @@ pub fn parse(reader: &mut Reader,
             }
             NodeType::Class(cname) => {
                 let mut class = objsys.new_class(cname.clone());
-                preval_class(&mut class, &node, globals, ctx);
+                preval_class(&mut class, &node, globals);
                 objsys.register_class(class);
             }
             x => panic!("Unexpected node: {}", x)
@@ -44,8 +44,7 @@ pub fn parse(reader: &mut Reader,
 fn preval_class(
     classobj: &mut Class,
     classnode: &Node,
-    globals: &mut HashMap<String, Node>,
-    ctx: &Ctx) {
+    globals: &mut HashMap<String, Node>) {
 
     for member in &classnode.children {
         let t: &NodeType = &member.nodetype;
