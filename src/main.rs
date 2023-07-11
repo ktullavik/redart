@@ -22,7 +22,6 @@ mod context;
 mod reader;
 
 use context::Ctx;
-use object::Object;
 use stack::Stack;
 use objsys::ObjSys;
 use std::collections::HashMap;
