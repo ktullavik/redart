@@ -12,7 +12,7 @@ use std::collections::HashMap;
 pub fn parse(reader: &mut Reader,
              globals: &mut HashMap<String, Node>,
              objsys: &mut ObjSys,
-             ctx: &Ctx) -> Result<Node, String> {
+             ctx: &Ctx) {
 
     dprint(" ");
     dprint("PARSE");
@@ -27,25 +27,17 @@ pub fn parse(reader: &mut Reader,
 
         match &node.nodetype {
             NodeType::FunDef(fname) => {
-                dprint(format!("Preval: NodeType::FunDef '{}'", fname));
-
                 globals.insert(fname.to_string(), node.clone());
-
-                dprint(format!("Inserted to symtable: {}", fname));
             }
             NodeType::Class(cname) => {
                 let mut class = objsys.new_class(cname.clone());
                 preval_class(&mut class, &node, globals, ctx);
                 objsys.register_class(class);
             }
-            x => {
-                dprint(format!("Preval considering node {}", x));
-            }
+            x => panic!("Unexpected node: {}", x)
         }
     }
     assert_eq!(reader.pos(), reader.len() - 1, "Undexpected index at end of parse: {} out of {}", reader.pos(), reader.len());
-
-    Ok(root)
 }
 
 
