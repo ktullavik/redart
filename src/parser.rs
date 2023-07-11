@@ -10,9 +10,8 @@ use std::collections::HashMap;
 
 
 pub fn parse(reader: &mut Reader,
-             globals: &mut HashMap<String, Node>,
              objsys: &mut ObjSys,
-             ctx: &Ctx) {
+             ctx: &Ctx) -> HashMap<String, Node> {
 
     dprint(" ");
     dprint("PARSE");
@@ -21,6 +20,8 @@ pub fn parse(reader: &mut Reader,
     let mut root = Node::new(NodeType::Module);
     let directive_node = directives(reader, ctx);
     root.children.push(directive_node);
+
+    let mut globals : HashMap<String, Node> = HashMap::new();
 
     while reader.more() {
         let node = decl(reader, ctx);
@@ -31,13 +32,14 @@ pub fn parse(reader: &mut Reader,
             }
             NodeType::Class(cname) => {
                 let mut class = objsys.new_class(cname.clone());
-                preval_class(&mut class, &node, globals);
+                preval_class(&mut class, &node, &mut globals);
                 objsys.register_class(class);
             }
             x => panic!("Unexpected node: {}", x)
         }
     }
     assert_eq!(reader.pos(), reader.len() - 1, "Undexpected index at end of parse: {} out of {}", reader.pos(), reader.len());
+    return globals;
 }
 
 
