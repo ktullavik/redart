@@ -905,9 +905,7 @@ pub fn eval(
 
                     for i in 0 .. params.len() {
                         let argtree = &argslist.children[i];
-                        dprint(format!("about to eval method argtree: {}", argtree));
                         let argobj = eval(argtree, globals, store, objsys, ctx);
-                        // store.add(params[i].as_str(), argobj);
                         store.add(params[i].name.as_str(), argobj);
                     }
 
@@ -928,211 +926,71 @@ pub fn eval(
                 }
             }
             panic!("Can't access {} of {}", qname, methname)
-
-
         }
 
         NodeType::FunCall(s) => {
             dprint(format!("Eval: NodeType::FunCall({})", s));
 
-            let funcobj : Object;
             if store.has(s) {
-                funcobj = store.get(s).clone();
+                let funcobj = store.get(s).clone();
+
+                return match funcobj {
+                    Object::Function(_, _, _) => {
+                        call_function(funcobj, &node.children[0], globals, store, objsys, ctx)
+                    }
+                    Object::Constructor(_, _, _) => {
+                        call_constructor(&funcobj, &node.children[0], globals, store, objsys, ctx)
+                    }
+                    _ => panic!("Called non-callable.")
+                }
             }
             else if globals.contains_key(s) {
-
                 let funcnode = &globals.get(s).unwrap().clone();
 
-                let paramnodes = &funcnode.children[0];
-                let bodynode = &funcnode.children[1];
-
-                match &funcnode.nodetype {
-
-                    NodeType::FunDef(fname) => {
-
-                        let mut paramobjs : Vec<ParamObj> = Vec::new();
-
-                        for i in 0..paramnodes.children.len() {
-                            let p = &paramnodes.children[i];
-                            match &p.nodetype {
-                                NodeType::Name(s) => {
-                                    paramobjs.push(ParamObj{typ: String::from("var"), name: s.clone(), fieldinit: false});
-                                }
-                                x => panic!("Invalid parameter: {}", x)
-                            }
-                        }
-
-                        funcobj = Object::Function(s.clone(), bodynode.clone(), paramobjs);
+                return match &funcnode.nodetype {
+                    NodeType::FunDef(_) => {
+                        call_function(
+                            create_function(funcnode),
+                            &node.children[0],
+                            globals,
+                            store,
+                            objsys,
+                            ctx)
                     }
-                    NodeType::Constructor(cname) => {
-
-                        let mut paramobjs : Vec<ParamObj> = Vec::new();
-
-                        for i in 0..paramnodes.children.len() {
-                            let p = &paramnodes.children[i];
-                            match &p.nodetype {
-                                NodeType::Name(s) => {
-                                    let po = ParamObj{ typ: String::from(""), name: s.clone(), fieldinit: false };
-                                    paramobjs.push(po);
-                                }
-                                NodeType::ThisFieldInit(s) => {
-                                    let po = ParamObj{ typ: String::from(""), name: s.clone(), fieldinit: true };
-                                    paramobjs.push(po);
-                                }
-                                x => panic!("Invalid parameter: {}", x)
-                            }
-                        }
-
-                        funcobj = Object::Constructor(cname.to_string(), bodynode.clone(), paramobjs);
+                    NodeType::Constructor(_) => {
+                        call_constructor(
+                            &create_constructor(funcnode),
+                            &node.children[0],
+                            globals,
+                            store,
+                            objsys,
+                            ctx)
                     }
                     _ => panic!("Expected function definition or constructor.")
                 }
             }
             else if builtin::has_function(s) {
-                let mut args: Vec<Object> = Vec::new();
 
-                for argtree in &node.children[0].children {
-                    args.push(eval(&argtree, globals, store, objsys, ctx));
-                }
+                let args = argnodes_to_argobjs(
+                    &node.children[0].children,
+                    globals,
+                    store,
+                    objsys,
+                    ctx
+                );
 
-                let res: Object = builtin::call(s, &args, ctx);
-                return res;
+                return builtin::call(s, &args, ctx);
             }
             else {
                 panic!("Unknown function: {}", s)
             }
-
-            match &funcobj {
-                Object::Function(fname, body, params) => {
-
-                    let argslist = &node.children[0];
-
-                    let mut evaled_args : Vec<Object> = Vec::new();
-                    for i in 0 .. params.len() {
-                        dprint(format!("about to eval function({}) argtree {}: {}", fname, i, params[i]));
-
-                        let argtree = &argslist.children[i];
-                        let argobj = eval(argtree, globals, store, objsys, ctx);
-                        evaled_args.push(argobj);
-                    }
-
-                    // Argtrees must be evaluated in callers context, but stored in new context.
-
-                    store.push_call();
-                    for i in 0 .. params.len() {
-                        store.add(params[i].name.as_str(), evaled_args.remove(0));
-                    }
-
-                    let result = eval(&body, globals, store, objsys, ctx);
-
-                    store.pop_call();
-
-                    return match result {
-                        Object::Return(v) => {
-                            *v
-                        }
-
-                        _ => {
-                            result
-                        }
-                    }
-                }
-                Object::Constructor(cname, body, params) => {
-
-                    let argslist = &node.children[0];
-
-                    let mut evaled_args : Vec<Object> = Vec::new();
-                    for i in 0 .. params.len() {
-                        dprint(format!("about to eval argtree {}: {}", i, params[i]));
-
-                        let argtree = &argslist.children[i];
-                        let argobj = eval(argtree, globals, store, objsys, ctx);
-                        evaled_args.push(argobj);
-                    }
-
-                    // Argtrees must be evaluated in callers context, but stored in new context.
-
-                    store.push_call();
-                    for i in 0 .. params.len() {
-                        // Field initializers does not need to be in symbol table.
-                        // They are set directly on the instance. See below.
-                        if !params[i].fieldinit {
-                            store.add(params[i].name.as_str(), evaled_args[i].clone());
-                        }
-                    }
-
-                    // Make an instance.
-
-                    let class = objsys.get_class(cname.as_str());
-                    let mut inst = class.instantiate();
-
-                    // Evaluate the initial field values.
-
-                    let field_nodes = class.fields.clone();
-                    for (_, fname, initexpr) in &field_nodes {
-                        inst.set_field(fname.clone(), eval(initexpr, globals, store, objsys, ctx));
-                    }
-
-                    let instref = objsys.register_instance(inst);
-
-                    // Run the constructor body.
-
-                    match &instref {
-                        Object::Reference(refid) => {
-                            objsys.set_this(refid.clone());
-
-                            // Set fields from params that uses "this" to auto-init.
-                            // Ie Bike(this.gears)
-                            let inst = objsys.get_this();
-                            for i in 0 .. params.len() {
-                                if params[i].fieldinit {
-                                    inst.set_field(params[i].name.clone(), evaled_args[i].clone());
-                                }
-                            }
-
-                            // Run body
-                            eval(&body, globals, store, objsys, ctx);
-
-                            objsys.clear_this();
-                            store.pop_call();
-
-                            return instref.clone();
-                        }
-                        _ => panic!("Couldn't find intance that was just created.")
-                    }
-                }
-                _ => panic!("Called a non function object")
-            }
-
         }
 
         NodeType::FunDef(s) => {
             dprint("Eval: NodeType::FunDef");
-
-            let params = &node.children[0];
-            let body = node.children[1].clone();
-
-            if let NodeType::ParamList = params.nodetype {
-
-                let mut args: Vec<ParamObj> = Vec::new();
-
-                for i in 0 .. params.children.len() {
-                    let p = &params.children[i];
-                    match &p.nodetype {
-                        NodeType::Name(s) => {
-                            args.push(ParamObj{typ: String::from("var"), name: s.clone(), fieldinit: false});
-                        }
-                        x => panic!("Invalid parameter: {}", x)
-                    }
-                }
-
-                let obj = Object::Function(s.to_string(), body, args);
-
-                store.add(s, obj);
-                return Object::Null;
-            } else {
-                panic!("Expected paramlist for FunDef in eval.");
-            }
+            let funcobj = create_function(node);
+            store.add(s, funcobj);
+            return Object::Null;
         }
 
         NodeType::Conditional => {
@@ -1297,4 +1155,199 @@ pub fn eval(
         _ => panic!("Unknown node type: {}", t)
     }
 }
+
+
+fn create_function(funcnode: &Node) -> Object {
+
+    match &funcnode.nodetype {
+
+        NodeType::FunDef(fname) => {
+            let paramnodes = &funcnode.children[0];
+            let bodynode = &funcnode.children[1];
+            let mut paramobjs: Vec<ParamObj> = Vec::new();
+
+            for i in 0..paramnodes.children.len() {
+                let p = &paramnodes.children[i];
+                match &p.nodetype {
+                    NodeType::Name(s) => {
+                        paramobjs.push(ParamObj { typ: String::from("var"), name: s.clone(), fieldinit: false });
+                    }
+                    x => panic!("Invalid parameter: {}", x)
+                }
+            }
+            return Object::Function(fname.clone(), bodynode.clone(), paramobjs);
+        }
+        _ => panic!("Invalid node type.")
+    }
+}
+
+
+fn call_function(
+    funcobj: Object,
+    args: &Node,
+    globals: &mut HashMap<String, Node>,
+    store: &mut Stack,
+    objsys: &mut ObjSys,
+    ctx: &Ctx) -> Object {
+
+    match funcobj {
+
+        Object::Function(fname, body, params) => {
+
+            let mut argobjs = argnodes_to_argobjs(
+                &args.children,
+                globals,
+                store,
+                objsys,
+                ctx
+            );
+
+            // Argtrees must be evaluated in callers context, but stored in new context.
+
+            store.push_call();
+            for i in 0..params.len() {
+                store.add(params[i].name.as_str(), argobjs.remove(0));
+            }
+
+            let result = eval(&body, globals, store, objsys, ctx);
+
+            store.pop_call();
+
+            return match result {
+                Object::Return(v) => {
+                    *v
+                }
+                _ => {
+                    result
+                }
+            }
+        }
+        _ => panic!("Called a non-function object.")
+    }
+}
+
+
+fn create_constructor(funcnode: &Node) -> Object {
+
+    match &funcnode.nodetype {
+
+        NodeType::Constructor(cname) => {
+
+            let paramnodes = &funcnode.children[0];
+            let bodynode = &funcnode.children[1];
+
+            let mut paramobjs : Vec<ParamObj> = Vec::new();
+
+            for i in 0..paramnodes.children.len() {
+                let p = &paramnodes.children[i];
+                match &p.nodetype {
+                    NodeType::Name(s) => {
+                        paramobjs.push(ParamObj{ typ: String::from(""), name: s.clone(), fieldinit: false });
+                    }
+                    NodeType::ThisFieldInit(s) => {
+                        paramobjs.push(ParamObj{ typ: String::from(""), name: s.clone(), fieldinit: true });
+                    }
+                    x => panic!("Invalid parameter: {}", x)
+                }
+            }
+
+            return Object::Constructor(cname.to_string(), bodynode.clone(), paramobjs);
+        }
+        _ => panic!("Invalid node type.")
+    }
+}
+
+
+fn call_constructor(
+    funcobj: &Object,
+    args: &Node,
+    globals: &mut HashMap<String, Node>,
+    store: &mut Stack,
+    objsys: &mut ObjSys,
+    ctx: &Ctx) -> Object {
+
+    match funcobj {
+
+        Object::Constructor(cname, body, params) => {
+
+            let mut args = argnodes_to_argobjs(
+                &args.children,
+                globals,
+                store,
+                objsys,
+                ctx
+            );
+
+            // Argtrees must be evaluated in callers context, but stored in new context.
+
+            store.push_call();
+            for i in 0..params.len() {
+                // Field initializers does not need to be in symbol table.
+                // They are set directly on the instance. See below.
+                if !params[i].fieldinit {
+                    store.add(params[i].name.as_str(), args[i].clone());
+                }
+            }
+
+            // Make an instance.
+
+            let class = objsys.get_class(cname.as_str());
+            let mut inst = class.instantiate();
+
+            // Evaluate the initial field values.
+
+            let field_nodes = class.fields.clone();
+            for (_, fname, initexpr) in &field_nodes {
+                inst.set_field(fname.clone(), eval(initexpr, globals, store, objsys, ctx));
+            }
+
+            let instref = objsys.register_instance(inst);
+
+            // Run the constructor body.
+
+            match &instref {
+                Object::Reference(refid) => {
+                    objsys.set_this(refid.clone());
+
+                    // Set fields from params that uses "this" to auto-init.
+                    // Ie Bike(this.gears)
+                    let inst = objsys.get_this();
+                    for i in 0..params.len() {
+                        if params[i].fieldinit {
+                            inst.set_field(params[i].name.clone(),args[i].clone());
+                        }
+                    }
+
+                    // Run body
+                    eval(&body, globals, store, objsys, ctx);
+
+                    objsys.clear_this();
+                    store.pop_call();
+
+                    return instref.clone();
+                }
+                _ => panic!("Couldn't find intance that was just created.")
+            }
+        }
+
+        _ => {
+            panic!("Called a non-constructor object.")
+        }
+    }
+}
+
+
+fn argnodes_to_argobjs(
+    argnodes: &Vec<Node>,
+    globals: &mut HashMap<String, Node>,
+    store: &mut Stack,
+    objsys: &mut ObjSys,
+    ctx: &Ctx) -> Vec<Object> {
+
+    argnodes.iter().map(
+        |argtree| eval(&argtree, globals, store, objsys, ctx)
+    ).collect()
+}
+
+
 
