@@ -150,7 +150,9 @@ fn do_task(action: &str, input: String, ctx: &Ctx) {
         }
         "parse" => {
             let mut tokens = lexer::lex(&input);
-            let tree = parser::parse(&mut tokens, ctx).unwrap();
+            let mut globals : HashMap<String, Node> = HashMap::new();
+            let mut objsys = ObjSys::new();
+            let tree = parser::parse(&mut tokens, &mut globals, &mut objsys, ctx).unwrap();
             println!("\n{}\n", tree);
         }
         "eval" => {
@@ -166,14 +168,10 @@ fn do_task(action: &str, input: String, ctx: &Ctx) {
 fn evaluate(input: &String, ctx: &Ctx) {
 
     let mut tokens = lexer::lex(&input);
-    let tree = parser::parse(&mut tokens, ctx).unwrap();
-
     let mut store = Stack::new();
     let mut objsys = ObjSys::new();
-    // let mut globals : HashMap<String, Object> = HashMap::new();
     let mut globals : HashMap<String, Node> = HashMap::new();
-
-    evaluator::preval(&tree, &mut globals, &mut objsys, ctx);
+    let tree = parser::parse(&mut tokens, &mut globals, &mut objsys, ctx).unwrap();
 
     if !globals.contains_key("main") {
         // As Dart.

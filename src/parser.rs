@@ -4,9 +4,16 @@ use token::Token;
 use node::{NodeType, Node};
 use expression::expression;
 use utils::{dprint, dart_parseerror};
+use object::{ParamObj, Object};
+use objsys::{Class, ObjSys};
+use std::collections::HashMap;
 
 
-pub fn parse(reader: &mut Reader, ctx: &Ctx) -> Result<Node, String> {
+pub fn parse(reader: &mut Reader,
+             globals: &mut HashMap<String, Node>,
+             objsys: &mut ObjSys,
+             ctx: &Ctx) -> Result<Node, String> {
+
     dprint(" ");
     dprint("PARSE");
     dprint(" ");
@@ -17,11 +24,79 @@ pub fn parse(reader: &mut Reader, ctx: &Ctx) -> Result<Node, String> {
 
     while reader.more() {
         let node = decl(reader, ctx);
-        root.children.push(node);
+
+        match &node.nodetype {
+            NodeType::FunDef(fname) => {
+                dprint(format!("Preval: NodeType::FunDef '{}'", fname));
+
+                globals.insert(fname.to_string(), node.clone());
+
+                dprint(format!("Inserted to symtable: {}", fname));
+            }
+            NodeType::Class(cname) => {
+                let mut class = objsys.new_class(cname.clone());
+                preval_class(&mut class, &node, globals, ctx);
+                objsys.register_class(class);
+            }
+            x => {
+                dprint(format!("Preval considering node {}", x));
+            }
+        }
     }
     assert_eq!(reader.pos(), reader.len() - 1, "Undexpected index at end of parse: {} out of {}", reader.pos(), reader.len());
 
     Ok(root)
+}
+
+
+fn preval_class(
+    classobj: &mut Class,
+    classnode: &Node,
+    globals: &mut HashMap<String, Node>,
+    ctx: &Ctx) {
+
+    for member in &classnode.children {
+        let t: &NodeType = &member.nodetype;
+
+        match t {
+            NodeType::FunDef(fname) => {
+                dprint(format!("Preval: NodeType::FunDef '{}'", fname));
+
+                let params = &member.children[0];
+                let body = member.children[1].clone();
+
+                let mut args: Vec<ParamObj> = Vec::new();
+
+                for i in 0..params.children.len() {
+                    let p = &params.children[i];
+                    match &p.nodetype {
+                        NodeType::Name(s) => {
+                            args.push(ParamObj{typ: String::from("var"), name: s.clone(), fieldinit: false});
+                        }
+                        x => panic!("Invalid parameter: {}", x)
+                    }
+                }
+
+                let obj = Object::Function(fname.to_string(), body, args);
+                classobj.add_method(fname.clone(), obj);
+            }
+            NodeType::Assign => {
+                let namenode = member.children[0].clone();
+                if let NodeType::TypedVar(ftype, fname) = namenode.nodetype {
+                    classobj.add_field(ftype, fname, member.children[1].clone());
+                }
+                else {
+                    panic!("Illegal left node in assignment.")
+                }
+            }
+            NodeType::Constructor(cname) => {
+                globals.insert(cname.to_string(), member.clone());
+            }
+            x => {
+                dprint(format!("preval_class considering node {}", x));
+            }
+        }
+    }
 }
 
 
