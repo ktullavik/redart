@@ -1097,7 +1097,7 @@ fn call_function(
 
     match funcobj {
 
-        Object::Function(fname, body, params) => {
+        Object::Function(_, body, params) => {
 
             let mut argobjs = argnodes_to_argobjs(
                 &args.children,
@@ -1175,7 +1175,7 @@ fn call_constructor(
 
         Object::Constructor(cname, body, params) => {
 
-            let mut args = argnodes_to_argobjs(
+            let args = argnodes_to_argobjs(
                 &args.children,
                 globals,
                 store,
@@ -1253,6 +1253,3 @@ fn argnodes_to_argobjs(
         |argtree| eval(&argtree, globals, store, objsys, ctx)
     ).collect()
 }
-
-
-
