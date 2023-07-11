@@ -27,7 +27,7 @@ pub enum Object {
     Double(f64),
     Bool(bool),
     String(String),
-    Function(String, Node, Vec<String>),
+    Function(String, Node, Vec<ParamObj>),
     Constructor(String, Node, Vec<ParamObj>),
     Reference(String),
     Null,

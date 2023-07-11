@@ -65,13 +65,14 @@ fn preval_class(
                 let body = member.children[1].clone();
 
                 if let NodeType::ParamList = params.nodetype {
-                    let mut args: Vec<String> = Vec::new();
+                    // let mut args: Vec<String> = Vec::new();
+                    let mut args: Vec<ParamObj> = Vec::new();
 
                     for i in 0..params.children.len() {
                         let p = &params.children[i];
                         match &p.nodetype {
                             NodeType::Name(s) => {
-                                args.push(s.clone());
+                                args.push(ParamObj{typ: String::from("var"), name: s.clone(), fieldinit: false});
                             }
                             x => panic!("Invalid parameter: {}", x)
                         }
@@ -906,7 +907,8 @@ pub fn eval(
                         let argtree = &argslist.children[i];
                         dprint(format!("about to eval method argtree: {}", argtree));
                         let argobj = eval(argtree, globals, store, objsys, ctx);
-                        store.add(params[i].as_str(), argobj);
+                        // store.add(params[i].as_str(), argobj);
+                        store.add(params[i].name.as_str(), argobj);
                     }
 
                     let result = eval(&node, globals, store, objsys, ctx);
@@ -948,19 +950,19 @@ pub fn eval(
 
                     NodeType::FunDef(fname) => {
 
-                        let mut params : Vec<String> = Vec::new();
+                        let mut paramobjs : Vec<ParamObj> = Vec::new();
 
                         for i in 0..paramnodes.children.len() {
                             let p = &paramnodes.children[i];
                             match &p.nodetype {
                                 NodeType::Name(s) => {
-                                    params.push(s.clone());
+                                    paramobjs.push(ParamObj{typ: String::from("var"), name: s.clone(), fieldinit: false});
                                 }
                                 x => panic!("Invalid parameter: {}", x)
                             }
                         }
 
-                        funcobj = Object::Function(s.clone(), bodynode.clone(), params);
+                        funcobj = Object::Function(s.clone(), bodynode.clone(), paramobjs);
                     }
                     NodeType::Constructor(cname) => {
 
@@ -1018,7 +1020,7 @@ pub fn eval(
 
                     store.push_call();
                     for i in 0 .. params.len() {
-                        store.add(params[i].as_str(), evaled_args.remove(0));
+                        store.add(params[i].name.as_str(), evaled_args.remove(0));
                     }
 
                     let result = eval(&body, globals, store, objsys, ctx);
@@ -1112,13 +1114,13 @@ pub fn eval(
 
             if let NodeType::ParamList = params.nodetype {
 
-                let mut args: Vec<String> = Vec::new();
+                let mut args: Vec<ParamObj> = Vec::new();
 
                 for i in 0 .. params.children.len() {
                     let p = &params.children[i];
                     match &p.nodetype {
                         NodeType::Name(s) => {
-                            args.push(s.clone());
+                            args.push(ParamObj{typ: String::from("var"), name: s.clone(), fieldinit: false});
                         }
                         x => panic!("Invalid parameter: {}", x)
                     }
