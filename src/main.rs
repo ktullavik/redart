@@ -50,7 +50,7 @@ fn main() {
                 return;
             }
             ctx.filepath = String::from(&args[2]);
-            do_task("lex", read_file(&args[2]), &ctx);
+            do_task("lex",args[2].clone(), &ctx);
         }
         "parse" => {
             if args.len() < 3 {
@@ -58,7 +58,7 @@ fn main() {
                 return;
             }
             ctx.filepath = String::from(&args[2]);
-            do_task("parse", read_file(&args[2]), &ctx);
+            do_task("parse",args[2].clone(), &ctx);
         }
         "test" => {
             if args.len() < 3 {
@@ -66,7 +66,7 @@ fn main() {
                 for s in testlist::TESTS {
                     println!("Running test: {}", s);
                     let path = format!("{}/{}", testlist::TESTPATH, s);
-                    do_task("eval", read_file(path.as_str()), &ctx);
+                    do_task("eval", String::from(path.as_str()), &ctx);
                 }
                 return;
             }
@@ -94,14 +94,14 @@ fn main() {
 
             let filepath = testlist::get_filepath(nextarg.clone());
             ctx.filepath = filepath.clone();
-            do_task(task, read_file(filepath.as_str()), &ctx);
+            do_task(task, filepath, &ctx);
         }
         "testfail" => {
             if args.len() < 3 {
                 println!("Running all fail tests:");
                 for s in testlist::FAILTESTS {
                     let path = format!("{}/{}", testlist::FAILTESTPATH, s);
-                    do_task("eval", read_file(path.as_str()), &ctx);
+                    do_task("eval", String::from(path.as_str()), &ctx);
                 }
                 return;
             }
@@ -129,7 +129,7 @@ fn main() {
 
             let filepath = testlist::get_failfilepath(nextarg.clone());
             ctx.filepath = filepath.clone();
-            do_task(task, read_file(filepath.as_str()), &ctx);
+            do_task(task, filepath, &ctx);
         }
         _ => {
             println!("Illegal argument: {}", a1);
@@ -138,10 +138,11 @@ fn main() {
 }
 
 
-fn do_task(action: &str, input: String, ctx: &Ctx) {
+fn do_task(action: &str, filepath: String, ctx: &Ctx) {
 
     match action {
         "lex" => {
+            let input = read_file(filepath.as_str());
             let reader = lexer::lex(&input);
             for t in reader.tokens() {
                 print!("{} ", t);
@@ -149,6 +150,7 @@ fn do_task(action: &str, input: String, ctx: &Ctx) {
             println!();
         }
         "parse" => {
+            let input = read_file(filepath.as_str());
             let mut tokens = lexer::lex(&input);
             let mut globals = HashMap::new();
             let mut objsys = ObjSys::new();
@@ -160,7 +162,7 @@ fn do_task(action: &str, input: String, ctx: &Ctx) {
             }
         }
         "eval" => {
-            evaluate(&input, ctx);
+            evaluate(filepath, ctx);
         }
         x => {
             println!("Unknown action: {}", x);
@@ -169,15 +171,47 @@ fn do_task(action: &str, input: String, ctx: &Ctx) {
 }
 
 
-fn evaluate(input: &String, ctx: &Ctx) {
 
+fn filecurse(basepath: String, filepath: String, globals: &mut HashMap<String, Node>, store: &mut Stack, objsys: &mut ObjSys, ctx: &Ctx) {
+
+    let mut fpath = basepath.clone();
+    fpath.push_str(filepath.as_str());
+
+    println!("basepath: {}, filepath: {}", basepath, filepath);
+
+    let input = read_file(fpath.as_str());
     let mut tokens = lexer::lex(&input);
 
-    let mut globals = HashMap::new();
+
+    let imports = parser::parse(&mut tokens, globals, objsys, ctx);
+
+    for s in imports {
+        filecurse(basepath.clone(), s, globals, store, objsys, ctx);
+    }
+}
+
+
+
+fn evaluate(filepath: String, ctx: &Ctx) {
+
+    let mut globals: HashMap<String, Node> = HashMap::new();
     let mut store = Stack::new();
     let mut objsys = ObjSys::new();
 
-    parser::parse(&mut tokens, &mut globals, &mut objsys, ctx);
+    let parts = filepath.split("/");
+    let mut vecparts: Vec<&str> = parts.collect();
+
+    let filename = vecparts.remove(vecparts.len() - 1);
+    let mut basepath: String = String::new();
+
+    for s in vecparts {
+        basepath.push_str(s);
+        basepath.push_str("/");
+    }
+
+
+    filecurse(basepath, String::from(filename), &mut globals, &mut store, &mut objsys, ctx);
+
 
     if !globals.contains_key("main") {
         // As Dart.

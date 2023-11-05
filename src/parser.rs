@@ -12,13 +12,13 @@ use std::collections::HashMap;
 pub fn parse(reader: &mut Reader,
              globals: &mut HashMap<String, Node>,
              objsys: &mut ObjSys,
-             ctx: &Ctx) {
+             ctx: &Ctx) -> Vec<String> {
 
     dprint(" ");
     dprint("PARSE");
     dprint(" ");
 
-    let directive_node = directives(reader, ctx);
+    let imports = directives(reader, ctx);
 
     while reader.more() {
         let node = decl(reader, ctx);
@@ -36,6 +36,8 @@ pub fn parse(reader: &mut Reader,
         }
     }
     assert_eq!(reader.pos(), reader.len() - 1, "Undexpected index at end of parse: {} out of {}", reader.pos(), reader.len());
+
+    return imports;
 }
 
 
@@ -89,25 +91,22 @@ fn preval_class(
 }
 
 
-fn directives(reader: &mut Reader, ctx: &Ctx) -> Node {
+fn directives(reader: &mut Reader, ctx: &Ctx) -> Vec<String> {
     dprint(format!("Parse: directives: {}", reader.sym()));
 
-    let mut directives_node = Node::new(NodeType::Directives);
+    let mut imports : Vec<String> = Vec::new();
 
     while reader.more() {
 
         match reader.sym() {
             Token::Import(_, _) => {
 
-                let mut node = Node::new(NodeType::Import);
-
                 reader.next();
                 if let Token::Str(s, _, _, _) = reader.sym() {
                     reader.next();
                     reader.skip(";", ctx);
 
-                    node.children.push(Node::new(NodeType::Str(s.clone())));
-                    directives_node.children.push(node);
+                    imports.push(s.clone());
                 }
                 else {
                     panic!("Error: Expected string after 'import'.")
@@ -116,7 +115,7 @@ fn directives(reader: &mut Reader, ctx: &Ctx) -> Node {
             _  => break
         }
     }
-    directives_node
+    imports
 }
 
 
