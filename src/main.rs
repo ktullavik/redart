@@ -171,7 +171,6 @@ fn do_task(action: &str, filepath: String, ctx: &Ctx) {
 }
 
 
-
 fn filecurse(basepath: String, filepath: String, globals: &mut HashMap<String, Node>, store: &mut Stack, objsys: &mut ObjSys, ctx: &Ctx) {
 
     let mut fpath = basepath.clone();
@@ -189,7 +188,6 @@ fn filecurse(basepath: String, filepath: String, globals: &mut HashMap<String, N
         filecurse(basepath.clone(), s, globals, store, objsys, ctx);
     }
 }
-
 
 
 fn evaluate(filepath: String, ctx: &Ctx) {
