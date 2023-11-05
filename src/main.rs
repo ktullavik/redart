@@ -2,10 +2,6 @@ extern crate rustyline;
 extern crate nuid;
 extern crate queues;
 
-use std::io::prelude::*;
-use std::env;
-use std::fs::File;
-
 mod parser;
 mod lexer;
 mod evaluator;
@@ -21,10 +17,13 @@ mod testlist;
 mod context;
 mod reader;
 
+use std::io::prelude::*;
+use std::env;
+use std::fs::File;
+use std::collections::HashMap;
 use context::Ctx;
 use stack::Stack;
 use objsys::ObjSys;
-use std::collections::HashMap;
 use node::{Node, NodeType};
 
 
