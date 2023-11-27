@@ -173,6 +173,7 @@ fn do_task(action: &str, filepath: String, ctx: &Ctx) {
 fn filecurse(basepath: String, filepath: String, globals: &mut HashMap<String, Node>, store: &mut Stack, objsys: &mut ObjSys, ctx: &Ctx) {
 
     let mut fpath = basepath.clone();
+    fpath.push_str("/");
     fpath.push_str(filepath.as_str());
 
     println!("basepath: {}, filepath: {}", basepath, filepath);
@@ -195,20 +196,12 @@ fn evaluate(filepath: String, ctx: &Ctx) {
     let mut store = Stack::new();
     let mut objsys = ObjSys::new();
 
-    let parts = filepath.split("/");
-    let mut vecparts: Vec<&str> = parts.collect();
+    let mut parts: Vec<&str> = filepath.split('/').collect();
 
-    let filename = vecparts.remove(vecparts.len() - 1);
-    let mut basepath: String = String::new();
-
-    for s in vecparts {
-        basepath.push_str(s);
-        basepath.push_str("/");
-    }
-
+    let filename = parts.remove(parts.len() - 1);
+    let basepath = parts.join("/");
 
     filecurse(basepath, String::from(filename), &mut globals, &mut store, &mut objsys, ctx);
-
 
     if !globals.contains_key("main") {
         // As Dart.
