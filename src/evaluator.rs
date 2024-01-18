@@ -1060,12 +1060,6 @@ pub fn eval(
             return Object::Null;
         }
 
-        NodeType::Module => {
-            dprint("Eval: NodeType::Module");
-
-            eval(&node.children[1], looktables, globals, store, objsys, ctx)
-        }
-
         _ => panic!("Unknown node type: {}", t)
     }
 }

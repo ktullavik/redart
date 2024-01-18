@@ -40,7 +40,6 @@ pub enum NodeType {
     For,
     Block,
     List,
-    Module,
     FunDef(String, String), // funcname, filename
     FunCall(String),
     MethodCall(String, String),
@@ -48,8 +47,6 @@ pub enum NodeType {
     ArgList,
     ThisFieldInit(String),
     Return,
-    Directives,
-    Import,
     Class(String),
     Constructor(String),
 }
@@ -102,9 +99,6 @@ impl fmt::Display for NodeType {
             NodeType::Block => write!(f, "Block"),
             NodeType::ThisFieldInit(s) => write!(f, "this.{}", s),
             NodeType::Return => write!(f, "Return"),
-            NodeType::Module => write!(f, "Module"),
-            NodeType::Import => write!(f, "import"),
-            NodeType::Directives => write!(f, "Directives"),
             NodeType::Class(s) => write!(f, "Class({})", s),
             NodeType::Constructor(name) => write!(f, "Constructor({})", name),
         }
