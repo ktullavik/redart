@@ -79,7 +79,7 @@ impl Class {
 
     pub fn get_method(&self, methname: &str) -> Object {
 
-        if let Object::Function(_, _, _) = &self.methods[methname] {
+        if let Object::Function(_, _, _, _) = &self.methods[methname] {
             return self.methods[methname].clone();
         }
         panic!("No such method")

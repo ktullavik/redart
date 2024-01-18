@@ -10,7 +10,8 @@ use std::collections::HashMap;
 
 
 pub fn parse(reader: &mut Reader,
-             globals: &mut HashMap<String, Node>,
+            //  ltable: &mut HashMap<String, Node>,
+             globals: &mut Vec<Node>,
              objsys: &mut ObjSys,
              ctx: &Ctx) -> Vec<String> {
 
@@ -24,12 +25,14 @@ pub fn parse(reader: &mut Reader,
         let node = decl(reader, ctx);
 
         match &node.nodetype {
-            NodeType::FunDef(fname) => {
-                globals.insert(fname.to_string(), node.clone());
+            NodeType::FunDef(fname, _) => {
+                // ltable.insert(fname.to_string(), node.clone());
+                globals.push(node.clone());
             }
             NodeType::Class(cname) => {
                 let mut class = objsys.new_class(cname.clone());
-                preval_class(&mut class, &node, globals);
+                // preval_class(&mut class, &node, ltable, ctx);
+                preval_class(&mut class, &node, globals, ctx);
                 objsys.register_class(class);
             }
             x => panic!("Unexpected node: {}", x)
@@ -44,13 +47,16 @@ pub fn parse(reader: &mut Reader,
 fn preval_class(
     classobj: &mut Class,
     classnode: &Node,
-    globals: &mut HashMap<String, Node>) {
+    // ltable: &mut HashMap<String, Node>,
+    // globals: &mut Vec<String>,
+    globals: &mut Vec<Node>,
+    ctx: &Ctx) {
 
     for member in &classnode.children {
         let t: &NodeType = &member.nodetype;
 
         match t {
-            NodeType::FunDef(fname) => {
+            NodeType::FunDef(fname, _) => {
                 dprint(format!("Preval: NodeType::FunDef '{}'", fname));
 
                 let params = &member.children[0];
@@ -68,7 +74,7 @@ fn preval_class(
                     }
                 }
 
-                let obj = Object::Function(fname.to_string(), body, args);
+                let obj = Object::Function(fname.to_string(), ctx.filepath.clone(), body, args);
                 classobj.add_method(fname.clone(), obj);
             }
             NodeType::Assign => {
@@ -81,7 +87,8 @@ fn preval_class(
                 }
             }
             NodeType::Constructor(cname) => {
-                globals.insert(cname.to_string(), member.clone());
+                // ltable.insert(cname.to_string(), member.clone());
+                globals.push(member.clone());
             }
             x => {
                 dprint(format!("preval_class considering node {}", x));
@@ -132,7 +139,7 @@ fn decl(reader: &mut Reader, ctx: &Ctx) -> Node  {
 
                 Token::Name(fname, _, _) => {
                     reader.next();
-                    let mut node = Node::new(NodeType::FunDef(fname.to_string()));
+                    let mut node = Node::new(NodeType::FunDef(fname.to_string(), ctx.filepath.clone()));
                     let params = paramlist(reader, ctx);
                     node.children.push(params);
 
@@ -256,7 +263,7 @@ fn readmembers(classname: String, reader: &mut Reader, ctx: &Ctx) -> Vec<Node> {
                                 // Method
                                 dprint("Found method");
 
-                                let mut method_node = Node::new(NodeType::FunDef(fieldname.clone()));
+                                let mut method_node = Node::new(NodeType::FunDef(fieldname.clone(), String::from("__METHOD__")));
                                 let param_node = paramlist(reader, ctx);
 
                                 if let Token::Block1(_, _) = reader.sym() {

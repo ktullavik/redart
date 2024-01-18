@@ -27,7 +27,8 @@ pub enum Object {
     Double(f64),
     Bool(bool),
     String(String),
-    Function(String, Node, Vec<ParamObj>),
+    // funcname, filename, body, params
+    Function(String, String, Node, Vec<ParamObj>),
     Constructor(String, Node, Vec<ParamObj>),
     Reference(String),
     Null,
@@ -44,7 +45,7 @@ impl fmt::Display for Object {
             Object::Double(x) => write!(f, "{}", x),
             Object::Bool(b) => write!(f, "{}", b),
             Object::String(s) => write!(f, "{}", s),
-            Object::Function(_, _, _) => {
+            Object::Function(_, _, _, _) => {
                 // Dart prints a function signature, like: (int) => String.
                 // But since the function will turn into a closure, it really prints
                 // Closure: (int) => String
