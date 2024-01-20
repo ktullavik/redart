@@ -6,21 +6,25 @@ pub struct Stack {
     // Two-level storage of "stack" data.
     //
     // First level is call-stack, getting pushed and popped
-    // between function calls. Lookups should not cross
+    // between function calls - lookups should not cross
     // function-call boundaries.
     // Examples:
     //  - callé should not have access to the vars of its callers.
-    //  - caller should have restored acces to its local vars
+    //  - caller should have restored access to its local vars
     //    after calling a function.
     //
     // Second level is lexical scope, getting pushed and popped
-    // on blocks within a function context. Lexical lookups should
+    // on blocks within a function. Lexical lookups should
     // cross boundaries by traversing up the lex-stack.
     // Examples:
-    //  - loop-block within a local function/method.
-    //  - function def within function.
+    //  - loop-blocks.
+    //  - nested function definitions.
     //
     // A 'frame' means current lex-frame in the current call-frame.
+    //
+    // This data structure must be initialised by calling "push_call"
+    // to make storage available.
+
     pub stack: Vec<Vec<HashMap<String, Object>>>,
     pub call_level: usize,
     pub lex_level: usize
