@@ -917,7 +917,7 @@ pub fn eval(
                         _ => panic!("Expected function definition or constructor.")
                     }
                 }
-                
+
                 panic!("Unknown function: {}", s)
             }
         }

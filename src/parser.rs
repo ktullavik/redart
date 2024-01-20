@@ -6,11 +6,9 @@ use expression::expression;
 use utils::{dprint, dart_parseerror};
 use object::{ParamObj, Object};
 use objsys::{Class, ObjSys};
-use std::collections::HashMap;
 
 
 pub fn parse(reader: &mut Reader,
-            //  ltable: &mut HashMap<String, Node>,
              globals: &mut Vec<Node>,
              objsys: &mut ObjSys,
              ctx: &Ctx) -> Vec<String> {
@@ -25,13 +23,11 @@ pub fn parse(reader: &mut Reader,
         let node = decl(reader, ctx);
 
         match &node.nodetype {
-            NodeType::FunDef(fname, _) => {
-                // ltable.insert(fname.to_string(), node.clone());
+            NodeType::FunDef(_, _) => {
                 globals.push(node.clone());
             }
             NodeType::Class(cname) => {
                 let mut class = objsys.new_class(cname.clone());
-                // preval_class(&mut class, &node, ltable, ctx);
                 preval_class(&mut class, &node, globals, ctx);
                 objsys.register_class(class);
             }
@@ -47,8 +43,6 @@ pub fn parse(reader: &mut Reader,
 fn preval_class(
     classobj: &mut Class,
     classnode: &Node,
-    // ltable: &mut HashMap<String, Node>,
-    // globals: &mut Vec<String>,
     globals: &mut Vec<Node>,
     ctx: &Ctx) {
 
@@ -87,7 +81,6 @@ fn preval_class(
                 }
             }
             NodeType::Constructor(cname, _) => {
-                // ltable.insert(cname.to_string(), member.clone());
                 globals.push(member.clone());
             }
             x => {
