@@ -156,8 +156,18 @@ impl ObjSys {
     }
 
 
-    pub fn get_this(&mut self) -> &mut Instance {
+    pub fn get_this_instance(&self) -> &Instance {
+        return self.instancemap.get(self.this.as_str()).unwrap();
+    }
+
+
+    pub fn get_this_instance_mut(&mut self) -> &mut Instance {
         return self.instancemap.get_mut(self.this.as_str()).unwrap();
+    }
+
+
+    pub fn get_this(&self) -> String {
+        return self.this.clone();
     }
 
 
@@ -166,8 +176,9 @@ impl ObjSys {
     }
 
 
-    pub fn clear_this(&mut self) {
-        self.this = String::from("");
-    }
+    // pub fn clear_this(&mut self) {
+    //     println!("REAL CLEAR");
+    //     self.this = String::from("");
+    // }
 
 }

@@ -86,7 +86,7 @@ fn preval_class(
                     panic!("Illegal left node in assignment.")
                 }
             }
-            NodeType::Constructor(cname) => {
+            NodeType::Constructor(cname, _) => {
                 // ltable.insert(cname.to_string(), member.clone());
                 globals.push(member.clone());
             }
@@ -241,7 +241,7 @@ fn readmembers(classname: String, reader: &mut Reader, ctx: &Ctx) -> Vec<Node> {
 
                     reader.next();
 
-                    let mut constructor_node = Node::new(NodeType::Constructor(classname.clone()));
+                    let mut constructor_node = Node::new(NodeType::Constructor(classname.clone(), ctx.filepath.clone()));
                     let params = constructor_paramlist(reader, ctx);
                     reader.next();
                     let body  = block(reader, ctx);
@@ -639,7 +639,7 @@ fn statement(reader: &mut Reader, ctx: &Ctx) -> Node {
 
                                     // Method call
                                     let args = arglist(reader, ctx);
-                                    let mut methcall_node = Node::new(NodeType::MethodCall(s.to_string(), acc_name.to_string()));
+                                    let mut methcall_node = Node::new(NodeType::MethodCall(s.to_string(), acc_name.to_string(), ctx.filepath.clone()));
                                     methcall_node.children.push(args);
                                     methcall_node
                                 }

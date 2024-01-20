@@ -42,13 +42,13 @@ pub enum NodeType {
     List,
     FunDef(String, String), // funcname, filename
     FunCall(String),
-    MethodCall(String, String),
+    MethodCall(String, String, String),  // qualifier, methodname, filename
     ParamList,
     ArgList,
     ThisFieldInit(String),
     Return,
     Class(String),
-    Constructor(String),
+    Constructor(String, String), // consname, filename
 }
 
 
@@ -83,9 +83,9 @@ impl fmt::Display for NodeType {
             NodeType::Bool(v)                        => write!(f, "{}", v),
             NodeType::Name(s)                       => write!(f, "{}", s),
             NodeType::TypedVar(tp, name)  => write!(f, "{}:{}", name, tp),
-            NodeType::FunDef(s, _)                     => write!(f, "{}() {{}}", s),
+            NodeType::FunDef(s, _filename)                     => write!(f, "{}() {{}}", s),
             NodeType::FunCall(s)                    => write!(f, "{}()", s),
-            NodeType::MethodCall(objname, methname) => write!(f, "{}.{}()", objname, methname),
+            NodeType::MethodCall(objname, methname, _) => write!(f, "{}.{}()", objname, methname),
             NodeType::List => write!(f, "[]"),
             NodeType::ParamList => write!(f, "ParamList"),
             NodeType::ArgList => write!(f, "ArgList"),
@@ -100,7 +100,7 @@ impl fmt::Display for NodeType {
             NodeType::ThisFieldInit(s) => write!(f, "this.{}", s),
             NodeType::Return => write!(f, "Return"),
             NodeType::Class(s) => write!(f, "Class({})", s),
-            NodeType::Constructor(name) => write!(f, "Constructor({})", name),
+            NodeType::Constructor(name, _filename) => write!(f, "Constructor({})", name),
         }
     }
 }

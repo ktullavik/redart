@@ -28,8 +28,8 @@ pub enum Object {
     Bool(bool),
     String(String),
     // funcname, filename, body, params
-    Function(String, String, Node, Vec<ParamObj>),
-    Constructor(String, Node, Vec<ParamObj>),
+    Function(String, String, Node, Vec<ParamObj>),    // funcname, filename, body, params
+    Constructor(String, String, Node, Vec<ParamObj>), // consname, filename, body, params
     Reference(String),
     Null,
     Return(Box<Object>)
@@ -52,7 +52,7 @@ impl fmt::Display for Object {
                 // TODO
                 write!(f, "() => ?")
             },
-            Object::Constructor(_, _, _) => {
+            Object::Constructor(_, _, _, _) => {
                 // TODO
                 write!(f, "() => ?")
             },

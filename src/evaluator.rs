@@ -32,7 +32,7 @@ pub fn eval(
                         store.add(s1.as_str(), right_obj);
                     }
                     else {
-                        let this = objsys.get_this();
+                        let this = objsys.get_this_instance_mut();
                         this.set_field(s1.clone(), right_obj);
                     }
                     return Object::Null;
@@ -47,7 +47,7 @@ pub fn eval(
                     }
                     else {
                         if objsys.has_this() {
-                            let this = objsys.get_this();
+                            let this = objsys.get_this_instance_mut();
                             if this.has_field(s1.clone()) {
                                 panic!("Variable with name {} already exists.", s1);
                             }
@@ -599,7 +599,7 @@ pub fn eval(
                         }
                     }
                     else {
-                        let this = objsys.get_this();
+                        let this = objsys.get_this_instance_mut();
                         let oldval = this.get_field(s.clone()).clone();
 
                         match oldval {
@@ -637,7 +637,7 @@ pub fn eval(
                         }
                     }
                     else {
-                        let this = objsys.get_this();
+                        let this = objsys.get_this_instance_mut();
                         let oldval = this.get_field(s.clone()).clone();
 
                         match oldval {
@@ -675,7 +675,7 @@ pub fn eval(
                         }
                     }
                     else {
-                        let this = objsys.get_this();
+                        let this = objsys.get_this_instance_mut();
                         let oldval = this.get_field(s.clone()).clone();
 
                         match oldval {
@@ -714,7 +714,7 @@ pub fn eval(
                         }
                     }
                     else {
-                        let this = objsys.get_this();
+                        let this = objsys.get_this_instance_mut();
                         let oldval = this.get_field(s.clone()).clone();
 
                         match oldval {
@@ -776,7 +776,7 @@ pub fn eval(
                 return store.get(s).clone();
             }
             else if objsys.has_this() {
-                let this = objsys.get_this();
+                let this = objsys.get_this_instance_mut();
                 return this.get_field(s.clone()).clone();
             }
             else {
@@ -792,10 +792,26 @@ pub fn eval(
             return Object::Return(Box::new(retval));
         }
 
-        NodeType::MethodCall(qname, methname) => {
+        NodeType::MethodCall(qname, methname, filename) => {
             dprint(format!("objname: {}", qname));
 
-            let reference = store.get(qname);
+
+            let reference: &Object;
+
+            if store.has(qname) {
+                reference = store.get(qname);
+            } else if objsys.has_this() {
+                let owner = objsys.get_this_instance();
+                if owner.has_field(qname.clone()) {
+                    reference = owner.get_field(qname.clone());
+                } else {
+                    dart_evalerror(format!("Undefined name: '{}'.", qname), ctx);
+                }
+            } else {
+                dart_evalerror(format!("Undefined name: '{}'.", qname), ctx);
+            }
+
+
             if let Object::Reference(refid) = reference {
 
                 let instance = objsys.get_instance(refid);
@@ -807,6 +823,11 @@ pub fn eval(
                     let argslist = &node.children[0];
 
                     store.push_call();
+
+                    let oldfilename = ctx.filepath.clone();
+                    ctx.filepath = filename.clone();
+
+                    let oldthis = objsys.get_this();
                     objsys.set_this(instance.id.clone());
 
                     for i in 0 .. params.len() {
@@ -817,7 +838,8 @@ pub fn eval(
 
                     let result = eval(&node, looktables, globals, store, objsys, ctx);
 
-                    objsys.clear_this();
+                    objsys.set_this(oldthis);
+                    ctx.filepath = oldfilename;
                     store.pop_call();
 
                     return match result {
@@ -844,7 +866,7 @@ pub fn eval(
                     Object::Function(_, _, _, _) => {
                         call_function(funcobj, &node.children[0], looktables, globals, store, objsys, ctx)
                     }
-                    Object::Constructor(_, _, _) => {
+                    Object::Constructor(_, _, _, _) => {
                         call_constructor(&funcobj, &node.children[0], looktables, globals, store, objsys, ctx)
                     }
                     _ => panic!("Called non-callable.")
@@ -864,7 +886,7 @@ pub fn eval(
                 return builtin::call(s, &args, ctx);
             }
             else {
-                println!("Looking for: {}", &ctx.filepath);
+                println!("FuncCall, table: {}", &ctx.filepath);
                 let ltable = &looktables[&ctx.filepath];
                 if ltable.contains_key(s) {
 
@@ -882,7 +904,7 @@ pub fn eval(
                                 objsys,
                                 ctx)
                         }
-                        NodeType::Constructor(_) => {
+                        NodeType::Constructor(_, _) => {
                             call_constructor(
                                 &create_constructor(&funcnode),
                                 &node.children[0],
@@ -1149,7 +1171,7 @@ fn create_constructor(funcnode: &Node) -> Object {
 
     match &funcnode.nodetype {
 
-        NodeType::Constructor(cname) => {
+        NodeType::Constructor(cname, filename) => {
 
             let paramnodes = &funcnode.children[0];
             let bodynode = &funcnode.children[1];
@@ -1169,7 +1191,7 @@ fn create_constructor(funcnode: &Node) -> Object {
                 }
             }
 
-            return Object::Constructor(cname.to_string(), bodynode.clone(), paramobjs);
+            return Object::Constructor(cname.to_string(), filename.clone(), bodynode.clone(), paramobjs);
         }
         _ => panic!("Invalid node type.")
     }
@@ -1187,7 +1209,7 @@ fn call_constructor(
 
     match funcobj {
 
-        Object::Constructor(cname, body, params) => {
+        Object::Constructor(cname, filename, body, params) => {
 
             let args = argnodes_to_argobjs(
                 &args.children,
@@ -1227,11 +1249,18 @@ fn call_constructor(
 
             match &instref {
                 Object::Reference(refid) => {
+
+                    let oldfilename = ctx.filepath.clone();
+                    ctx.filepath = filename.clone();
+
+
+                    let oldthis = objsys.get_this();
                     objsys.set_this(refid.clone());
+                    println!("Set this: {}, classname: {}, filename: {}", refid, cname, filename);
 
                     // Set fields from params that uses "this" to auto-init.
                     // Ie Bike(this.gears)
-                    let inst = objsys.get_this();
+                    let inst = objsys.get_this_instance_mut();
                     for i in 0..params.len() {
                         if params[i].fieldinit {
                             inst.set_field(params[i].name.clone(),args[i].clone());
@@ -1241,7 +1270,10 @@ fn call_constructor(
                     // Run body
                     eval(&body, looktables, globals, store, objsys, ctx);
 
-                    objsys.clear_this();
+                    objsys.set_this(oldthis);
+                    ctx.filepath = oldfilename;
+                    println!("Resetting filepath to {}", ctx.filepath);
+
                     store.pop_call();
 
                     return instref.clone();

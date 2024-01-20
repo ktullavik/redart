@@ -212,7 +212,7 @@ fn filecurse(
                 looktable.insert(funcname.clone(), i);
 
             }
-            NodeType::Constructor(name) => {
+            NodeType::Constructor(name, _) => {
                 looktable.insert(name.clone(), i);
             }
             _ => {
@@ -241,7 +241,7 @@ fn filecurse(
                 NodeType::FunDef(funcname, _) => {
                     looktable.insert(funcname.clone(), i);
                 }
-                NodeType::Constructor(name) => {
+                NodeType::Constructor(name, _) => {
                     looktable.insert(name.clone(), i);
                 }
                 _ => {
