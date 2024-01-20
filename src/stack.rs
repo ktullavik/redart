@@ -3,9 +3,7 @@ use object::Object;
 
 
 pub struct Stack {
-    // pub stack: Vec<HashMap<String, Object>>,
-
-    // Two dimensional storage of "stack" data.
+    // Two-level storage of "stack" data.
     //
     // First level is call-stack, getting pushed and popped
     // between function calls. Lookups should not cross
@@ -16,8 +14,8 @@ pub struct Stack {
     //    after calling a function.
     //
     // Second level is lexical scope, getting pushed and popped
-    // on blocks within a local context. Lexial lookups should
-    // traverse up the lex-stack.
+    // on blocks within a function context. Lexical lookups should
+    // cross boundaries by traversing up the lex-stack.
     // Examples:
     //  - loop-block within a local function/method.
     //  - function def within function.
