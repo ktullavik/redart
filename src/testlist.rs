@@ -70,7 +70,8 @@ pub const TESTS: &'static [&'static str] = &[
     "64.for.dart",
     "65.for2.dart",
     "66.this_constructor_arg.dart",
-    "100.multifile/main.dart"
+    "100.multifile/main.dart",
+    "101.external_constructor/main.dart"
 ];
 
 
