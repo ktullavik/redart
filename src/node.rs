@@ -23,7 +23,6 @@ pub enum NodeType {
     LessOrEq,
     GreaterOrEq,
     Equal,
-    Access,
     Assign,
     Int(i64),
     Double(f64),
@@ -42,7 +41,7 @@ pub enum NodeType {
     List,
     FunDef(String, String), // funcname, filename
     FunCall(String),
-    MethodCall(String, String, String),  // qualifier, methodname, filename
+    MethodCall(String, Box<Node>, String),  // methodname, owner, filename
     ParamList,
     ArgList,
     ThisFieldInit(String),
@@ -76,7 +75,6 @@ impl fmt::Display for NodeType {
             NodeType::LessOrEq => write!(f, "<="),
             NodeType::GreaterOrEq => write!(f, ">="),
             NodeType::Equal => write!(f, "=="),
-            NodeType::Access => write!(f, "."),
             NodeType::Int(s)                        => write!(f, "{}", s),
             NodeType::Double(s)                     => write!(f, "{}", s),
             NodeType::Str(s)                        => write!(f, "\"{}\"", s),
@@ -85,7 +83,7 @@ impl fmt::Display for NodeType {
             NodeType::TypedVar(tp, name)  => write!(f, "{}:{}", name, tp),
             NodeType::FunDef(s, _filename)                     => write!(f, "{}() {{}}", s),
             NodeType::FunCall(s)                    => write!(f, "{}()", s),
-            NodeType::MethodCall(objname, methname, _) => write!(f, "{}.{}()", objname, methname),
+            NodeType::MethodCall(name, owner, _) => write!(f, "{}.{}()", name, owner),
             NodeType::List => write!(f, "[]"),
             NodeType::ParamList => write!(f, "ParamList"),
             NodeType::ArgList => write!(f, "ArgList"),

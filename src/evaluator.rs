@@ -771,6 +771,20 @@ pub fn eval(
 
         NodeType::Name(s) => {
             dprint(format!("Eval: NodeType::Name({})", s));
+
+            // For Name, having a child means having an owner.
+            if node.children.len() > 0 {
+                let owner = eval(&node.children[0], looktables, globals, store, objsys, ctx);
+                
+                if let Object::Reference(refid) = owner {
+                    let instance = objsys.get_instance(&refid);
+                    return instance.get_field(s.to_string()).clone();
+                }
+
+                panic!("Unexpected owner for {}: {}", s, owner)
+            }
+
+
             if store.has(s) {
                 dprint(format!("got value for {}", s));
                 return store.get(s).clone();
@@ -792,32 +806,19 @@ pub fn eval(
             return Object::Return(Box::new(retval));
         }
 
-        NodeType::MethodCall(qname, methname, filename) => {
-            dprint(format!("objname: {}", qname));
+        NodeType::MethodCall(name, owner, filename) => {
+            dprint(format!("Eval: NodeType::MethodCall({})", name));
 
 
-            let reference: &Object;
-
-            if store.has(qname) {
-                reference = store.get(qname);
-            } else if objsys.has_this() {
-                let owner = objsys.get_this_instance();
-                if owner.has_field(qname.clone()) {
-                    reference = owner.get_field(qname.clone());
-                } else {
-                    dart_evalerror(format!("Undefined name: '{}'.", qname), ctx);
-                }
-            } else {
-                dart_evalerror(format!("Undefined name: '{}'.", qname), ctx);
-            }
+            let reference: Object = eval(owner, looktables, globals, store, objsys, ctx);
 
 
             if let Object::Reference(refid) = reference {
 
-                let instance = objsys.get_instance(refid);
+                let instance = objsys.get_instance(&refid);
                 let c = objsys.get_class(&instance.classname);
 
-                let meth = c.get_method(methname);
+                let meth = c.get_method(name);
                 if let Object::Function(_, _, node, params) = meth {
 
                     let argslist = &node.children[0];
@@ -853,7 +854,7 @@ pub fn eval(
                     }
                 }
             }
-            panic!("Can't access {} of {}", qname, methname)
+            panic!("Can't access {} of {}", name, owner);
         }
 
         NodeType::FunCall(s) => {

@@ -619,41 +619,6 @@ fn statement(reader: &mut Reader, ctx: &Ctx) -> Node {
                     return ass_node;
                 }
 
-                Token::Access(_, _) => {
-
-                    reader.next();
-
-                    match reader.next() {
-
-                        Token::Name(acc_name, _, _) => {
-
-                            return match reader.next() {
-                                Token::Paren1(_, _) => {
-
-                                    // Method call
-                                    let args = arglist(reader, ctx);
-                                    let mut methcall_node = Node::new(NodeType::MethodCall(s.to_string(), acc_name.to_string(), ctx.filepath.clone()));
-                                    methcall_node.children.push(args);
-                                    methcall_node
-                                }
-
-                                _ => {
-                                    let mut acc_node = Node::new(NodeType::Access);
-                                    let obj_node = Node::new(NodeType::Name(s.to_string()));
-                                    let member_node = Node::new(NodeType::Name(acc_name.to_string()));
-                                    acc_node.children.push(obj_node);
-                                    acc_node.children.push(member_node);
-                                    acc_node
-                                }
-                            }
-                        }
-
-                        x => {
-                            panic!("Unexpected token following '.': {}", x)
-                        }
-                    }
-                }
-
                 _ => {
                     return expression(reader, ctx)
                 }

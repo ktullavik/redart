@@ -327,7 +327,7 @@ fn product(reader: &mut Reader, ctx: &Ctx) -> Node {
 
 fn product_help(reader: &mut Reader, righties: &mut Queue<Node>, ops: &mut Queue<Node>, ctx: &Ctx) -> Node {
 
-    let n = term(reader, ctx);
+    let n = access(reader, ctx);
     righties.add(n).ok();
 
     if reader.len() <= reader.pos() {
@@ -369,6 +369,71 @@ fn product_help(reader: &mut Reader, righties: &mut Queue<Node>, ops: &mut Queue
         _ => {
             righties.remove().unwrap()
         }
+    }
+}
+
+
+fn access(reader: &mut Reader, ctx: &Ctx) -> Node {
+
+    let n = term(reader, ctx);
+    let t = reader.sym();
+
+    return match t {
+        Token::Access(_, _) => {
+            access_help(reader, n, ctx)
+        }
+        _ => { n }
+    }
+}
+
+
+fn access_help(reader: &mut Reader, owner: Node, ctx: &Ctx) -> Node {
+
+    match reader.sym() {
+
+        Token::Access(_, _) => {
+
+            match reader.next() {
+
+                Token::Name(name, _, _) => {
+
+                    match reader.next() {
+
+                        Token::Paren1(_, _) => {
+                            let args_node = arglist(reader, ctx);
+                            let mut funcall_node = Node::new(NodeType::MethodCall(name.to_string(), Box::new(owner), ctx.filepath.clone()));
+                            funcall_node.children.push(args_node);
+                            return access_help(reader, funcall_node, ctx);
+                        }
+
+                        Token::Decrement(_, _) => {
+                            let mut decnode = Node::new(NodeType::PostDecrement);
+                            let node = Node::new(NodeType::Name(name.clone()));
+                            decnode.children.push(node);
+                            return decnode;
+                        }
+
+                        Token::Increment(_, _) => {
+                            let mut incnode = Node::new(NodeType::PostIncrement);
+                            let node = Node::new(NodeType::Name(name.clone()));
+                            incnode.children.push(node);
+                            return incnode;
+                        }
+
+                        _ => {
+                            let mut node = Node::new(NodeType::Name(name.clone()));
+                            node.children.push(owner);
+                            return access_help(reader, node, ctx);
+                        }
+                    }
+                }
+
+                x => {
+                    panic!("Expected name after accessor, got: {}", x)
+                }
+            }
+        }
+        _ => owner
     }
 }
 
@@ -475,6 +540,7 @@ fn term(reader: &mut Reader, ctx: &Ctx) -> Node {
                     // Function call.
                     let args_node = arglist(reader, ctx);
                     let mut funcall_node = Node::new(NodeType::FunCall(s.to_string()));
+                    // FIXME, already set above
                     funcall_node.nodetype = NodeType::FunCall(s.to_string());
                     funcall_node.children.push(args_node);
                     return funcall_node;
