@@ -618,10 +618,7 @@ fn statement(reader: &mut Reader, ctx: &Ctx) -> Node {
                             let body = block(reader, ctx);
 
                             let mut forloop = Node::new(NodeType::For);
-                            forloop.children.push(assign);
-                            forloop.children.push(condexpr);
-                            forloop.children.push(mutexpr);
-                            forloop.children.push(body);
+                            forloop.children.extend([assign, condexpr, mutexpr, body]);
                             return forloop;
                         }
 
@@ -652,10 +649,8 @@ fn statement(reader: &mut Reader, ctx: &Ctx) -> Node {
                             let body = block(reader, ctx);
 
                             let mut forloop = Node::new(NodeType::For);
-                            forloop.children.push(assign);
-                            forloop.children.push(condexpr);
-                            forloop.children.push(mutexpr);
-                            forloop.children.push(body);
+                            forloop.children.extend([assign, condexpr, mutexpr, body]);
+
                             return forloop;
                         }
 
