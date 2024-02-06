@@ -83,6 +83,8 @@ pub const FAILTESTS: &'static [&'static str] = &[
     "1.double_declaration.dart",
     "2.forgotten_paramlist.dart",
     "3.plus_is_not_prefix.dart",
+    "4.var_not_declared.dart",
+    "5.var_not_declared2.dart",
 ];
 
 
