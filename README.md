@@ -11,10 +11,10 @@ WIP toy interpreter for the Dart language.
 
 ## Installation
 * Install rust/cargo.
-* git clone https://github.com/ktullavik/redart.git
-* cd redart
-* cargo build
-* cd target/debug
+* `git clone https://github.com/ktullavik/redart.git`
+* `cd redart`
+* `cargo build`
+* `cd target/debug`
 
 After the above steps, you will be in the directory of the `redart` executable.
 
