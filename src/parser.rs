@@ -20,74 +20,11 @@ pub fn parse(reader: &mut Reader,
     let imports = directives(reader, ctx);
 
     while reader.more() {
-        let node = decl(reader, ctx);
-
-        match &node.nodetype {
-            NodeType::FunDef(_, _) => {
-                globals.push(node.clone());
-            }
-            NodeType::Class(cname) => {
-                let mut class = objsys.new_class(cname.clone());
-                preval_class(&mut class, &node, globals, ctx);
-                objsys.register_class(class);
-            }
-            x => panic!("Unexpected node: {}", x)
-        }
+        decl(reader, objsys, globals, ctx);
     }
     assert_eq!(reader.pos(), reader.len() - 1, "Undexpected index at end of parse: {} out of {}", reader.pos(), reader.len());
 
     return imports;
-}
-
-
-fn preval_class(
-    classobj: &mut Class,
-    classnode: &Node,
-    globals: &mut Vec<Node>,
-    ctx: &Ctx) {
-
-    for member in &classnode.children {
-        let t: &NodeType = &member.nodetype;
-
-        match t {
-            NodeType::FunDef(fname, _) => {
-                dprint(format!("Preval: NodeType::FunDef '{}'", fname));
-
-                let params = &member.children[0];
-                let body = member.children[1].clone();
-
-                let mut args: Vec<ParamObj> = Vec::new();
-
-                for i in 0..params.children.len() {
-                    let p = &params.children[i];
-                    match &p.nodetype {
-                        NodeType::Name(s) => {
-                            args.push(ParamObj{typ: String::from("var"), name: s.clone(), fieldinit: false});
-                        }
-                        x => panic!("Invalid parameter: {}", x)
-                    }
-                }
-
-                let obj = Object::Function(fname.to_string(), ctx.filepath.clone(), body, args);
-                classobj.add_method(fname.clone(), obj);
-            }
-            NodeType::Assign => {
-                let namenode = member.children[0].clone();
-                if let NodeType::TypedVar(ftype, fname) = namenode.nodetype {
-                    classobj.add_field(ftype, fname, member.children[1].clone());
-                }
-                else {
-                    panic!("Illegal left node in assignment.")
-                }
-            }
-            NodeType::Constructor(cname, _) => {
-                globals.push(member.clone());
-            }
-            x => {
-                dprint(format!("preval_class considering node {}", x));
-            }
-        }
-    }
 }
 
 
@@ -119,37 +56,34 @@ fn directives(reader: &mut Reader, ctx: &Ctx) -> Vec<String> {
 }
 
 
-fn decl(reader: &mut Reader, ctx: &Ctx) -> Node  {
+fn decl(reader: &mut Reader, objsys: &mut ObjSys, globals: &mut Vec<Node>, ctx: &Ctx) {
     dprint(format!("Parse: decl: {}", reader.sym()));
 
     match reader.sym() {
 
+        // The return type of a top level function definition.
         Token::Name(_, _, _) => {
 
-            let t2 = reader.next();
+            match reader.next() {
 
-            match t2 {
-
+                // Name of top level function.
                 Token::Name(fname, _, _) => {
                     reader.next();
                     let mut node = Node::new(NodeType::FunDef(fname.to_string(), ctx.filepath.clone()));
                     let params = paramlist(reader, ctx);
                     node.children.push(params);
 
-                    let t3 = reader.sym();
-                    reader.next();
-
-                    match t3 {
+                    match reader.sym() {
                         Token::Block1(_, _) => {
-                            // Could increment i here. But is it better for block parse to
-                            // just expect starting at '{'?
+                            reader.next();
                             let body = block(reader, ctx);
                             node.children.push(body);
-                            return node;
+                            globals.push(node.clone());
+                            return;
                         }
 
-                        _ => {
-                            panic!("Expected {{. Got: {}", t3)
+                        x => {
+                            panic!("Expected {{. Got: {}", x)
                         }
                     }
                 }
@@ -161,8 +95,7 @@ fn decl(reader: &mut Reader, ctx: &Ctx) -> Node  {
         }
 
         Token::Class(_, _) => {
-            reader.next();
-            return class(reader, ctx);
+            class(reader, objsys, globals, ctx);
         }
 
         Token::Import(_, _) => {
@@ -182,33 +115,21 @@ fn decl(reader: &mut Reader, ctx: &Ctx) -> Node  {
 }
 
 
-fn class(reader: &mut Reader, ctx: &Ctx) -> Node {
+fn class(reader: &mut Reader, objsys:&mut ObjSys, globals: &mut Vec<Node>, ctx: &Ctx) {
     dprint(format!("Parse: class: {}", reader.sym()));
 
-    match reader.sym() {
+    match reader.next() {
         Token::Name(classname, _, _) => {
 
+            let mut class = objsys.new_class(classname.clone());
+
             reader.next();
-
-            let mut classnode = Node::new(NodeType::Class(classname.clone()));
-
-            if let Token::Block1(_, _) = reader.sym() {
-                reader.next();
-
-                let members = readmembers(classname.clone(), reader, ctx);
-                classnode.children = members;
-
-                if let Token::Block2(_, _) = reader.sym() {
-                    reader.next();
-                    return classnode;
-                }
-                panic!("{}", "Expected '}' to end class.")
-            }
-            else {
-                panic!("{}", "Error: Expected '{' after class name")
-            }
-
+            reader.skip("{", ctx);
+            readmembers(&mut class, reader, globals, ctx);
+            reader.skip("}", ctx);
+            objsys.register_class(class);
         }
+
         x => {
             panic!("Error: Expected class name. Got: {}", x)
         }
@@ -216,11 +137,9 @@ fn class(reader: &mut Reader, ctx: &Ctx) -> Node {
 }
 
 
-// Expecting member declaration - field or method.
-fn readmembers(classname: String, reader: &mut Reader, ctx: &Ctx) -> Vec<Node> {
+// Expecting member declaration - field or method, or constructor.
+fn readmembers(class: &mut Class, reader: &mut Reader, globals: &mut Vec<Node>, ctx: &Ctx) {
     dprint(format!("Parse: readmembers: {}", reader.sym()));
-
-    let mut members : Vec<Node> = Vec::new();
 
     while reader.more() {
 
@@ -228,13 +147,12 @@ fn readmembers(classname: String, reader: &mut Reader, ctx: &Ctx) -> Vec<Node> {
 
             Token::Name(mtype, _, _) => {
 
-                if *mtype == classname {
+                if *mtype == class.name {
                     // Constructor
-                    dprint("Found constructor");
 
                     reader.next();
 
-                    let mut constructor_node = Node::new(NodeType::Constructor(classname.clone(), ctx.filepath.clone()));
+                    let mut constructor_node = Node::new(NodeType::Constructor(class.name.clone(), ctx.filepath.clone()));
                     let params = constructor_paramlist(reader, ctx);
                     reader.next();
                     let body  = block(reader, ctx);
@@ -242,7 +160,7 @@ fn readmembers(classname: String, reader: &mut Reader, ctx: &Ctx) -> Vec<Node> {
                     constructor_node.children.push(params);
                     constructor_node.children.push(body);
 
-                    members.push(constructor_node);
+                    globals.push(constructor_node);
                     continue;
                 }
 
@@ -254,19 +172,27 @@ fn readmembers(classname: String, reader: &mut Reader, ctx: &Ctx) -> Vec<Node> {
 
                             Token::Paren1(_, _) => {
                                 // Method
-                                dprint("Found method");
 
-                                let mut method_node = Node::new(NodeType::FunDef(fieldname.clone(), String::from("__METHOD__")));
                                 let param_node = paramlist(reader, ctx);
 
                                 if let Token::Block1(_, _) = reader.sym() {
                                     reader.next();
                                     let body = block(reader, ctx);
 
-                                    method_node.children.push(param_node);
-                                    method_node.children.push(body);
+                                    let mut args: Vec<ParamObj> = Vec::new();
 
-                                    members.push(method_node);
+                                    for i in 0..param_node.children.len() {
+                                        let p = &param_node.children[i];
+                                        match &p.nodetype {
+                                            NodeType::Name(s) => {
+                                                args.push(ParamObj{typ: String::from("var"), name: s.clone(), fieldinit: false});
+                                            }
+                                            x => panic!("Invalid parameter: {}", x)
+                                        }
+                                    }
+
+                                    let methodobj = Object::Function(fieldname.to_string(), ctx.filepath.clone(), body, args);
+                                    class.add_method(fieldname.clone(), methodobj);
                                 }
                                 else {
                                     panic!("{}", "Expected opening brace in method declaration: '{'")
@@ -275,34 +201,24 @@ fn readmembers(classname: String, reader: &mut Reader, ctx: &Ctx) -> Vec<Node> {
 
                             Token::EndSt(_, _) => {
                                 // Uninitialized field declare
-                                dprint("Found uninitialized field");
                                 reader.next();
-
-                                let fieldnode = Node::new(NodeType::TypedVar(mtype.clone(), fieldname.clone()));
-                                members.push(fieldnode);
+                                class.add_field(mtype, fieldname, Node::new(NodeType::Null));
                             }
 
                             Token::Assign(_, _) => {
                                 // Initialized field declare
-                                dprint("Found initialized field");
                                 reader.next();
 
                                 let val = expression(reader, ctx);
 
                                 if let Token::EndSt(_, _) = reader.sym() {
-                                    dprint("Got endst after field init");
                                     reader.next();
                                 }
                                 else {
                                     panic!("Expected ';' after field initialization.")
                                 }
 
-                                let mut eqnode = Node::new(NodeType::Assign);
-                                let fieldnode = Node::new(NodeType::TypedVar(mtype.clone(), fieldname.clone()));
-
-                                eqnode.children.push(fieldnode);
-                                eqnode.children.push(val);
-                                members.push(eqnode);
+                                class.add_field(mtype, fieldname, val);
                             }
 
                             Token::Block2(_, _) => {
@@ -328,8 +244,6 @@ fn readmembers(classname: String, reader: &mut Reader, ctx: &Ctx) -> Vec<Node> {
             x => panic!("Unexpected first token when parsing class member: {}", x)
         }
     }
-
-    members
 }
 
 
@@ -358,9 +272,7 @@ fn constructor_paramlist(reader: &mut Reader, ctx: &Ctx) -> Node {
                     match reader.sym() {
 
                         Token::Name(s, _, _) => {
-                            // let fieldname = Node::new(NodeType::Name(s));
                             let this_fieldinit = Node::new(NodeType::ThisFieldInit(s));
-                            // this_fieldinit.children.push(fieldname);
                             node.children.push(this_fieldinit);
                             expect_comma = true;
                             reader.next();
@@ -462,7 +374,7 @@ fn paramlist(reader: &mut Reader, ctx: &Ctx) -> Node {
 
 
 pub fn arglist(reader: &mut Reader, ctx: &Ctx) -> Node {
-    dprint(format!("arglist on {}", reader.sym()));
+    dprint(format!("Parse: arglist: {}", reader.sym()));
 
     if let Token::Paren1(_, _) = reader.sym() {
 
