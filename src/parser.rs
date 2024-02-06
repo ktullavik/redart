@@ -479,13 +479,12 @@ fn statement(reader: &mut Reader, ctx: &Ctx) -> Node {
             match t2 {
 
                 Token::Name(name, _, _) => {
-                    // Two names in a row here indicates a typed variable.
+                    // Two names in a row here indicates a typed variable or nested function declaration.
 
                     let typed_var = Node::new(NodeType::TypedVar(s.to_string(), name.to_string()));
 
                     reader.next();
                     reader.next();
-
 
                     match reader.sym() {
 
@@ -517,16 +516,6 @@ fn statement(reader: &mut Reader, ctx: &Ctx) -> Node {
                             panic!("Unexpected token: {}", x)
                         }
                     }
-
-
-                    // reader.skip("=", ctx);
-
-                    // let right_node = expression(reader, ctx);
-
-                    // let mut ass_node = Node::new(NodeType::Assign);
-                    // ass_node.children.push(typed_var);
-                    // ass_node.children.push(right_node);
-                    // return ass_node;
                 }
 
                 Token::Assign(_, _) => {
