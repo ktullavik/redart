@@ -489,7 +489,7 @@ fn statement(reader: &mut Reader, ctx: &Ctx) -> Node {
 
                     match reader.sym() {
 
-                        Token::Equal(_, _) => {
+                        Token::Assign(_, _) => {
 
                             reader.next();
                             let right_node = expression(reader, ctx);
