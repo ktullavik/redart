@@ -22,7 +22,7 @@ pub fn parse(reader: &mut Reader,
     while reader.more() {
         decl(reader, objsys, globals, ctx);
     }
-    assert_eq!(reader.pos(), reader.len() - 1, "Undexpected index at end of parse: {} out of {}", reader.pos(), reader.len());
+    assert_eq!(reader.pos(), reader.len() - 1, "Unexpected index at end of parse: {} out of {}", reader.pos(), reader.len());
 
     return imports;
 }
