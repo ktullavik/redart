@@ -465,16 +465,16 @@ fn term(reader: &mut Reader, ctx: &Ctx) -> Node {
 
         Token::Sub(_, _) => {
             // This handles unary minus.
-            let mut unary = Node::new(NodeType::Sub);
             reader.next();
+            let mut unary = Node::new(NodeType::Sub);
             let next = term(reader, ctx);
             unary.children.push(next);
             unary
         }
 
         Token::Not(_, _) => {
-            let mut notnode = Node::new(NodeType::Not);
             reader.next();
+            let mut notnode = Node::new(NodeType::Not);
             let next = term(reader, ctx);
             notnode.children.push(next);
             notnode
@@ -482,8 +482,8 @@ fn term(reader: &mut Reader, ctx: &Ctx) -> Node {
 
         Token::Str(ref s, interpols, _, _) => {
             return if interpols.is_empty() {
-                let node = Node::new(NodeType::Str(s.clone()));
                 reader.next();
+                let node = Node::new(NodeType::Str(s.clone()));
                 node
             } else {
                 let mut node = Node::new(NodeType::Str(s.clone()));
