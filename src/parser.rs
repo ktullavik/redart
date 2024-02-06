@@ -455,6 +455,8 @@ fn block(reader: &mut Reader, ctx: &Ctx) -> Node {
                         reader.next();
                         continue;
                     }
+
+                    // Why? Should'nt it always be EndSt or Block2?
                     _ => continue
                 }
             }
@@ -483,14 +485,48 @@ fn statement(reader: &mut Reader, ctx: &Ctx) -> Node {
 
                     reader.next();
                     reader.next();
-                    reader.skip("=", ctx);
 
-                    let right_node = expression(reader, ctx);
 
-                    let mut ass_node = Node::new(NodeType::Assign);
-                    ass_node.children.push(typed_var);
-                    ass_node.children.push(right_node);
-                    return ass_node;
+                    match reader.sym() {
+
+                        Token::Equal(_, _) => {
+
+                            reader.next();
+                            let right_node = expression(reader, ctx);
+
+                            let mut ass_node = Node::new(NodeType::Assign);
+                            ass_node.children.push(typed_var);
+                            ass_node.children.push(right_node);
+                            return ass_node;
+                        }
+
+                        Token::Paren1(_, _) => {
+                            // Nested function declaration.
+
+                            let params = paramlist(reader, ctx);
+                            reader.skip("{", ctx);
+                            let body = block(reader, ctx);
+
+                            let mut funcnode = Node::new(NodeType::FunDef(name.clone(), ctx.filepath.clone()));
+                            funcnode.children.push(params);
+                            funcnode.children.push(body);
+                            return funcnode;
+                        }
+
+                        x => {
+                            panic!("Unexpected token: {}", x)
+                        }
+                    }
+
+
+                    // reader.skip("=", ctx);
+
+                    // let right_node = expression(reader, ctx);
+
+                    // let mut ass_node = Node::new(NodeType::Assign);
+                    // ass_node.children.push(typed_var);
+                    // ass_node.children.push(right_node);
+                    // return ass_node;
                 }
 
                 Token::Assign(_, _) => {
