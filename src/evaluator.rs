@@ -30,11 +30,21 @@ pub fn eval(
 
                     if store.has(s1.as_str()) {
                         store.add(s1.as_str(), right_obj);
+                        return Object::Null;
                     }
-                    else {
-                        let this = objsys.get_this_instance_mut();
-                        this.set_field(s1.clone(), right_obj);
+
+                    if !objsys.has_this() {
+                        // As dart.
+                        dart_evalerror(format!("Setter not found: '{}'", s1), ctx)
                     }
+                    let this = objsys.get_this_instance_mut();
+
+                    if !this.has_field(s1.clone()) {
+                        // As dart.
+                        dart_evalerror(format!("The setter '{}' isn't defined for the class '{}'", s1, this.classname), ctx)
+                    }
+                    this.set_field(s1.clone(), right_obj);
+
                     return Object::Null;
                 }
                 NodeType::TypedVar(_, ref s1) => {
