@@ -397,33 +397,33 @@ fn access_help(reader: &mut Reader, owner: Node, ctx: &Ctx) -> Node {
 
                 Token::Name(name, _, _) => {
 
-                    match reader.next() {
+                    return match reader.next() {
 
                         Token::Paren1(_, _) => {
                             let args_node = arglist(reader, ctx);
                             let mut funcall_node = Node::new(NodeType::MethodCall(name.to_string(), Box::new(owner), ctx.filepath.clone()));
                             funcall_node.children.push(args_node);
-                            return access_help(reader, funcall_node, ctx);
+                            access_help(reader, funcall_node, ctx)
                         }
 
                         Token::Decrement(_, _) => {
                             let mut decnode = Node::new(NodeType::PostDecrement);
                             let node = Node::new(NodeType::Name(name.clone()));
                             decnode.children.push(node);
-                            return decnode;
+                            decnode
                         }
 
                         Token::Increment(_, _) => {
                             let mut incnode = Node::new(NodeType::PostIncrement);
                             let node = Node::new(NodeType::Name(name.clone()));
                             incnode.children.push(node);
-                            return incnode;
+                            incnode
                         }
 
                         _ => {
                             let mut node = Node::new(NodeType::Name(name.clone()));
                             node.children.push(owner);
-                            return access_help(reader, node, ctx);
+                            access_help(reader, node, ctx)
                         }
                     }
                 }
@@ -446,15 +446,13 @@ fn term(reader: &mut Reader, ctx: &Ctx) -> Node {
     match t {
 
         Token::Int(val, _, _) => {
-            let node = Node::new(NodeType::Int(val));
             reader.next();
-            return node;
+            Node::new(NodeType::Int(val))
         }
 
         Token::Double(val, _, _) => {
-            let node = Node::new(NodeType::Double(val));
             reader.next();
-            return node;
+            Node::new(NodeType::Double(val))
         }
 
         Token::Add(_, _) => {
@@ -473,7 +471,7 @@ fn term(reader: &mut Reader, ctx: &Ctx) -> Node {
             reader.next();
             let next = term(reader, ctx);
             unary.children.push(next);
-            return unary;
+            unary
         }
 
         Token::Not(_, _) => {
@@ -481,7 +479,7 @@ fn term(reader: &mut Reader, ctx: &Ctx) -> Node {
             reader.next();
             let next = term(reader, ctx);
             notnode.children.push(next);
-            return notnode;
+            notnode
         }
 
         Token::Str(ref s, interpols, _, _) => {
@@ -503,14 +501,13 @@ fn term(reader: &mut Reader, ctx: &Ctx) -> Node {
                 if reader.len() > reader.pos() + 1 {
                     reader.next();
                 }
-                return node;
+                node
             }
         }
 
         Token::Bool(v, _, _) => {
-            let node = Node::new(NodeType::Bool(v));
             reader.next();
-            return node;
+            Node::new(NodeType::Bool(v))
         }
 
         Token::Name(ref s, _, _) => {
@@ -547,8 +544,7 @@ fn term(reader: &mut Reader, ctx: &Ctx) -> Node {
                 }
             }
 
-            let node = Node::new(NodeType::Name(s.clone()));
-            return node;
+            Node::new(NodeType::Name(s.clone()))
         }
 
         Token::Increment(_, _) => {
@@ -581,7 +577,7 @@ fn term(reader: &mut Reader, ctx: &Ctx) -> Node {
             reader.next();
             let wnode = expression(reader, ctx);
             reader.skip(")", ctx);
-            return wnode;
+            wnode
         }
 
         Token::Brack1(_, _) => {
@@ -624,7 +620,7 @@ fn term(reader: &mut Reader, ctx: &Ctx) -> Node {
                         let entry = expression(reader, ctx);
                         list_node.children.push(entry);
                     }
-                    return list_node;
+                    list_node
                 }
             }
         }
