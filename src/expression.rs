@@ -376,9 +376,8 @@ fn product_help(reader: &mut Reader, righties: &mut Queue<Node>, ops: &mut Queue
 fn access(reader: &mut Reader, ctx: &Ctx) -> Node {
 
     let n = term(reader, ctx);
-    let t = reader.sym();
 
-    return match t {
+    return match reader.sym() {
         Token::Access(_, _) => {
             access_help(reader, n, ctx)
         }
