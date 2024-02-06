@@ -276,7 +276,7 @@ fn constructor_paramlist(reader: &mut Reader, ctx: &Ctx) -> Node {
                     if !expect_comma {
                         // As dart.
                         dart_parseerror(
-                            "Expected an identifier, but got ','",
+                            "Expected an identifier, but got ','.",
                             ctx, reader.tokens(),
                             reader.pos()
                         );
