@@ -785,7 +785,7 @@ pub fn eval(
             // For Name, having a child means having an owner.
             if node.children.len() > 0 {
                 let owner = eval(&node.children[0], looktables, globals, stack, objsys, ctx);
-                
+
                 if let Object::Reference(refid) = owner {
                     let instance = objsys.get_instance(&refid);
                     return instance.get_field(s.to_string()).clone();
