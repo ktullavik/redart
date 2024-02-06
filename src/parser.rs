@@ -199,12 +199,7 @@ fn readmembers(class: &mut Class, reader: &mut Reader, globals: &mut Vec<Node>, 
 
                                 let val = expression(reader, ctx);
 
-                                if let Token::EndSt(_, _) = reader.sym() {
-                                    reader.next();
-                                }
-                                else {
-                                    panic!("Expected ';' after field initialization.")
-                                }
+                                reader.skip(";", ctx);
 
                                 class.add_field(mtype, fieldname, val);
                             }
