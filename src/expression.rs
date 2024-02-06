@@ -580,13 +580,8 @@ fn term(reader: &mut Reader, ctx: &Ctx) -> Node {
         Token::Paren1(_, _) => {
             reader.next();
             let wnode = expression(reader, ctx);
-            if let Token::Paren2(_, _) = reader.sym() {
-                reader.next();
-                return wnode;
-            }
-            else {
-                panic!("Expected closing parenthesis at {} but found {}", reader.pos(), reader.sym())
-            }
+            reader.skip(")", ctx);
+            return wnode;
         }
 
         Token::Brack1(_, _) => {
