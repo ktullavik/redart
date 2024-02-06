@@ -24,45 +24,46 @@ pub fn eval(
         NodeType::Assign => {
             dprint("Eval: NodeType::Assign");
             match &node.children[0].nodetype {
-                NodeType::Name(ref s1) => {
+                // NodeType::Name(ref s1) => {
+                NodeType::Name(name) => {
 
                     let right_obj = eval(&node.children[1], looktables, globals, store, objsys, ctx);
 
-                    if store.has(s1.as_str()) {
-                        store.add(s1.as_str(), right_obj);
+                    if store.has(name) {
+                        store.add(name, right_obj);
                         return Object::Null;
                     }
 
                     if !objsys.has_this() {
                         // As dart.
-                        dart_evalerror(format!("Setter not found: '{}'", s1), ctx)
+                        dart_evalerror(format!("Setter not found: '{}'", name), ctx)
                     }
                     let this = objsys.get_this_instance_mut();
 
-                    if !this.has_field(s1.clone()) {
+                    if !this.has_field(name.to_string()) {
                         // As dart.
-                        dart_evalerror(format!("The setter '{}' isn't defined for the class '{}'", s1, this.classname), ctx)
+                        dart_evalerror(format!("The setter '{}' isn't defined for the class '{}'", name, this.classname), ctx)
                     }
-                    this.set_field(s1.clone(), right_obj);
+                    this.set_field(name.to_string(), right_obj);
 
                     return Object::Null;
                 }
-                NodeType::TypedVar(_, ref s1) => {
+                NodeType::TypedVar(_, name) => {
 
                     let right_obj = eval(&node.children[1], looktables, globals, store, objsys, ctx);
 
-                    if store.has_in_lexscope(s1.as_str()) {
+                    if store.has_in_lexscope(name) {
                         // As dart.
-                        dart_evalerror(format!("'{}' is already declared in this scope.", s1), ctx);
+                        dart_evalerror(format!("'{}' is already declared in this scope.", name), ctx);
                     }
                     else {
                         if objsys.has_this() {
                             let this = objsys.get_this_instance_mut();
-                            if this.has_field(s1.clone()) {
-                                panic!("Variable with name {} already exists.", s1);
+                            if this.has_field(name.to_string()) {
+                                panic!("Variable with name {} already exists.", name);
                             }
                         }
-                        store.add(s1.as_str(), right_obj);
+                        store.add(name, right_obj);
                     }
 
                     return Object::Null;
