@@ -24,7 +24,6 @@ pub fn eval(
         NodeType::Assign => {
             dprint("Eval: NodeType::Assign");
             match &node.children[0].nodetype {
-                // NodeType::Name(ref s1) => {
                 NodeType::Name(name) => {
 
                     let right_obj = eval(&node.children[1], looktables, globals, store, objsys, ctx);
