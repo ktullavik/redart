@@ -75,8 +75,8 @@ pub const TESTS: &'static [&'static str] = &[
     "69.chained_methods.dart",
     "70.nested_function.dart",
     "71.nested_functions.dart",
-    "100.multifile/main.dart",
-    "101.external_constructor/main.dart"
+    "500.multifile/main.dart",
+    "501.external_constructor/main.dart"
 ];
 
 
@@ -88,6 +88,7 @@ pub const FAILTESTS: &'static [&'static str] = &[
     "4.var_not_declared.dart",
     "5.var_not_declared2.dart",
     "6.extraneous_comma.dart",
+    "500.non_transitive_imports/main.dart",
 ];
 
 
