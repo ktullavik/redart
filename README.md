@@ -1,5 +1,5 @@
 
-WIP toy implementation of the Dart language.
+WIP toy interpreter for the Dart language.
 
 ## Top missing features:
 
