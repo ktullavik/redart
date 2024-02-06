@@ -553,14 +553,12 @@ fn term(reader: &mut Reader, ctx: &Ctx) -> Node {
 
         Token::Increment(_, _) => {
 
-            reader.next();
-            return match reader.sym() {
-                Token::Name(s, _, _) => {
+            return match reader.next() {
+                Token::Name(name, _, _) => {
                     reader.next();
-                    let namenode = Node::new(NodeType::Name(s.clone()));
-                    let mut incnode = Node::new(NodeType::PreIncrement);
-                    incnode.children.push(namenode);
-                    incnode
+                    let mut node = Node::new(NodeType::PreIncrement);
+                    node.children.push(Node::new(NodeType::Name(name)));
+                    node
                 }
                 x => panic!("Invalid operand for increment: {}", x)
             }
@@ -568,14 +566,12 @@ fn term(reader: &mut Reader, ctx: &Ctx) -> Node {
 
         Token::Decrement(_, _) => {
 
-            reader.next();
-            return match reader.sym() {
-                Token::Name(s, _, _) => {
+            return match reader.next() {
+                Token::Name(name, _, _) => {
                     reader.next();
-                    let namenode = Node::new(NodeType::Name(s.clone()));
-                    let mut incnode = Node::new(NodeType::PreDecrement);
-                    incnode.children.push(namenode);
-                    incnode
+                    let mut node = Node::new(NodeType::PreDecrement);
+                    node.children.push(Node::new(NodeType::Name(name)));
+                    node
                 }
                 x => panic!("Invalid operand for decrement: {}", x)
             }
