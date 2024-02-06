@@ -274,7 +274,12 @@ fn constructor_paramlist(reader: &mut Reader, ctx: &Ctx) -> Node {
 
                 Token::Comma(_, _) => {
                     if !expect_comma {
-                        panic!("Error: Unexpected separator in parameter list: ','.");
+                        // As dart.
+                        dart_parseerror(
+                            "Expected an identifier, but got ','",
+                            ctx, reader.tokens(),
+                            reader.pos()
+                        );
                     }
                     reader.next();
                     expect_comma = false;
