@@ -73,19 +73,11 @@ fn decl(reader: &mut Reader, objsys: &mut ObjSys, globals: &mut Vec<Node>, ctx: 
                     let params = paramlist(reader, ctx);
                     node.children.push(params);
 
-                    match reader.sym() {
-                        Token::Block1(_, _) => {
-                            reader.next();
-                            let body = block(reader, ctx);
-                            node.children.push(body);
-                            globals.push(node.clone());
-                            return;
-                        }
-
-                        x => {
-                            panic!("Expected {{. Got: {}", x)
-                        }
-                    }
+                    reader.skip("{", ctx);
+                    let body = block(reader, ctx);
+                    node.children.push(body);
+                    globals.push(node.clone());
+                    return;
                 }
 
                 _ => {
@@ -175,28 +167,24 @@ fn readmembers(class: &mut Class, reader: &mut Reader, globals: &mut Vec<Node>, 
 
                                 let param_node = paramlist(reader, ctx);
 
-                                if let Token::Block1(_, _) = reader.sym() {
-                                    reader.next();
-                                    let body = block(reader, ctx);
+                                reader.skip("{", ctx);
 
-                                    let mut args: Vec<ParamObj> = Vec::new();
+                                let body = block(reader, ctx);
 
-                                    for i in 0..param_node.children.len() {
-                                        let p = &param_node.children[i];
-                                        match &p.nodetype {
-                                            NodeType::Name(s) => {
-                                                args.push(ParamObj{typ: String::from("var"), name: s.clone(), fieldinit: false});
-                                            }
-                                            x => panic!("Invalid parameter: {}", x)
+                                let mut args: Vec<ParamObj> = Vec::new();
+
+                                for i in 0..param_node.children.len() {
+                                    let p = &param_node.children[i];
+                                    match &p.nodetype {
+                                        NodeType::Name(s) => {
+                                            args.push(ParamObj{typ: String::from("var"), name: s.clone(), fieldinit: false});
                                         }
+                                        x => panic!("Invalid parameter: {}", x)
                                     }
+                                }
 
-                                    let methodobj = Object::Function(fieldname.to_string(), ctx.filepath.clone(), body, args);
-                                    class.add_method(fieldname.clone(), methodobj);
-                                }
-                                else {
-                                    panic!("{}", "Expected opening brace in method declaration: '{'")
-                                }
+                                let methodobj = Object::Function(fieldname.to_string(), ctx.filepath.clone(), body, args);
+                                class.add_method(fieldname.clone(), methodobj);
                             }
 
                             Token::EndSt(_, _) => {
@@ -489,33 +477,20 @@ fn statement(reader: &mut Reader, ctx: &Ctx) -> Node {
             match t2 {
 
                 Token::Name(name, _, _) => {
-                    // Two names in a row indicate a typed variable or function definition.
-                    reader.next();
-                    let t3 = reader.next();
-                    reader.next();
+                    // Two names in a row here indicates a typed variable.
 
                     let typed_var = Node::new(NodeType::TypedVar(s.to_string(), name.to_string()));
 
-                    match t3 {
-                        Token::Assign(_, _) => {
+                    reader.next();
+                    reader.next();
+                    reader.skip("=", ctx);
 
-                            let right_node = expression(reader, ctx);
+                    let right_node = expression(reader, ctx);
 
-                            let mut ass_node = Node::new(NodeType::Assign);
-                            ass_node.children.push(typed_var);
-                            ass_node.children.push(right_node);
-                            return ass_node;
-                        }
-
-                        x => {
-                            dart_parseerror(
-                                format!("Unexpected token in statement. Got: {}. Expected: {}", x, "="),
-                                ctx,
-                                reader.tokens(),
-                                reader.pos()
-                            );
-                        }
-                    }
+                    let mut ass_node = Node::new(NodeType::Assign);
+                    ass_node.children.push(typed_var);
+                    ass_node.children.push(right_node);
+                    return ass_node;
                 }
 
                 Token::Assign(_, _) => {
