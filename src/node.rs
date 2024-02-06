@@ -48,6 +48,7 @@ pub enum NodeType {
     Return,
     Class(String),
     Constructor(String, String), // consname, filename
+    Null,
 }
 
 
@@ -99,6 +100,7 @@ impl fmt::Display for NodeType {
             NodeType::Return => write!(f, "Return"),
             NodeType::Class(s) => write!(f, "Class({})", s),
             NodeType::Constructor(name, _filename) => write!(f, "Constructor({})", name),
+            NodeType::Null => write!(f, "null"),
         }
     }
 }

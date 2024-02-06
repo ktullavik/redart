@@ -1083,6 +1083,11 @@ pub fn eval(
             return Object::Null;
         }
 
+        NodeType::Null => {
+            dprint("Eval:: NodeType::Null");
+            return Object::Null;
+        }
+
         _ => panic!("Unknown node type: {}", t)
     }
 }
