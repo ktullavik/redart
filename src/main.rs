@@ -63,7 +63,9 @@ fn main() {
             if args.len() < 3 {
                 println!("Running all tests:");
                 for s in testlist::TESTS {
+                    println!("____________________________________________________");
                     println!("Running test: {}", s);
+                    println!("----------------------------------------------------");
                     let path = format!("{}/{}", testlist::TESTPATH, s);
                     ctx.filepath = String::from(path.as_str());
                     do_task("eval", String::from(path.as_str()), &mut ctx);
