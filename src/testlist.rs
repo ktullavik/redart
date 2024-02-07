@@ -75,6 +75,7 @@ pub const TESTS: &'static [&'static str] = &[
     "69.chained_methods.dart",
     "70.nested_function.dart",
     "71.nested_functions.dart",
+    "72.bodyless_constructor.dart",
     "500.multifile/main.dart",
     "501.external_constructor/main.dart"
 ];

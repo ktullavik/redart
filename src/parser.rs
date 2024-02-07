@@ -146,11 +146,30 @@ fn readmembers(class: &mut Class, reader: &mut Reader, globals: &mut Vec<Node>, 
 
                     let mut constructor_node = Node::new(NodeType::Constructor(class.name.clone(), ctx.filepath.clone()));
                     let params = constructor_paramlist(reader, ctx);
-                    reader.next();
-                    let body  = block(reader, ctx);
-
                     constructor_node.children.push(params);
-                    constructor_node.children.push(body);
+
+                    match reader.sym() {
+
+                        Token::Block1(_, _) => {
+                            reader.next();
+                            let body  = block(reader, ctx);
+                            constructor_node.children.push(body);
+                        }
+
+                        Token::EndSt(_, _) => {
+                            reader.next();
+                            constructor_node.children.push(Node::new(NodeType::Null));
+                        }
+
+                        x => {
+                            dart_parseerror(
+                                format!("Expected constructor body, got: {}", x),
+                                ctx,
+                                reader.tokens(),
+                                reader.pos()
+                            )
+                        }
+                    }
 
                     globals.push(constructor_node);
                     continue;
