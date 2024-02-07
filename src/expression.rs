@@ -70,8 +70,6 @@ fn conjunction(reader: &mut Reader, ctx: &Ctx) -> Node {
         Token::LogAnd(_, _) => {
 
             reader.next();
-            // let (right, i) = conjunction(tokens, next_pos + 1, ctx);
-            // let (right, i) = conjunction(reader, ctx);
             let right = conjunction(reader, ctx);
 
             let mut connode = Node::new(NodeType::LogAnd);
@@ -86,7 +84,6 @@ fn conjunction(reader: &mut Reader, ctx: &Ctx) -> Node {
 }
 
 
-// fn equality(reader: &mut Reader, ctx: &Ctx) -> (Node, usize) {
 fn equality(reader: &mut Reader, ctx: &Ctx) -> Node {
     dprint(format!("Parse: equality: {}", reader.sym()));
 
@@ -116,7 +113,6 @@ fn equality(reader: &mut Reader, ctx: &Ctx) -> Node {
 }
 
 
-// fn comparison(reader: &mut Reader, ctx: &Ctx) -> (Node, usize) {
 fn comparison(reader: &mut Reader, ctx: &Ctx) -> Node {
     dprint(format!("Parse: comparison: {}", reader.sym()));
 
@@ -225,7 +221,6 @@ fn bit_xor(reader: &mut Reader, ctx: &Ctx) -> Node {
 
             reader.next();
             let right = bit_xor(reader, ctx);
-            // let (right, i) = bit_xor(tokens, next_pos + 1, ctx);
             node.children.push(right);
 
             node
@@ -287,13 +282,11 @@ fn sum_help(reader: &mut Reader, righties: &mut Queue<Node>, ops: &mut Queue<Nod
             ops.add(Node::new(NodeType::Add)).ok();
 
             reader.next();
-            // let (deeper, i) = sum_help(tokens, next_pos + 1, righties, ops, ctx);
             let deeper = sum_help(reader, righties, ops, ctx);
 
             let mut node = ops.remove().unwrap();
             node.children.push(deeper);
             node.children.push(righties.remove().unwrap());
-            // (node, i)
             node
         }
         Token::Sub(_, _) => {
@@ -301,7 +294,6 @@ fn sum_help(reader: &mut Reader, righties: &mut Queue<Node>, ops: &mut Queue<Nod
             ops.add(Node::new(NodeType::Sub)).ok();
 
             reader.next();
-            // let (deeper, i) = sum_help(tokens, next_pos + 1, righties, ops, ctx);
             let deeper = sum_help(reader, righties, ops, ctx);
 
             let mut node = ops.remove().unwrap();
@@ -355,7 +347,6 @@ fn product_help(reader: &mut Reader, righties: &mut Queue<Node>, ops: &mut Queue
 
             ops.add(Node::new(NodeType::Div)).ok();
 
-            // let (deeper, i) = product_help(tokens, next_pos + 1, righties, ops, ctx);
             reader.next();
             let deeper = product_help(reader, righties, ops, ctx);
 
