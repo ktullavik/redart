@@ -133,6 +133,8 @@ fn class(reader: &mut Reader, objsys:&mut ObjSys, globals: &mut Vec<Node>, ctx: 
 fn readmembers(class: &mut Class, reader: &mut Reader, globals: &mut Vec<Node>, ctx: &Ctx) {
     dprint(format!("Parse: readmembers: {}", reader.sym()));
 
+    let mut got_contructor = false;
+
     while reader.more() {
 
         match reader.sym() {
@@ -171,6 +173,7 @@ fn readmembers(class: &mut Class, reader: &mut Reader, globals: &mut Vec<Node>, 
                         }
                     }
 
+                    got_contructor = true;
                     globals.push(constructor_node);
                     continue;
                 }
@@ -246,6 +249,15 @@ fn readmembers(class: &mut Class, reader: &mut Reader, globals: &mut Vec<Node>, 
             x => panic!("Unexpected first token when parsing class member: {}", x)
         }
     }
+
+    if !got_contructor {
+        // Class without constructor. Add an implicit one.
+        let mut constructor_node = Node::new(NodeType::Constructor(class.name.clone(), ctx.filepath.clone()));
+        constructor_node.children.push(Node::new(NodeType::ParamList));
+        constructor_node.children.push(Node::new(NodeType::Null));
+        globals.push(constructor_node);
+    }
+
 }
 
 
