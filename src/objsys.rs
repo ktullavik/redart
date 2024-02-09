@@ -39,7 +39,6 @@ impl Instance {
 pub struct Class {
     pub name: String,
     pub classid: String,
-    pub constructors: HashMap<String, Object>,
     pub fields: Vec<(String, String, Node)>,
     pub methods: HashMap<String, Object>
 }
@@ -52,16 +51,9 @@ impl Class {
         Class {
             name,
             classid: nuid::next(),
-            constructors: HashMap::new(),
             fields: Vec::new(),
             methods: HashMap::new()
         }
-    }
-
-
-    pub fn add_constructor(&mut self, name: String, m: Object) {
-        self.constructors.insert(name.clone(), m);
-        dprint(format!("Inserted to constructortable: {}", name));
     }
 
 
@@ -153,11 +145,6 @@ impl ObjSys {
 
     pub fn has_this(&self) -> bool {
         self.has_instance(self.this.as_str())
-    }
-
-
-    pub fn get_this_instance(&self) -> &Instance {
-        return self.instancemap.get(self.this.as_str()).unwrap();
     }
 
 
