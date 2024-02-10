@@ -827,27 +827,39 @@ pub fn eval(
 
                 let instance = objsys.get_instance(&refid);
                 let c = objsys.get_class(&instance.classname);
+                let instance_id = instance.id.clone();
 
                 let meth = c.get_method(name);
-                if let Object::Function(_, _, node, params) = meth {
+                if let Object::Function(_, _, funcnode, params) = meth {
 
                     let argslist = &node.children[0];
 
-                    stack.push_call();
+                    if argslist.children.len() != params.len() {
+                        dart_evalerror(format!("In method call {}, {} arguments expected but {} given.",
+                        name, params.len(), argslist.children.len()), ctx);
+                    }
 
-                    let oldfilename = ctx.filepath.clone();
-                    ctx.filepath = filename.clone();
-
-                    let oldthis = objsys.get_this();
-                    objsys.set_this(instance.id.clone());
-
+                    // Args must be evaluated where they are passed.
+                    let mut argobjects = Vec::new();
                     for i in 0 .. params.len() {
                         let argtree = &argslist.children[i];
                         let argobj = eval(argtree, looktables, globals, stack, objsys, ctx);
-                        stack.add(params[i].name.as_str(), argobj);
+                        argobjects.push(argobj);
                     }
 
-                    let result = eval(&node, looktables, globals, stack, objsys, ctx);
+                    // Args must go to the new call frame.
+                    stack.push_call();
+
+                    for i in 0 .. params.len() {
+                        stack.add(params[i].name.as_str(), argobjects.pop().unwrap());
+                    }
+
+                    let oldfilename = ctx.filepath.clone();
+                    ctx.filepath = filename.clone();
+                    let oldthis = objsys.get_this();
+                    objsys.set_this(instance_id);
+
+                    let result = eval(&funcnode, looktables, globals, stack, objsys, ctx);
 
                     objsys.set_this(oldthis);
                     ctx.filepath = oldfilename;
