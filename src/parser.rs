@@ -1,4 +1,5 @@
 use context::Ctx;
+use queues::IsQueue;
 use reader::Reader;
 use token::Token;
 use node::{NodeType, Node};
@@ -201,6 +202,9 @@ fn readmembers(class: &mut Class, reader: &mut Reader, globals: &mut Vec<Node>, 
                                         NodeType::Name(s) => {
                                             args.push(ParamObj{typ: String::from("var"), name: s.clone(), fieldinit: false});
                                         }
+                                        NodeType::TypedVar(t, s) => {
+                                            args.push(ParamObj{typ: t.to_string(), name: s.clone(), fieldinit: false});
+                                        }
                                         x => panic!("Invalid parameter: {}", x)
                                     }
                                 }
@@ -368,10 +372,22 @@ fn paramlist(reader: &mut Reader, ctx: &Ctx) -> Node {
                 }
 
                 Token::Name(s, _, _) => {
-                    let paramnode= Node::new(NodeType::Name(s.to_string()));
-                    node.children.push(paramnode);
-                    expect_comma = true;
-                    reader.next();
+
+                    if let Token::Name(s2, _, _) = reader.peek() {
+
+                        reader.next();
+
+                        let param= Node::new(NodeType::TypedVar(s.to_string(), s2.to_string()));
+                        node.children.push(param);
+                        expect_comma = true;
+                        reader.next();
+                    }
+                    else {
+                        let param= Node::new(NodeType::Name(s.to_string()));
+                        node.children.push(param);
+                        expect_comma = true;
+                        reader.next();
+                    }
                 }
 
                 _ => {
