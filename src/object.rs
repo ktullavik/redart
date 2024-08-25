@@ -56,9 +56,9 @@ impl fmt::Display for Object {
                 // TODO
                 write!(f, "() => ?")
             },
-            Object::Reference(_) => {
+            Object::Reference(s) => {
                 // TODO, need lookup, dont have access.
-                write!(f, "Reference")
+                write!(f, "Reference<{}>", s)
             },
             Object::Null => write!(f, "null"),
             Object::Return(_) => panic!("Tried to display Return Object")
