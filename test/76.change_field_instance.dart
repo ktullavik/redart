@@ -1,5 +1,5 @@
 class Gnu {
-    bool horns = 2;
+    int horns = 2;
 }
 
 

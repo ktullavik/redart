@@ -1,7 +1,7 @@
 
 class Gnu {
     bool tamed = false;
-    bool horns = 2;
+    int horns = 2;
 }
 
 
