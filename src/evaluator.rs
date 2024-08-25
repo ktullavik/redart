@@ -819,11 +819,13 @@ pub fn eval(
             }
 
             if stack.has(s) {
-                dprint(format!("got value for {}", s));
                 return stack.get(s).clone();
             }
             else if objsys.has_this() {
                 let this = objsys.get_this_instance_mut();
+                if !resolve {
+                    return Object::Reference(this.id.clone());
+                }
                 return this.get_field(s.clone()).clone();
             }
             else {
