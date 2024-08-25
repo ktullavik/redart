@@ -8,7 +8,6 @@ class Beastie {
     Gnu gnu = Gnu();
 
     void change() {
-        print("Change");
         gnu = Gnu();
     }
 }
