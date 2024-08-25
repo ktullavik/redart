@@ -62,19 +62,13 @@ pub fn eval(
 
                     let right_obj = eval(&node.children[1], looktables, globals, stack, objsys, ctx, true);
 
+                    // TypedVar means we will allocate a new one on stack even if the this object
+                    // has a field with the same name. But fail if it's already on lex stack.
                     if stack.has_in_lexscope(name) {
                         // As dart.
                         dart_evalerror(format!("'{}' is already declared in this scope.", name), ctx);
                     }
-                    else {
-                        if objsys.has_this() {
-                            let this = objsys.get_this_instance_mut();
-                            if this.has_field(name.to_string()) {
-                                panic!("Variable with name {} already exists.", name);
-                            }
-                        }
-                        stack.add(name, right_obj);
-                    }
+                    stack.add(name, right_obj);
 
                     return Object::Null;
                 }
