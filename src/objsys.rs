@@ -138,6 +138,11 @@ impl ObjSys {
     }
 
 
+    pub fn get_instance_mut(&mut self, id: &str) -> &mut Instance {
+        return self.instancemap.get_mut(id).unwrap()
+    }
+
+
     pub fn has_instance(&self, id: &str) -> bool {
         self.instancemap.contains_key(id)
     }

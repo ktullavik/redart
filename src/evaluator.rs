@@ -15,7 +15,8 @@ pub fn eval(
     globals: &Vec<Node>,
     stack: &mut Stack,
     objsys: &mut ObjSys,
-    ctx: &mut Ctx) -> Object {
+    ctx: &mut Ctx,
+    resolve: bool) -> Object {
 
     let t: &NodeType = &node.nodetype;
 
@@ -26,10 +27,20 @@ pub fn eval(
             match &node.children[0].nodetype {
                 NodeType::Name(name) => {
 
-                    let right_obj = eval(&node.children[1], looktables, globals, stack, objsys, ctx);
+                    let left_obj = eval(&node.children[0], looktables, globals, stack, objsys, ctx, false);
+                    let right_obj = eval(&node.children[1], looktables, globals, stack, objsys, ctx, true);
+
+                    println!("Assign: {} = {}", name, right_obj);
 
                     if stack.has(name) {
                         stack.add(name, right_obj);
+                        return Object::Null;
+                    }
+
+
+                    if let Object::Reference(refid) = left_obj {
+                        let left_ref = objsys.get_instance_mut(&refid);
+                        left_ref.set_field(name.to_string(), right_obj);
                         return Object::Null;
                     }
 
@@ -49,7 +60,7 @@ pub fn eval(
                 }
                 NodeType::TypedVar(_, name) => {
 
-                    let right_obj = eval(&node.children[1], looktables, globals, stack, objsys, ctx);
+                    let right_obj = eval(&node.children[1], looktables, globals, stack, objsys, ctx, true);
 
                     if stack.has_in_lexscope(name) {
                         // As dart.
@@ -74,7 +85,7 @@ pub fn eval(
         NodeType::Not => {
             dprint("Eval: NodeType::Not");
 
-            let obj = eval(&node.children[0], looktables, globals, stack, objsys, ctx);
+            let obj = eval(&node.children[0], looktables, globals, stack, objsys, ctx, true);
 
             return match obj {
                 Object::Bool(b) => {
@@ -87,13 +98,13 @@ pub fn eval(
         NodeType::LogOr => {
             dprint("Eval: NodeType::LogOr");
 
-            let left_obj = eval(&node.children[0], looktables, globals, stack, objsys, ctx);
+            let left_obj = eval(&node.children[0], looktables, globals, stack, objsys, ctx, true);
 
             match left_obj {
 
                 Object::Bool(b1) => {
 
-                    let right_obj = eval(&node.children[1], looktables, globals, stack, objsys, ctx);
+                    let right_obj = eval(&node.children[1], looktables, globals, stack, objsys, ctx, true);
 
                     match right_obj {
 
@@ -110,13 +121,13 @@ pub fn eval(
         NodeType::LogAnd => {
             dprint("Eval: NodeType::LogAnd");
 
-            let left_obj = eval(&node.children[0], looktables, globals, stack, objsys, ctx);
+            let left_obj = eval(&node.children[0], looktables, globals, stack, objsys, ctx, true);
 
             match left_obj {
 
                 Object::Bool(b1) => {
 
-                    let right_obj = eval(&node.children[1], looktables, globals, stack, objsys, ctx);
+                    let right_obj = eval(&node.children[1], looktables, globals, stack, objsys, ctx, true);
 
                     match right_obj {
 
@@ -133,13 +144,13 @@ pub fn eval(
         NodeType::LessThan => {
             dprint("Eval: NodeType::LessThan");
 
-            let left_obj = eval(&node.children[0], looktables, globals, stack, objsys, ctx);
+            let left_obj = eval(&node.children[0], looktables, globals, stack, objsys, ctx, true);
 
             match left_obj {
 
                 Object::Int(n1) => {
 
-                    let right_obj = eval(&node.children[1], looktables, globals, stack, objsys, ctx);
+                    let right_obj = eval(&node.children[1], looktables, globals, stack, objsys, ctx, true);
 
                     match right_obj {
 
@@ -154,7 +165,7 @@ pub fn eval(
                 }
 
                 Object::Double(x1) => {
-                    let right_obj = eval(&node.children[1], looktables, globals, stack, objsys, ctx);
+                    let right_obj = eval(&node.children[1], looktables, globals, stack, objsys, ctx, true);
 
                     match right_obj {
 
@@ -174,13 +185,13 @@ pub fn eval(
         NodeType::GreaterThan => {
             dprint("Eval: NodeType::GreaterThan");
 
-            let left_obj = eval(&node.children[0], looktables, globals, stack, objsys, ctx);
+            let left_obj = eval(&node.children[0], looktables, globals, stack, objsys, ctx, true);
 
             match left_obj {
 
                 Object::Int(n1) => {
 
-                    let right_obj = eval(&node.children[1], looktables, globals, stack, objsys, ctx);
+                    let right_obj = eval(&node.children[1], looktables, globals, stack, objsys, ctx, true);
 
                     match right_obj {
 
@@ -195,7 +206,7 @@ pub fn eval(
                 }
 
                 Object::Double(x1) => {
-                    let right_obj = eval(&node.children[1], looktables, globals, stack, objsys, ctx);
+                    let right_obj = eval(&node.children[1], looktables, globals, stack, objsys, ctx, true);
 
                     match right_obj {
 
@@ -215,13 +226,13 @@ pub fn eval(
         NodeType::LessOrEq => {
             dprint("Eval: NodeType::LessOrEq");
 
-            let left_obj = eval(&node.children[0], looktables, globals, stack, objsys, ctx);
+            let left_obj = eval(&node.children[0], looktables, globals, stack, objsys, ctx, true);
 
             match left_obj {
 
                 Object::Int(n1) => {
 
-                    let right_obj = eval(&node.children[1], looktables, globals, stack, objsys, ctx);
+                    let right_obj = eval(&node.children[1], looktables, globals, stack, objsys, ctx, true);
 
                     match right_obj {
 
@@ -236,7 +247,7 @@ pub fn eval(
                 }
 
                 Object::Double(x1) => {
-                    let right_obj = eval(&node.children[1], looktables, globals, stack, objsys, ctx);
+                    let right_obj = eval(&node.children[1], looktables, globals, stack, objsys, ctx, true);
 
                     match right_obj {
 
@@ -256,13 +267,13 @@ pub fn eval(
         NodeType::GreaterOrEq => {
             dprint("Eval: NodeType::GreaterOrEq");
 
-            let left_obj = eval(&node.children[0], looktables, globals, stack, objsys, ctx);
+            let left_obj = eval(&node.children[0], looktables, globals, stack, objsys, ctx, true);
 
             match left_obj {
 
                 Object::Int(n1) => {
 
-                    let right_obj = eval(&node.children[1], looktables, globals, stack, objsys, ctx);
+                    let right_obj = eval(&node.children[1], looktables, globals, stack, objsys, ctx, true);
 
                     match right_obj {
 
@@ -277,7 +288,7 @@ pub fn eval(
                 }
 
                 Object::Double(x1) => {
-                    let right_obj = eval(&node.children[1], looktables, globals, stack, objsys, ctx);
+                    let right_obj = eval(&node.children[1], looktables, globals, stack, objsys, ctx, true);
 
                     match right_obj {
 
@@ -297,8 +308,8 @@ pub fn eval(
         NodeType::Equal => {
             dprint("Eval: NodeType::Equal");
 
-            let left_obj = eval(&node.children[0], looktables, globals, stack, objsys, ctx);
-            let right_obj = eval(&node.children[1], looktables, globals, stack, objsys, ctx);
+            let left_obj = eval(&node.children[0], looktables, globals, stack, objsys, ctx, true);
+            let right_obj = eval(&node.children[1], looktables, globals, stack, objsys, ctx, true);
 
             match left_obj {
 
@@ -348,13 +359,13 @@ pub fn eval(
         NodeType::BitAnd => {
             dprint("Eval: NodeType::BitAnd");
 
-            let left_obj = eval(&node.children[0], looktables, globals, stack, objsys, ctx);
+            let left_obj = eval(&node.children[0], looktables, globals, stack, objsys, ctx, true);
 
             match &left_obj {
 
                 Object::Int(s1) => {
 
-                    let right_obj = eval(&node.children[1], looktables, globals, stack, objsys, ctx);
+                    let right_obj = eval(&node.children[1], looktables, globals, stack, objsys, ctx, true);
 
                     match &right_obj {
 
@@ -371,13 +382,13 @@ pub fn eval(
         NodeType::BitOr => {
             dprint("Eval: NodeType::BitOr");
 
-            let left_obj = eval(&node.children[0], looktables, globals, stack, objsys, ctx);
+            let left_obj = eval(&node.children[0], looktables, globals, stack, objsys, ctx, true);
 
             match &left_obj {
 
                 Object::Int(s1) => {
 
-                    let right_obj = eval(&node.children[1], looktables, globals, stack, objsys, ctx);
+                    let right_obj = eval(&node.children[1], looktables, globals, stack, objsys, ctx, true);
 
                     match &right_obj {
 
@@ -394,13 +405,13 @@ pub fn eval(
         NodeType::BitXor => {
             dprint("Eval: NodeType::BitXor");
 
-            let left_obj = eval(&node.children[0], looktables, globals, stack, objsys, ctx);
+            let left_obj = eval(&node.children[0], looktables, globals, stack, objsys, ctx, true);
 
             match &left_obj {
 
                 Object::Int(s1) => {
 
-                    let right_obj = eval(&node.children[1], looktables, globals, stack, objsys, ctx);
+                    let right_obj = eval(&node.children[1], looktables, globals, stack, objsys, ctx, true);
 
                     match &right_obj {
 
@@ -417,12 +428,12 @@ pub fn eval(
         NodeType::Add => {
             dprint("Eval: NodeType::Add");
 
-            let left_obj = eval(&node.children[0], looktables, globals, stack, objsys, ctx);
+            let left_obj = eval(&node.children[0], looktables, globals, stack, objsys, ctx, true);
 
             match &left_obj {
                 Object::Int(s1) => {
 
-                    let right_obj = eval(&node.children[1], looktables, globals, stack, objsys, ctx);
+                    let right_obj = eval(&node.children[1], looktables, globals, stack, objsys, ctx, true);
 
                     match &right_obj {
                         Object::Int(s2) => {
@@ -435,7 +446,7 @@ pub fn eval(
                     }
                 },
                 Object::Double(s1) => {
-                    let right_obj = eval(&node.children[1], looktables, globals, stack, objsys, ctx);
+                    let right_obj = eval(&node.children[1], looktables, globals, stack, objsys, ctx, true);
 
                     match &right_obj {
                         Object::Int(s2) => {
@@ -448,7 +459,7 @@ pub fn eval(
                     }
                 }
                 Object::String(s1) => {
-                    let right_obj = eval(&node.children[1], looktables, globals, stack, objsys, ctx);
+                    let right_obj = eval(&node.children[1], looktables, globals, stack, objsys, ctx, true);
 
                     match &right_obj {
                         Object::String(s2) => {
@@ -466,7 +477,7 @@ pub fn eval(
         NodeType::Sub => {
             dprint("Eval: NodeType::Sub");
 
-            let left_obj = eval(&node.children[0], looktables, globals, stack, objsys, ctx);
+            let left_obj = eval(&node.children[0], looktables, globals, stack, objsys, ctx, true);
 
             if node.children.len() == 1 {
                 return match &left_obj {
@@ -483,7 +494,7 @@ pub fn eval(
             match &left_obj {
                 Object::Int(s1) => {
 
-                    let right_obj = eval(&node.children[1], looktables, globals, stack, objsys, ctx);
+                    let right_obj = eval(&node.children[1], looktables, globals, stack, objsys, ctx, true);
 
                     match &right_obj {
                         Object::Int(s2) => {
@@ -496,7 +507,7 @@ pub fn eval(
                     }
                 },
                 Object::Double(s1) => {
-                    let right_obj = eval(&node.children[1], looktables, globals, stack, objsys, ctx);
+                    let right_obj = eval(&node.children[1], looktables, globals, stack, objsys, ctx, true);
 
                     match &right_obj {
                         Object::Int(s2) => {
@@ -516,12 +527,12 @@ pub fn eval(
         NodeType::Mul => {
             dprint("Eval: NodeType::Mul");
 
-            let left_obj = eval(&node.children[0], looktables, globals, stack, objsys, ctx);
+            let left_obj = eval(&node.children[0], looktables, globals, stack, objsys, ctx, true);
 
             match &left_obj {
                 Object::Int(s1) => {
 
-                    let right_obj = eval(&node.children[1], looktables, globals, stack, objsys, ctx);
+                    let right_obj = eval(&node.children[1], looktables, globals, stack, objsys, ctx, true);
 
                     match &right_obj {
                         Object::Int(s2) => {
@@ -534,7 +545,7 @@ pub fn eval(
                     }
                 },
                 Object::Double(s1) => {
-                    let right_obj = eval(&node.children[1], looktables, globals, stack, objsys, ctx);
+                    let right_obj = eval(&node.children[1], looktables, globals, stack, objsys, ctx, true);
 
                     match &right_obj {
                         Object::Int(s2) => {
@@ -553,12 +564,12 @@ pub fn eval(
         NodeType::Div => {
             dprint("Eval: NodeType::Div");
 
-            let left_obj = eval(&node.children[0], looktables, globals, stack, objsys, ctx);
+            let left_obj = eval(&node.children[0], looktables, globals, stack, objsys, ctx, true);
 
             match &left_obj {
                 Object::Int(s1) => {
 
-                    let right_obj = eval(&node.children[1], looktables, globals, stack, objsys, ctx);
+                    let right_obj = eval(&node.children[1], looktables, globals, stack, objsys, ctx, true);
 
                     match &right_obj {
                         Object::Int(s2) => {
@@ -572,7 +583,7 @@ pub fn eval(
                 },
                 Object::Double(s1) => {
 
-                    let right_obj = eval(&node.children[1], looktables, globals, stack, objsys, ctx);
+                    let right_obj = eval(&node.children[1], looktables, globals, stack, objsys, ctx, true);
 
                     match &right_obj {
                         Object::Int(s2) => {
@@ -764,7 +775,7 @@ pub fn eval(
 
             let mut evaled_itps = Vec::new();
             for itp in &node.children {
-                evaled_itps.push(eval(itp, looktables, globals, stack, objsys, ctx));
+                evaled_itps.push(eval(itp, looktables, globals, stack, objsys, ctx, true));
             }
 
             let parts : Vec<&str> = s.as_str().split("$").collect();
@@ -784,16 +795,28 @@ pub fn eval(
 
             // For Name, having a child means having an owner.
             if node.children.len() > 0 {
-                let owner = eval(&node.children[0], looktables, globals, stack, objsys, ctx);
 
-                if let Object::Reference(refid) = owner {
-                    let instance = objsys.get_instance(&refid);
-                    return instance.get_field(s.to_string()).clone();
+                // Run parent through the loop for lookup.
+                let owner = eval(&node.children[0], looktables, globals, stack, objsys, ctx, true);
+
+                // Owner is reference
+                if let Object::Reference(refid) = owner.clone() {
+
+                    if resolve {
+                        let instance = objsys.get_instance(&refid);
+                        return instance.get_field(s.to_string()).clone();
+                    }
+                    else {
+                        // When evaluating left side of '=',
+                        // we don't want to lookup the value.
+                        // Return reference to the owner and then Assign will do
+                        // set_field.
+                        return owner;
+                    }
                 }
 
-                panic!("Unexpected owner for {}: {}", s, owner)
+                panic!("Unexpected owner for {}: {}", s, owner);
             }
-
 
             if stack.has(s) {
                 dprint(format!("got value for {}", s));
@@ -812,7 +835,7 @@ pub fn eval(
 
         NodeType::Return => {
             dprint(format!("Eval: NodeType::Return"));
-            let retval = eval(&node.children[0], looktables, globals, stack, objsys, ctx);
+            let retval = eval(&node.children[0], looktables, globals, stack, objsys, ctx, true);
             return Object::Return(Box::new(retval));
         }
 
@@ -820,7 +843,7 @@ pub fn eval(
             dprint(format!("Eval: NodeType::MethodCall({})", name));
 
 
-            let reference: Object = eval(owner, looktables, globals, stack, objsys, ctx);
+            let reference: Object = eval(owner, looktables, globals, stack, objsys, ctx, true);
 
 
             if let Object::Reference(refid) = reference {
@@ -843,7 +866,7 @@ pub fn eval(
                     let mut argobjects = Vec::new();
                     for i in 0 .. params.len() {
                         let argtree = &argslist.children[i];
-                        let argobj = eval(argtree, looktables, globals, stack, objsys, ctx);
+                        let argobj = eval(argtree, looktables, globals, stack, objsys, ctx, true);
                         argobjects.push(argobj);
                     }
 
@@ -859,7 +882,7 @@ pub fn eval(
                     let oldthis = objsys.get_this();
                     objsys.set_this(instance_id);
 
-                    let result = eval(&funcnode, looktables, globals, stack, objsys, ctx);
+                    let result = eval(&funcnode, looktables, globals, stack, objsys, ctx, true);
 
                     objsys.set_this(oldthis);
                     ctx.filepath = oldfilename;
@@ -903,9 +926,7 @@ pub fn eval(
                     globals,
                     stack,
                     objsys,
-                    ctx
-                );
-
+                    ctx);
                 return builtin::call(s, &args, ctx);
             }
             else {
@@ -963,14 +984,14 @@ pub fn eval(
                     NodeType::ElseIf => {
                         let boolnode= &condnode.children[0];
 
-                        let cond = eval(&boolnode, looktables, globals, stack, objsys, ctx);
+                        let cond = eval(&boolnode, looktables, globals, stack, objsys, ctx, true);
                         match cond {
 
                             Object::Bool(v) => {
                                 if v {
                                     let bodynode= &condnode.children[1];
                                     stack.push_lex();
-                                    let ret = eval(&bodynode, looktables, globals, stack, objsys, ctx);
+                                    let ret = eval(&bodynode, looktables, globals, stack, objsys, ctx, true);
                                     stack.pop_lex();
                                     return ret;
                                 }
@@ -982,7 +1003,7 @@ pub fn eval(
                     NodeType::Else => {
                         let bodynode= &condnode.children[0];
                         stack.push_lex();
-                        let ret = eval(&bodynode, looktables, globals, stack, objsys, ctx);
+                        let ret = eval(&bodynode, looktables, globals, stack, objsys, ctx, true);
                         stack.pop_lex();
                         return ret;
                     }
@@ -1000,15 +1021,15 @@ pub fn eval(
             let boolnode = &node.children[0];
             let block = &node.children[1];
 
-            let mut cond = eval(boolnode, looktables, globals, stack, objsys, ctx);
+            let mut cond = eval(boolnode, looktables, globals, stack, objsys, ctx, true);
 
             match &cond {
 
                 Object::Bool(mut v) => {
 
                     while v {
-                        eval(block, looktables, globals, stack, objsys, ctx);
-                        cond = eval(boolnode, looktables, globals, stack, objsys, ctx);
+                        eval(block, looktables, globals, stack, objsys, ctx, true);
+                        cond = eval(boolnode, looktables, globals, stack, objsys, ctx, true);
 
                         match &cond {
                             Object::Bool(newcond) => {
@@ -1031,16 +1052,16 @@ pub fn eval(
             let block = &node.children[0];
             let boolnode = &node.children[1];
 
-            eval(block, looktables, globals, stack, objsys, ctx);
+            eval(block, looktables, globals, stack, objsys, ctx, true);
 
-            let mut cond = eval(boolnode, looktables, globals, stack, objsys, ctx);
+            let mut cond = eval(boolnode, looktables, globals, stack, objsys, ctx, true);
 
             if let Object::Bool(mut b) = cond {
 
                 while b {
 
-                    eval(block, looktables, globals, stack, objsys, ctx);
-                    cond = eval(boolnode, looktables, globals, stack, objsys, ctx);
+                    eval(block, looktables, globals, stack, objsys, ctx, true);
+                    cond = eval(boolnode, looktables, globals, stack, objsys, ctx, true);
 
                     match &cond {
                         Object::Bool(new_b) => {
@@ -1065,11 +1086,11 @@ pub fn eval(
             let mutexpr = &node.children[2];
             let body = &node.children[3];
 
-            eval(assign, looktables, globals, stack, objsys, ctx);
+            eval(assign, looktables, globals, stack, objsys, ctx, true);
 
             loop {
 
-                let condobj = eval(condexpr, looktables, globals, stack, objsys, ctx);
+                let condobj = eval(condexpr, looktables, globals, stack, objsys, ctx, true);
 
                 match condobj {
                     Object::Bool(b) => {
@@ -1078,8 +1099,8 @@ pub fn eval(
                             break;
                         }
 
-                        eval(body, looktables, globals, stack, objsys, ctx);
-                        eval(mutexpr, looktables, globals, stack, objsys, ctx);
+                        eval(body, looktables, globals, stack, objsys, ctx, true);
+                        eval(mutexpr, looktables, globals, stack, objsys, ctx, true);
                     }
                     x => dart_evalerror(format!("Expected bool. Got: {}", x), ctx)
 
@@ -1093,7 +1114,7 @@ pub fn eval(
 
             for c in &node.children {
 
-                let retval = eval(c, looktables, globals, stack, objsys, ctx);
+                let retval = eval(c, looktables, globals, stack, objsys, ctx, true);
 
                 match &retval {
                     Object::Return(_) => {
@@ -1174,7 +1195,7 @@ fn call_function(
             ctx.filepath = filename;
             println!("Setting filepath: {}", &ctx.filepath);
 
-            let result = eval(&body, looktables, globals, store, objsys, ctx);
+            let result = eval(&body, looktables, globals, store, objsys, ctx, true);
 
             ctx.filepath = oldfilepath;
             println!("Restoring filepath: {}", &ctx.filepath);
@@ -1268,7 +1289,7 @@ fn call_constructor(
 
             let field_nodes = class.fields.clone();
             for (_, fname, initexpr) in &field_nodes {
-                inst.set_field(fname.clone(), eval(initexpr, looktables, globals, store, objsys, ctx));
+                inst.set_field(fname.clone(), eval(initexpr, looktables, globals, store, objsys, ctx, true));
             }
 
             let instref = objsys.register_instance(inst);
@@ -1296,7 +1317,7 @@ fn call_constructor(
                     }
 
                     // Run body
-                    eval(&body, looktables, globals, store, objsys, ctx);
+                    eval(&body, looktables, globals, store, objsys, ctx, true);
 
                     objsys.set_this(oldthis);
                     ctx.filepath = oldfilename;
@@ -1326,6 +1347,6 @@ fn argnodes_to_argobjs(
     ctx: &mut Ctx) -> Vec<Object> {
 
     argnodes.iter().map(
-        |argtree| eval(&argtree, looktables, globals, store, objsys, ctx)
+        |argtree| eval(&argtree, looktables, globals, store, objsys, ctx, true)
     ).collect()
 }

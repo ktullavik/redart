@@ -396,6 +396,20 @@ fn access_help(reader: &mut Reader, owner: Node, ctx: &Ctx) -> Node {
                             access_help(reader, funcall_node, ctx)
                         }
 
+                        // Yuck, repeat this logic here, were it does not belong. For now.
+                        Token::Assign(_, _) => {
+                            reader.next();
+                            let right_node = expression(reader, ctx);
+
+                            let mut node = Node::new(NodeType::Name(name.clone()));
+                            node.children.push(owner);
+
+                            let mut ass_node = Node::new(NodeType::Assign);
+                            ass_node.children.push(node);
+                            ass_node.children.push(right_node);
+                            return ass_node;
+                        }
+
                         Token::Decrement(_, _) => {
                             let mut decnode = Node::new(NodeType::PostDecrement);
                             let node = Node::new(NodeType::Name(name.clone()));

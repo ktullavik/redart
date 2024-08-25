@@ -298,7 +298,7 @@ fn evaluate(filepath: String, ctx: &mut Ctx) {
             let mainbody = &mainfunc.children[1];
 
             store.push_call();
-            evaluator::eval(mainbody, &looktables, &globals, &mut store, &mut objsys, ctx);
+            evaluator::eval(mainbody, &looktables, &globals, &mut store, &mut objsys, ctx, true);
             store.pop_call();
         }
         x => {
