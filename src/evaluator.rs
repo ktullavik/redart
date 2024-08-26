@@ -62,8 +62,8 @@ pub fn eval(
 
                     let right_obj = eval(&node.children[1], looktables, globals, stack, objsys, ctx, true);
 
-                    // TypedVar means we will allocate a new one on stack even if the this object
-                    // has a field with the same name. But fail if it's already on lex stack.
+                    // TypedVar means we will allocate a new one on stack even if the name exists in a
+                    // larger scope, like outside a loop or in a field. But fail if it's already on lex stack.
                     if stack.has_in_lexscope(name) {
                         // As dart.
                         dart_evalerror(format!("'{}' is already declared in this scope.", name), ctx);
