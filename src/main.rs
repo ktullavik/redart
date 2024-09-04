@@ -32,7 +32,8 @@ fn main() {
     let args: Vec<String> = env::args().collect();
 
     if args.len() < 2 {
-        panic!("Argument expected.");
+        println!("Argument expected.");
+        return;
     }
 
     let mut ctx = Ctx{
