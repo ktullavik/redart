@@ -2,7 +2,7 @@
 WIP toy interpreter for the Dart language.
 
 ## Top missing features:
-* Garbage collector.
+* ~~Garbage collector~~.
 * Standard library.
 * Inheritance.
 * Isolates.
