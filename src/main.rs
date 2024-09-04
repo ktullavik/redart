@@ -265,6 +265,7 @@ fn evaluate(filepath: String, ctx: &mut Ctx) {
     let mut looktables: HashMap<String, HashMap<String, usize>> = HashMap::new();
     let mut store = Stack::new();
     let mut objsys = ObjSys::new();
+    let mut building: Vec<String> = Vec::new();
 
 
     let mut parts: Vec<&str> = filepath.split('/').collect();
@@ -298,7 +299,7 @@ fn evaluate(filepath: String, ctx: &mut Ctx) {
             let mainbody = &mainfunc.children[1];
 
             store.push_call();
-            evaluator::eval(mainbody, &looktables, &globals, &mut store, &mut objsys, ctx, true);
+            evaluator::eval(mainbody, &looktables, &globals, &mut store, &mut objsys, ctx, &mut building, true);
             store.pop_call();
         }
         x => {

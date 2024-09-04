@@ -81,6 +81,7 @@ pub const TESTS: &'static [&'static str] = &[
     "75.external_setget2.dart",
     "76.change_field_instance.dart",
     "77.shadow_field.dart",
+    "78.busy_garbageman.dart",
     "500.multifile/main.dart",
     "501.external_constructor/main.dart"
 ];

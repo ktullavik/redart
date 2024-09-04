@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 use object::Object;
+use objsys::ObjSys;
 
 
 pub struct Stack {
@@ -129,6 +130,56 @@ impl Stack {
         }
 
         panic!("Undefined variable: {}", s)
+    }
+
+
+    pub fn garbagecollect(&self, objsys: &mut ObjSys, building: &Vec<String>) {
+
+        for b in building {
+            objsys.mark(b);
+        }
+        self.markroots(objsys);
+        objsys.sweep();
+        objsys.clearmark();
+        println!("GARBAGE COLLECTED");
+    }
+
+
+    pub fn markroots(&self, objsys: &mut ObjSys) {
+
+        if objsys.has_this() {
+            objsys.mark(&objsys.get_this());
+        }
+
+        let mut cl = self.call_level;
+
+        while cl > 0 {
+            let callframe = self.stack.get(cl - 1).unwrap();
+            let mut ll = callframe.len();
+            while ll > 0 {
+                let lexframe = callframe.get(ll - 1).unwrap();
+
+                for (_, v) in lexframe {
+                    match v {
+                        Object::Reference(s) => {
+
+                            if objsys.has_instance(s) {
+                                objsys.mark(s)
+                            }
+                            // else it refers to something
+                            // on the stack. Leave it.
+                        },
+                        _ => {
+                            println!("Not Reference: {}", v);
+                        }
+                    }
+
+
+                }
+                ll -= 1;
+            }
+            cl -= 1;
+        }
     }
 
 

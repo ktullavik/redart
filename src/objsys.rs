@@ -7,7 +7,8 @@ use node::Node;
 pub struct Instance {
     pub id: String,
     pub classname: String,
-    pub fields: HashMap<String, Object>
+    pub fields: HashMap<String, Object>,
+    pub marked: bool
 }
 
 
@@ -17,7 +18,8 @@ impl Instance {
         Instance {
             id,
             classname,
-            fields: HashMap::new()
+            fields: HashMap::new(),
+            marked: false
         }
     }
 
@@ -40,7 +42,7 @@ pub struct Class {
     pub name: String,
     pub classid: String,
     pub fields: Vec<(String, String, Node)>,
-    pub methods: HashMap<String, Object>
+    pub methods: HashMap<String, Object>,
 }
 
 
@@ -87,7 +89,7 @@ impl Class {
 pub struct ObjSys {
     classmap: HashMap<String, Class>,
     instancemap: HashMap<String, Instance>,
-    this: String
+    this: String,
 }
 
 
@@ -97,7 +99,7 @@ impl ObjSys {
         ObjSys {
             classmap: HashMap::new(),
             instancemap: HashMap::new(),
-            this: String::from("")
+            this: String::from(""),
         }
     }
 
@@ -168,9 +170,63 @@ impl ObjSys {
     }
 
 
-    // pub fn clear_this(&mut self) {
-    //     println!("REAL CLEAR");
-    //     self.this = String::from("");
-    // }
+    pub fn mark(&mut self, refid: &str) {
+
+        let p = self.instancemap.get_mut(refid).unwrap();
+
+        if p.marked {
+            return;
+        }
+        p.marked = true;
+
+        let mut childs: Vec<String> = Vec::new();
+        for (_, obj) in p.fields.iter() {
+            if let Object::Reference(refid) = obj {
+                childs.push(refid.clone());
+            }
+        }
+
+        for cid in childs {
+            self.mark(cid.as_str());
+        }
+    }
+
+
+    pub fn sweep(&mut self) {
+
+        // FOR EASIER DEBUG USE THIS INSTEAD:
+
+        let mut del: Vec<String> = Vec::new();
+        for (k, v) in self.instancemap.iter() {
+            if !v.marked {
+                del.push(k.clone());
+            }
+        }
+        for k in del {
+            println!("Garbagecollecting: {}", k);
+            self.instancemap.remove(&k);
+        }
+
+        // self.instancemap.retain(|_, v| {
+            // v.marked
+        // });
+    }
+
+
+    pub fn clearmark(&mut self) {
+
+        let mut clear: Vec<String> = Vec::new();
+
+        for k in self.instancemap.keys() {
+            clear.push(k.clone());
+        }
+
+        for k in clear {
+            self.instancemap.get_mut(&k).unwrap().marked = false;
+        }
+    }
+
+
 
 }
+
