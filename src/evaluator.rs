@@ -76,7 +76,7 @@ pub fn eval(
                 Object::Bool(b) => {
                     Object::Bool(!b)
                 }
-                _ => panic!("Illegal operand for '!'")
+                _ => dart_evalerror(format!("Illegal right operand for !: {:?}", obj), state)                    
             }
         }
 
@@ -95,10 +95,10 @@ pub fn eval(
                         Object::Bool(b2) => {
                             return Object::Bool(b1 || b2)
                         }
-                        _ => panic!("Illegal right operand for ||")
+                        _ => dart_evalerror(format!("Illegal right operand for ||: {:?}", right_obj), state)                    
                     }
                 }
-                _ => panic!("Illegal left operand for ||")
+                _ => dart_evalerror(format!("Illegal left operand for ||: {:?}", left_obj), state)                    
             }
         }
 
@@ -117,10 +117,10 @@ pub fn eval(
                         Object::Bool(b2) => {
                             return Object::Bool(b1 && b2)
                         }
-                        _ => panic!("Illegal right operand for &&")
+                        _ => dart_evalerror(format!("Illegal right operand for &&: {:?}", right_obj), state)
                     }
                 }
-                _ => panic!("Illegal left operand for &&")
+                _ => dart_evalerror(format!("Illegal left operand for &&: {:?}", left_obj), state)
             }
         }
 
@@ -142,7 +142,7 @@ pub fn eval(
                         Object::Double(x2) => {
                             return Object::Bool((n1 as f64) < x2)
                         }
-                        _ => panic!("Illegal right operand for <")
+                        _ => dart_evalerror(format!("Illegal right operand for comparison: {:?}", right_obj), state)
                     }
                 }
 
@@ -157,10 +157,10 @@ pub fn eval(
                         Object::Double(x2) => {
                             return Object::Bool(x1 < x2)
                         }
-                        _ => panic!("Illegal right operand for <")
+                        _ => dart_evalerror(format!("Illegal right operand for comparison: {:?}", right_obj), state)
                     }
                 }
-                _ => panic!("Illegal left operand for <")
+                _ => dart_evalerror(format!("Illegal left operand for comparison: {:?}", left_obj), state)
             }
         }
 
@@ -222,7 +222,7 @@ pub fn eval(
                         Object::Double(x2) => {
                             return Object::Bool((n1 as f64) <= x2)
                         }
-                        _ => panic!("Illegal right operand for <=")
+                        _ => dart_evalerror(format!("Illegal right operand for comparison: {:?}", right_obj), state)
                     }
                 }
 
@@ -237,15 +237,14 @@ pub fn eval(
                         Object::Double(x2) => {
                             return Object::Bool(x1 <= x2)
                         }
-                        _ => panic!("Illegal right operand for <=")
+                        _ => dart_evalerror(format!("Illegal right operand for comparison: {:?}", right_obj), state)
                     }
                 }
-                _ => panic!("Illegal left operand for <=")
+                _ => dart_evalerror(format!("Illegal left operand for comparison: {:?}", left_obj), state)
             }
         }
 
         NodeType::GreaterOrEq => {
-            dprint("Eval: NodeType::GreaterOrEq");
 
             let left_obj = eval(&node.children[0], state, true);
 
@@ -263,7 +262,7 @@ pub fn eval(
                         Object::Double(x2) => {
                             return Object::Bool((n1 as f64) >= x2)
                         }
-                        _ => panic!("Illegal right operand for >=")
+                        _ => dart_evalerror(format!("Illegal right operand for comparison: {:?}", right_obj), state)
                     }
                 }
 
@@ -278,10 +277,10 @@ pub fn eval(
                         Object::Double(x2) => {
                             return Object::Bool(x1 >= x2)
                         }
-                        _ => panic!("Illegal right operand for >=")
+                        _ => dart_evalerror(format!("Illegal right operand for comparison: {:?}", right_obj), state)
                     }
                 }
-                _ => panic!("Illegal left operand for >=")
+                _ => dart_evalerror(format!("Illegal left operand for comparison: {:?}", left_obj), state)
             }
         }
 
@@ -331,7 +330,7 @@ pub fn eval(
                         _ => Object::Bool(false)
                     }
                 }
-                x => panic!("Equality not implemented for object: {:?}", x)
+                _ => dart_evalerror(format!("Equality not implemented for object: {:?}", left_obj), state)
             }
         }
 
@@ -350,7 +349,7 @@ pub fn eval(
                         Object::Int(s2) => {
                             Object::Int(s1.bitand(s2))
                         }
-                        _ => panic!("Illegal right operand for bitwise and: {:?}", &right_obj)
+                        _ => dart_evalerror(format!("Illegal right operand for bitwise and: {:?}", right_obj), state)
                     }
                 }
                 _ => panic!("Illegal left operand for bitwise and: {:?}", &left_obj)
@@ -372,10 +371,10 @@ pub fn eval(
                         Object::Int(s2) => {
                             Object::Int(s1.bitor(s2))
                         }
-                        _ => panic!("Illegal right operand for bitwise or: {:?}", &right_obj)
+                        _ => dart_evalerror(format!("Illegal right operand for bitwise or: {:?}", right_obj), state)
                     }
                 }
-                _ => panic!("Illegal left operand for bitwise or: {:?}", &left_obj)
+                _ => dart_evalerror(format!("Illegal left operand for bitwise or: {:?}", left_obj), state)
             }
         }
 
@@ -394,10 +393,10 @@ pub fn eval(
                         Object::Int(s2) => {
                             Object::Int(s1.bitxor(s2))
                         }
-                        _ => panic!("Illegal right operand for bitwise xor: {:?}", &right_obj)
+                        _ => dart_evalerror(format!("Illegal right operand for bitwise xor: {:?}", right_obj), state)
                     }
                 }
-                _ => panic!("Illegal left operand for bitwise xor: {:?}", &left_obj)
+                _ => dart_evalerror(format!("Illegal left operand for bitwise xor: {:?}", left_obj), state)
             }
         }
 
@@ -417,7 +416,7 @@ pub fn eval(
                         Object::Double(s2) => {
                             Object::Double(*s1 as f64 + s2)
                         }
-                        _ => panic!("Illegal right operand for addition: {:?}", &right_obj)
+                        _ => dart_evalerror(format!("Illegal right operand for addition: {:?}", right_obj), state)
                     }
                 },
                 Object::Double(s1) => {
@@ -430,7 +429,7 @@ pub fn eval(
                         Object::Double(s2) => {
                             Object::Double(s1 + s2)
                         }
-                        _ => panic!("Illegal right operand for addition: {:?}", &right_obj)
+                        _ => dart_evalerror(format!("Illegal right operand for addition: {:?}", right_obj), state)
                     }
                 }
                 Object::String(s1) => {
@@ -442,10 +441,10 @@ pub fn eval(
                             ret.push_str(s2);
                             return Object::String(ret);
                         }
-                        _ => panic!("Illegal right operand for addition: {:?}", &right_obj)
+                        _ => dart_evalerror(format!("Illegal right operand for addition: {:?}", right_obj), state)
                     }
                 }
-                _ => panic!("Illegal left operand for addition: {:?}", &left_obj)
+                _ => dart_evalerror(format!("Illegal left operand for addition: {:?}", left_obj), state)
             }
         }
 
@@ -477,7 +476,7 @@ pub fn eval(
                         Object::Double(s2) => {
                             Object::Double(*s1 as f64 - s2)
                         }
-                        _ => panic!("Illegal right operand for subtraction: {:?}", &right_obj)
+                        _ => dart_evalerror(format!("Illegal right operand for subtraction: {:?}", right_obj), state)
                     }
                 },
                 Object::Double(s1) => {
@@ -490,10 +489,10 @@ pub fn eval(
                         Object::Double(s2) => {
                             Object::Double(s1 - s2)
                         }
-                        _ => panic!("Illegal right operand for subtraction: {:?}", &right_obj)
+                        _ => dart_evalerror(format!("Illegal right operand for subtraction: {:?}", right_obj), state)
                     }
                 }
-                _ => panic!("Illegal left operand for subtraction: {:?}", &left_obj)
+                _ => dart_evalerror(format!("Illegal left operand for subtraction: {:?}", left_obj), state)
             }
         }
 
@@ -513,7 +512,7 @@ pub fn eval(
                         Object::Double(s2) => {
                             Object::Double(*s1 as f64 * s2)
                         }
-                        _ => panic!("Illegal right operand for multiplication: {:?}", &right_obj)
+                        _ => dart_evalerror(format!("Illegal right operand for multiplication: {:?}", right_obj), state)
                     }
                 },
                 Object::Double(s1) => {
@@ -526,10 +525,10 @@ pub fn eval(
                         Object::Double(s2) => {
                             Object::Double(s1 * s2)
                         }
-                        _ => panic!("Illegal right operand for multiplication: {:?}", &right_obj)
+                        _ => dart_evalerror(format!("Illegal right operand for multiplication: {:?}", right_obj), state)
                     }
                 }
-                _ => panic!("Illegal left operand for multiplication: {:?}", &left_obj)
+                _ => dart_evalerror(format!("Illegal left operand for multiplication: {:?}", left_obj), state)
             }
         }
 
@@ -549,7 +548,7 @@ pub fn eval(
                         Object::Double(s2) => {
                             Object::Double(*s1 as f64 / *s2)
                         }
-                        _ => panic!("Illegal right operand for division: {:?}", &right_obj)
+                        _ => dart_evalerror(format!("Illegal right operand for division: {:?}", right_obj), state)
                     }
                 },
                 Object::Double(s1) => {
@@ -563,10 +562,10 @@ pub fn eval(
                         Object::Double(s2) => {
                             Object::Double(*s1 as f64 / *s2)
                         }
-                        _ => panic!("Illegal right operand for division: {:?}", &right_obj)
+                        _ => dart_evalerror(format!("Illegal right operand for division: {:?}", right_obj), state)
                     }
                 },
-                _ => panic!("Illegal left operand for division: {:?}", &left_obj)
+                _ => dart_evalerror(format!("Illegal left operand for divison: {:?}", left_obj), state)
             }
         }
 
@@ -586,7 +585,7 @@ pub fn eval(
                                 state.stack.add(s.as_str(), newval.clone());
                                 return newval;
                             }
-                            _ => panic!("Illegal operand for preincrement.")
+                            _ => dart_evalerror(format!("Illegal operand for preincrement: {:?}", oldval), state)
                         }
                     }
                     else {
@@ -599,7 +598,7 @@ pub fn eval(
                                 this.set_field(s.clone(), newval.clone());
                                 return newval;
                             }
-                            _ => panic!("Illegal operand for preincrement.")
+                            _ => dart_evalerror(format!("Illegal operand for preincrement: {:?}", oldval), state)
                         }
                     }
                 }
@@ -623,7 +622,7 @@ pub fn eval(
                                 state.stack.add(s.as_str(), newval.clone());
                                 return newval;
                             }
-                            _ => panic!("Illegal operand for preincrement.")
+                            _ => dart_evalerror(format!("Illegal operand for predecrement: {:?}", oldval), state)
                         }
                     }
                     else {
@@ -636,11 +635,11 @@ pub fn eval(
                                 this.set_field(s.clone(), newval.clone());
                                 return newval;
                             }
-                            _ => panic!("Illegal operand for predecrement.")
+                            _ => dart_evalerror(format!("Illegal operand for predecrement: {:?}", oldval), state)
                         }
                     }
                 }
-                _ => panic!("Illegal operand for predecrement: {}", valnode)
+                _ => dart_evalerror(format!("Illegal operand for predecrement: {:?}", valnode), state)
             }
         }
 
@@ -660,7 +659,7 @@ pub fn eval(
                                 state.stack.add(s.as_str(), newval);
                                 return oldval;
                             }
-                            _ => panic!("Illegal operand for increment.")
+                            _ => dart_evalerror(format!("Illegal operand for increment: {:?}", oldval), state)
                         }
                     }
                     else {
@@ -673,12 +672,12 @@ pub fn eval(
                                 this.set_field(s.clone(), newval);
                                 return oldval;
                             }
-                            _ => panic!("Illegal operand for increment.")
+                            _ => dart_evalerror(format!("Illegal operand for increment: {:?}", oldval), state)
                         }
 
                     }
                 }
-                _ => panic!("Illegal operand for increment: {}", valnode)
+                _ => dart_evalerror(format!("Illegal operand for increment: {:?}", valnode), state)
             }
         }
 
@@ -698,7 +697,7 @@ pub fn eval(
                                 state.stack.add(s.as_str(), newval);
                                 return oldval;
                             }
-                            _ => panic!("Illegal operand for decrement.")
+                            _ => dart_evalerror(format!("Illegal operand for decrement: {:?}", oldval), state)
                         }
                     }
                     else {
@@ -711,11 +710,11 @@ pub fn eval(
                                 this.set_field(s.clone(), newval);
                                 return oldval;
                             }
-                            _ => panic!("Illegal operand for decrement.")
+                            _ => dart_evalerror(format!("Illegal operand for decrement: {:?}", oldval), state)
                         }
                     }
                 }
-                _ => panic!("Illegal operand for decrement: {}", valnode)
+                _ => dart_evalerror(format!("Illegal operand for decrement: {:?}", valnode), state)
             }
         }
 
