@@ -1,22 +1,14 @@
-use context::Ctx;
+use state::State;
 use node::{NodeType, Node};
 use builtin;
 use utils::{dprint, dart_evalerror};
-use stack::Stack;
 use object::{Object, ParamObj};
-use objsys::ObjSys;
-use std::collections::HashMap;
 use std::ops::{BitAnd, BitOr, BitXor};
 
 
 pub fn eval(
     node: &Node,
-    looktables: &HashMap<String, HashMap<String, usize>>,
-    globals: &Vec<Node>,
-    stack: &mut Stack,
-    objsys: &mut ObjSys,
-    ctx: &mut Ctx,
-    constructing: &mut Vec<String>,
+    state: &mut State,
     resolve: bool) -> Object {
 
     let t: &NodeType = &node.nodetype;
@@ -28,31 +20,31 @@ pub fn eval(
             match &node.children[0].nodetype {
                 NodeType::Name(name) => {
 
-                    let left_obj = eval(&node.children[0], looktables, globals, stack, objsys, ctx, constructing, false);
-                    let right_obj = eval(&node.children[1], looktables, globals, stack, objsys, ctx, constructing, true);
+                    let left_obj = eval(&node.children[0], state, false);
+                    let right_obj = eval(&node.children[1], state, true);
 
-                    if stack.has(name) {
+                    if state.stack.has(name) {
                         // If right_obj is a reference, then it should be cloned?
-                        stack.add(name, right_obj);
+                        state.stack.add(name, right_obj);
                         return Object::Null;
                     }
 
 
                     if let Object::Reference(refid) = left_obj {
-                        let left_ref = objsys.get_instance_mut(&refid);
+                        let left_ref = state.objsys.get_instance_mut(&refid);
                         left_ref.set_field(name.to_string(), right_obj);
                         return Object::Null;
                     }
 
-                    if !objsys.has_this() {
+                    if !state.objsys.has_this() {
                         // As dart.
-                        dart_evalerror(format!("Setter not found: '{}'", name), ctx)
+                        dart_evalerror(format!("Setter not found: '{}'", name), state)
                     }
-                    let this = objsys.get_this_instance_mut();
+                    let this = state.objsys.get_this_instance_mut();
 
                     if !this.has_field(name.to_string()) {
                         // As dart.
-                        dart_evalerror(format!("The setter '{}' isn't defined for the class '{}'", name, this.classname), ctx)
+                        dart_evalerror(format!("The setter '{}' isn't defined for the class '{}'", name, this.classname), state)
                     }
                     this.set_field(name.to_string(), right_obj);
 
@@ -60,15 +52,15 @@ pub fn eval(
                 }
                 NodeType::TypedVar(_, name) => {
 
-                    let right_obj = eval(&node.children[1], looktables, globals, stack, objsys, ctx, constructing, true);
+                    let right_obj = eval(&node.children[1], state, true);
 
                     // TypedVar means we will allocate a new one on stack even if the name exists in a
                     // larger scope, like outside a loop or in a field. But fail if it's already on lex stack.
-                    if stack.has_in_lexscope(name) {
+                    if state.stack.has_in_lexscope(name) {
                         // As dart.
-                        dart_evalerror(format!("'{}' is already declared in this scope.", name), ctx);
+                        dart_evalerror(format!("'{}' is already declared in this scope.", name), state);
                     }
-                    stack.add(name, right_obj);
+                    state.stack.add(name, right_obj);
 
                     return Object::Null;
                 }
@@ -79,7 +71,7 @@ pub fn eval(
         NodeType::Not => {
             dprint("Eval: NodeType::Not");
 
-            let obj = eval(&node.children[0], looktables, globals, stack, objsys, ctx, constructing, true);
+            let obj = eval(&node.children[0], state, true);
 
             return match obj {
                 Object::Bool(b) => {
@@ -92,13 +84,13 @@ pub fn eval(
         NodeType::LogOr => {
             dprint("Eval: NodeType::LogOr");
 
-            let left_obj = eval(&node.children[0], looktables, globals, stack, objsys, ctx, constructing, true);
+            let left_obj = eval(&node.children[0], state, true);
 
             match left_obj {
 
                 Object::Bool(b1) => {
 
-                    let right_obj = eval(&node.children[1], looktables, globals, stack, objsys, ctx, constructing, true);
+                    let right_obj = eval(&node.children[1], state, true);
 
                     match right_obj {
 
@@ -115,13 +107,13 @@ pub fn eval(
         NodeType::LogAnd => {
             dprint("Eval: NodeType::LogAnd");
 
-            let left_obj = eval(&node.children[0], looktables, globals, stack, objsys, ctx, constructing, true);
+            let left_obj = eval(&node.children[0], state, true);
 
             match left_obj {
 
                 Object::Bool(b1) => {
 
-                    let right_obj = eval(&node.children[1], looktables, globals, stack, objsys, ctx, constructing, true);
+                    let right_obj = eval(&node.children[1], state, true);
 
                     match right_obj {
 
@@ -138,13 +130,13 @@ pub fn eval(
         NodeType::LessThan => {
             dprint("Eval: NodeType::LessThan");
 
-            let left_obj = eval(&node.children[0], looktables, globals, stack, objsys, ctx, constructing, true);
+            let left_obj = eval(&node.children[0], state, true);
 
             match left_obj {
 
                 Object::Int(n1) => {
 
-                    let right_obj = eval(&node.children[1], looktables, globals, stack, objsys, ctx, constructing, true);
+                    let right_obj = eval(&node.children[1], state, true);
 
                     match right_obj {
 
@@ -159,7 +151,7 @@ pub fn eval(
                 }
 
                 Object::Double(x1) => {
-                    let right_obj = eval(&node.children[1], looktables, globals, stack, objsys, ctx, constructing, true);
+                    let right_obj = eval(&node.children[1], state, true);
 
                     match right_obj {
 
@@ -179,13 +171,13 @@ pub fn eval(
         NodeType::GreaterThan => {
             dprint("Eval: NodeType::GreaterThan");
 
-            let left_obj = eval(&node.children[0], looktables, globals, stack, objsys, ctx, constructing, true);
+            let left_obj = eval(&node.children[0], state, true);
 
             match left_obj {
 
                 Object::Int(n1) => {
 
-                    let right_obj = eval(&node.children[1], looktables, globals, stack, objsys, ctx, constructing, true);
+                    let right_obj = eval(&node.children[1], state, true);
 
                     match right_obj {
 
@@ -200,7 +192,7 @@ pub fn eval(
                 }
 
                 Object::Double(x1) => {
-                    let right_obj = eval(&node.children[1], looktables, globals, stack, objsys, ctx, constructing, true);
+                    let right_obj = eval(&node.children[1], state, true);
 
                     match right_obj {
 
@@ -220,13 +212,13 @@ pub fn eval(
         NodeType::LessOrEq => {
             dprint("Eval: NodeType::LessOrEq");
 
-            let left_obj = eval(&node.children[0], looktables, globals, stack, objsys, ctx, constructing, true);
+            let left_obj = eval(&node.children[0], state, true);
 
             match left_obj {
 
                 Object::Int(n1) => {
 
-                    let right_obj = eval(&node.children[1], looktables, globals, stack, objsys, ctx, constructing, true);
+                    let right_obj = eval(&node.children[1], state, true);
 
                     match right_obj {
 
@@ -241,7 +233,7 @@ pub fn eval(
                 }
 
                 Object::Double(x1) => {
-                    let right_obj = eval(&node.children[1], looktables, globals, stack, objsys, ctx, constructing, true);
+                    let right_obj = eval(&node.children[1], state, true);
 
                     match right_obj {
 
@@ -261,13 +253,13 @@ pub fn eval(
         NodeType::GreaterOrEq => {
             dprint("Eval: NodeType::GreaterOrEq");
 
-            let left_obj = eval(&node.children[0], looktables, globals, stack, objsys, ctx, constructing, true);
+            let left_obj = eval(&node.children[0], state, true);
 
             match left_obj {
 
                 Object::Int(n1) => {
 
-                    let right_obj = eval(&node.children[1], looktables, globals, stack, objsys, ctx, constructing, true);
+                    let right_obj = eval(&node.children[1], state, true);
 
                     match right_obj {
 
@@ -282,7 +274,7 @@ pub fn eval(
                 }
 
                 Object::Double(x1) => {
-                    let right_obj = eval(&node.children[1], looktables, globals, stack, objsys, ctx, constructing, true);
+                    let right_obj = eval(&node.children[1], state, true);
 
                     match right_obj {
 
@@ -302,8 +294,8 @@ pub fn eval(
         NodeType::Equal => {
             dprint("Eval: NodeType::Equal");
 
-            let left_obj = eval(&node.children[0], looktables, globals, stack, objsys, ctx, constructing, true);
-            let right_obj = eval(&node.children[1], looktables, globals, stack, objsys, ctx, constructing, true);
+            let left_obj = eval(&node.children[0], state, true);
+            let right_obj = eval(&node.children[1], state, true);
 
             match left_obj {
 
@@ -353,13 +345,13 @@ pub fn eval(
         NodeType::BitAnd => {
             dprint("Eval: NodeType::BitAnd");
 
-            let left_obj = eval(&node.children[0], looktables, globals, stack, objsys, ctx, constructing, true);
+            let left_obj = eval(&node.children[0], state, true);
 
             match &left_obj {
 
                 Object::Int(s1) => {
 
-                    let right_obj = eval(&node.children[1], looktables, globals, stack, objsys, ctx, constructing, true);
+                    let right_obj = eval(&node.children[1], state, true);
 
                     match &right_obj {
 
@@ -376,13 +368,13 @@ pub fn eval(
         NodeType::BitOr => {
             dprint("Eval: NodeType::BitOr");
 
-            let left_obj = eval(&node.children[0], looktables, globals, stack, objsys, ctx, constructing, true);
+            let left_obj = eval(&node.children[0], state, true);
 
             match &left_obj {
 
                 Object::Int(s1) => {
 
-                    let right_obj = eval(&node.children[1], looktables, globals, stack, objsys, ctx, constructing, true);
+                    let right_obj = eval(&node.children[1], state, true);
 
                     match &right_obj {
 
@@ -399,13 +391,13 @@ pub fn eval(
         NodeType::BitXor => {
             dprint("Eval: NodeType::BitXor");
 
-            let left_obj = eval(&node.children[0], looktables, globals, stack, objsys, ctx, constructing, true);
+            let left_obj = eval(&node.children[0], state, true);
 
             match &left_obj {
 
                 Object::Int(s1) => {
 
-                    let right_obj = eval(&node.children[1], looktables, globals, stack, objsys, ctx, constructing, true);
+                    let right_obj = eval(&node.children[1], state, true);
 
                     match &right_obj {
 
@@ -422,12 +414,12 @@ pub fn eval(
         NodeType::Add => {
             dprint("Eval: NodeType::Add");
 
-            let left_obj = eval(&node.children[0], looktables, globals, stack, objsys, ctx, constructing, true);
+            let left_obj = eval(&node.children[0], state, true);
 
             match &left_obj {
                 Object::Int(s1) => {
 
-                    let right_obj = eval(&node.children[1], looktables, globals, stack, objsys, ctx, constructing, true);
+                    let right_obj = eval(&node.children[1], state, true);
 
                     match &right_obj {
                         Object::Int(s2) => {
@@ -440,7 +432,7 @@ pub fn eval(
                     }
                 },
                 Object::Double(s1) => {
-                    let right_obj = eval(&node.children[1], looktables, globals, stack, objsys, ctx, constructing, true);
+                    let right_obj = eval(&node.children[1], state, true);
 
                     match &right_obj {
                         Object::Int(s2) => {
@@ -453,7 +445,7 @@ pub fn eval(
                     }
                 }
                 Object::String(s1) => {
-                    let right_obj = eval(&node.children[1], looktables, globals, stack, objsys, ctx, constructing, true);
+                    let right_obj = eval(&node.children[1], state, true);
 
                     match &right_obj {
                         Object::String(s2) => {
@@ -471,7 +463,7 @@ pub fn eval(
         NodeType::Sub => {
             dprint("Eval: NodeType::Sub");
 
-            let left_obj = eval(&node.children[0], looktables, globals, stack, objsys, ctx, constructing, true);
+            let left_obj = eval(&node.children[0], state, true);
 
             if node.children.len() == 1 {
                 return match &left_obj {
@@ -488,7 +480,7 @@ pub fn eval(
             match &left_obj {
                 Object::Int(s1) => {
 
-                    let right_obj = eval(&node.children[1], looktables, globals, stack, objsys, ctx, constructing, true);
+                    let right_obj = eval(&node.children[1], state, true);
 
                     match &right_obj {
                         Object::Int(s2) => {
@@ -501,7 +493,7 @@ pub fn eval(
                     }
                 },
                 Object::Double(s1) => {
-                    let right_obj = eval(&node.children[1], looktables, globals, stack, objsys, ctx, constructing, true);
+                    let right_obj = eval(&node.children[1], state, true);
 
                     match &right_obj {
                         Object::Int(s2) => {
@@ -521,12 +513,12 @@ pub fn eval(
         NodeType::Mul => {
             dprint("Eval: NodeType::Mul");
 
-            let left_obj = eval(&node.children[0], looktables, globals, stack, objsys, ctx, constructing, true);
+            let left_obj = eval(&node.children[0], state, true);
 
             match &left_obj {
                 Object::Int(s1) => {
 
-                    let right_obj = eval(&node.children[1], looktables, globals, stack, objsys, ctx, constructing, true);
+                    let right_obj = eval(&node.children[1], state, true);
 
                     match &right_obj {
                         Object::Int(s2) => {
@@ -539,7 +531,7 @@ pub fn eval(
                     }
                 },
                 Object::Double(s1) => {
-                    let right_obj = eval(&node.children[1], looktables, globals, stack, objsys, ctx, constructing, true);
+                    let right_obj = eval(&node.children[1], state, true);
 
                     match &right_obj {
                         Object::Int(s2) => {
@@ -558,12 +550,12 @@ pub fn eval(
         NodeType::Div => {
             dprint("Eval: NodeType::Div");
 
-            let left_obj = eval(&node.children[0], looktables, globals, stack, objsys, ctx, constructing, true);
+            let left_obj = eval(&node.children[0], state, true);
 
             match &left_obj {
                 Object::Int(s1) => {
 
-                    let right_obj = eval(&node.children[1], looktables, globals, stack, objsys, ctx, constructing, true);
+                    let right_obj = eval(&node.children[1], state, true);
 
                     match &right_obj {
                         Object::Int(s2) => {
@@ -577,7 +569,7 @@ pub fn eval(
                 },
                 Object::Double(s1) => {
 
-                    let right_obj = eval(&node.children[1], looktables, globals, stack, objsys, ctx, constructing, true);
+                    let right_obj = eval(&node.children[1], state, true);
 
                     match &right_obj {
                         Object::Int(s2) => {
@@ -601,20 +593,20 @@ pub fn eval(
             match valnode.nodetype {
                 NodeType::Name(ref s) => {
 
-                    if stack.has(s) {
-                        let oldval = stack.get(s).clone();
+                    if state.stack.has(s) {
+                        let oldval = state.stack.get(s).clone();
 
                         match oldval {
                             Object::Int(n) => {
                                 let newval = Object::Int(n + 1);
-                                stack.add(s.as_str(), newval.clone());
+                                state.stack.add(s.as_str(), newval.clone());
                                 return newval;
                             }
                             _ => panic!("Illegal operand for preincrement.")
                         }
                     }
                     else {
-                        let this = objsys.get_this_instance_mut();
+                        let this = state.objsys.get_this_instance_mut();
                         let oldval = this.get_field(s.clone()).clone();
 
                         match oldval {
@@ -639,20 +631,20 @@ pub fn eval(
             match valnode.nodetype {
                 NodeType::Name(ref s) => {
 
-                    if stack.has(s) {
-                        let oldval = stack.get(s).clone();
+                    if state.stack.has(s) {
+                        let oldval = state.stack.get(s).clone();
 
                         match oldval {
                             Object::Int(n) => {
                                 let newval = Object::Int(n - 1);
-                                stack.add(s.as_str(), newval.clone());
+                                state.stack.add(s.as_str(), newval.clone());
                                 return newval;
                             }
                             _ => panic!("Illegal operand for preincrement.")
                         }
                     }
                     else {
-                        let this = objsys.get_this_instance_mut();
+                        let this = state.objsys.get_this_instance_mut();
                         let oldval = this.get_field(s.clone()).clone();
 
                         match oldval {
@@ -677,20 +669,20 @@ pub fn eval(
             match valnode.nodetype {
                 NodeType::Name(ref s) => {
 
-                    if stack.has(s) {
-                        let oldval = stack.get(s).clone();
+                    if state.stack.has(s) {
+                        let oldval = state.stack.get(s).clone();
 
                         match oldval {
                             Object::Int(n) => {
                                 let newval = Object::Int(n + 1);
-                                stack.add(s.as_str(), newval);
+                                state.stack.add(s.as_str(), newval);
                                 return oldval;
                             }
                             _ => panic!("Illegal operand for increment.")
                         }
                     }
                     else {
-                        let this = objsys.get_this_instance_mut();
+                        let this = state.objsys.get_this_instance_mut();
                         let oldval = this.get_field(s.clone()).clone();
 
                         match oldval {
@@ -716,20 +708,20 @@ pub fn eval(
             match valnode.nodetype {
                 NodeType::Name(ref s) => {
 
-                    if stack.has(s) {
-                        let oldval = stack.get(s).clone();
+                    if state.stack.has(s) {
+                        let oldval = state.stack.get(s).clone();
 
                         match oldval {
                             Object::Int(n) => {
                                 let newval = Object::Int(n - 1);
-                                stack.add(s.as_str(), newval);
+                                state.stack.add(s.as_str(), newval);
                                 return oldval;
                             }
                             _ => panic!("Illegal operand for decrement.")
                         }
                     }
                     else {
-                        let this = objsys.get_this_instance_mut();
+                        let this = state.objsys.get_this_instance_mut();
                         let oldval = this.get_field(s.clone()).clone();
 
                         match oldval {
@@ -769,7 +761,7 @@ pub fn eval(
 
             let mut evaled_itps = Vec::new();
             for itp in &node.children {
-                evaled_itps.push(eval(itp, looktables, globals, stack, objsys, ctx, constructing, true));
+                evaled_itps.push(eval(itp, state, true));
             }
 
             let parts : Vec<&str> = s.as_str().split("$").collect();
@@ -791,13 +783,13 @@ pub fn eval(
             if node.children.len() > 0 {
 
                 // Run parent through the loop for lookup.
-                let owner = eval(&node.children[0], looktables, globals, stack, objsys, ctx, constructing, true);
+                let owner = eval(&node.children[0], state, true);
 
                 // Owner is reference
                 if let Object::Reference(refid) = owner.clone() {
 
                     if resolve {
-                        let instance = objsys.get_instance(&refid);
+                        let instance = state.objsys.get_instance(&refid);
                         return instance.get_field(s.to_string()).clone();
                     }
                     else {
@@ -812,26 +804,26 @@ pub fn eval(
                 panic!("Unexpected owner for {}: {}", s, owner);
             }
 
-            if stack.has(s) {
-                return stack.get(s).clone();
+            if state.stack.has(s) {
+                return state.stack.get(s).clone();
             }
-            else if objsys.has_this() {
-                let this = objsys.get_this_instance_mut();
+            else if state.objsys.has_this() {
+                let this = state.objsys.get_this_instance_mut();
                 if !resolve {
                     return Object::Reference(this.id.clone());
                 }
                 return this.get_field(s.clone()).clone();
             }
             else {
-                stack.printstack();
+                state.stack.printstack();
                 // As dart.
-                dart_evalerror(format!("Undefined name: '{}'.", s), ctx);
+                dart_evalerror(format!("Undefined name: '{}'.", s), state);
             }
         }
 
         NodeType::Return => {
             dprint(format!("Eval: NodeType::Return"));
-            let retval = eval(&node.children[0], looktables, globals, stack, objsys, ctx, constructing, true);
+            let retval = eval(&node.children[0], state, true);
             return Object::Return(Box::new(retval));
         }
 
@@ -839,13 +831,13 @@ pub fn eval(
             dprint(format!("Eval: NodeType::MethodCall({})", name));
 
 
-            let reference: Object = eval(owner, looktables, globals, stack, objsys, ctx, constructing, true);
+            let reference: Object = eval(owner, state, true);
 
 
             if let Object::Reference(refid) = reference {
 
-                let instance = objsys.get_instance(&refid);
-                let c = objsys.get_class(&instance.classname);
+                let instance = state.objsys.get_instance(&refid);
+                let c = state.objsys.get_class(&instance.classname);
                 let instance_id = instance.id.clone();
 
                 let meth = c.get_method(name);
@@ -855,34 +847,34 @@ pub fn eval(
 
                     if argslist.children.len() != params.len() {
                         dart_evalerror(format!("In method call {}, {} arguments expected but {} given.",
-                        name, params.len(), argslist.children.len()), ctx);
+                        name, params.len(), argslist.children.len()), state);
                     }
 
                     // Args must be evaluated where they are passed.
                     let mut argobjects = Vec::new();
                     for i in 0 .. params.len() {
                         let argtree = &argslist.children[i];
-                        let argobj = eval(argtree, looktables, globals, stack, objsys, ctx, constructing, true);
+                        let argobj = eval(argtree, state, true);
                         argobjects.push(argobj);
                     }
 
                     // Args must go to the new call frame.
-                    stack.push_call();
+                    state.stack.push_call();
 
                     for i in 0 .. params.len() {
-                        stack.add(params[i].name.as_str(), argobjects.pop().unwrap());
+                        state.stack.add(params[i].name.as_str(), argobjects.pop().unwrap());
                     }
 
-                    let oldfilename = ctx.filepath.clone();
-                    ctx.filepath = filename.clone();
-                    let oldthis = objsys.get_this();
-                    objsys.set_this(instance_id);
+                    let oldfilename = state.filepath.clone();
+                    state.filepath = filename.clone();
+                    let oldthis = state.objsys.get_this();
+                    state.objsys.set_this(instance_id);
 
-                    let result = eval(&funcnode, looktables, globals, stack, objsys, ctx, constructing, true);
+                    let result = eval(&funcnode, state, true);
 
-                    objsys.set_this(oldthis);
-                    ctx.filepath = oldfilename;
-                    stack.pop_call();
+                    state.objsys.set_this(oldthis);
+                    state.filepath = oldfilename;
+                    state.stack.pop_call();
 
                     return match result {
                         Object::Return(v) => {
@@ -901,15 +893,15 @@ pub fn eval(
         NodeType::FunCall(s) => {
             dprint(format!("Eval: NodeType::FunCall({})", s));
 
-            if stack.has(s) {
-                let funcobj = stack.get(s).clone();
+            if state.stack.has(s) {
+                let funcobj = state.stack.get(s).clone();
 
                 return match funcobj {
                     Object::Function(_, _, _, _) => {
-                        call_function(funcobj, &node.children[0], looktables, globals, stack, objsys, constructing, ctx)
+                        call_function(funcobj, &node.children[0], state)
                     }
                     Object::Constructor(_, _, _, _) => {
-                        call_constructor(&funcobj, &node.children[0], looktables, globals, stack, objsys, constructing, ctx)
+                        call_constructor(&funcobj, &node.children[0], state)
                     }
                     _ => panic!("Called non-callable.")
                 }
@@ -918,44 +910,29 @@ pub fn eval(
 
                 let args = argnodes_to_argobjs(
                     &node.children[0].children,
-                    looktables,
-                    globals,
-                    stack,
-                    objsys,
-                    constructing,
-                    ctx);
-                return builtin::call(s, &args, ctx);
+                    state);
+                return builtin::call(s, &args, state);
             }
             else {
-                println!("FuncCall, table: {}", &ctx.filepath);
-                let ltable = &looktables[&ctx.filepath];
+                println!("FuncCall, table: {}", &state.filepath);
+                let ltable = &state.looktables[&state.filepath];
                 if ltable.contains_key(s) {
 
                     let funcindex = ltable.get(s).unwrap().clone();
-                    let funcnode = &globals[funcindex];
+                    let funcnode = &state.globals[funcindex];
 
                     return match funcnode.nodetype {
                         NodeType::FunDef(_, _) => {
                             call_function(
                                 create_function(&funcnode),
                                 &node.children[0],
-                                looktables,
-                                globals,
-                                stack,
-                                objsys,
-                                constructing,
-                                ctx)
+                                state)
                         }
                         NodeType::Constructor(_, _) => {
                             call_constructor(
                                 &create_constructor(&funcnode),
                                 &node.children[0],
-                                looktables,
-                                globals,
-                                stack,
-                                objsys,
-                                constructing,
-                                ctx)
+                                state)
                         }
                         _ => panic!("Expected function definition or constructor.")
                     }
@@ -968,7 +945,7 @@ pub fn eval(
         NodeType::FunDef(s, _) => {
             dprint("Eval: NodeType::FunDef");
             let funcobj = create_function(node);
-            stack.add(s, funcobj);
+            state.stack.add(s, funcobj);
             return Object::Null;
         }
 
@@ -983,15 +960,15 @@ pub fn eval(
                     NodeType::ElseIf => {
                         let boolnode= &condnode.children[0];
 
-                        let cond = eval(&boolnode, looktables, globals, stack, objsys, ctx, constructing, true);
+                        let cond = eval(&boolnode, state, true);
                         match cond {
 
                             Object::Bool(v) => {
                                 if v {
                                     let bodynode= &condnode.children[1];
-                                    stack.push_lex();
-                                    let ret = eval(&bodynode, looktables, globals, stack, objsys, ctx, constructing, true);
-                                    stack.pop_lex();
+                                    state.stack.push_lex();
+                                    let ret = eval(&bodynode, state, true);
+                                    state.stack.pop_lex();
                                     return ret;
                                 }
                             }
@@ -1001,9 +978,9 @@ pub fn eval(
 
                     NodeType::Else => {
                         let bodynode= &condnode.children[0];
-                        stack.push_lex();
-                        let ret = eval(&bodynode, looktables, globals, stack, objsys, ctx, constructing, true);
-                        stack.pop_lex();
+                        state.stack.push_lex();
+                        let ret = eval(&bodynode, state, true);
+                        state.stack.pop_lex();
                         return ret;
                     }
                     _ => panic!("Invalid node in conditional!")
@@ -1020,15 +997,15 @@ pub fn eval(
             let boolnode = &node.children[0];
             let block = &node.children[1];
 
-            let mut cond = eval(boolnode, looktables, globals, stack, objsys, ctx, constructing, true);
+            let mut cond = eval(boolnode, state, true);
 
             match &cond {
 
                 Object::Bool(mut v) => {
 
                     while v {
-                        eval(block, looktables, globals, stack, objsys, ctx, constructing, true);
-                        cond = eval(boolnode, looktables, globals, stack, objsys, ctx, constructing, true);
+                        eval(block, state, true);
+                        cond = eval(boolnode, state, true);
 
                         match &cond {
                             Object::Bool(newcond) => {
@@ -1051,16 +1028,16 @@ pub fn eval(
             let block = &node.children[0];
             let boolnode = &node.children[1];
 
-            eval(block, looktables, globals, stack, objsys, ctx, constructing, true);
+            eval(block, state, true);
 
-            let mut cond = eval(boolnode, looktables, globals, stack, objsys, ctx, constructing, true);
+            let mut cond = eval(boolnode, state, true);
 
             if let Object::Bool(mut b) = cond {
 
                 while b {
 
-                    eval(block, looktables, globals, stack, objsys, ctx, constructing, true);
-                    cond = eval(boolnode, looktables, globals, stack, objsys, ctx, constructing, true);
+                    eval(block, state, true);
+                    cond = eval(boolnode, state, true);
 
                     match &cond {
                         Object::Bool(new_b) => {
@@ -1085,11 +1062,11 @@ pub fn eval(
             let mutexpr = &node.children[2];
             let body = &node.children[3];
 
-            eval(assign, looktables, globals, stack, objsys, ctx, constructing, true);
+            eval(assign, state, true);
 
             loop {
 
-                let condobj = eval(condexpr, looktables, globals, stack, objsys, ctx, constructing, true);
+                let condobj = eval(condexpr, state, true);
 
                 match condobj {
                     Object::Bool(b) => {
@@ -1098,10 +1075,10 @@ pub fn eval(
                             break;
                         }
 
-                        eval(body, looktables, globals, stack, objsys, ctx, constructing, true);
-                        eval(mutexpr, looktables, globals, stack, objsys, ctx, constructing, true);
+                        eval(body, state, true);
+                        eval(mutexpr, state, true);
                     }
-                    x => dart_evalerror(format!("Expected bool. Got: {}", x), ctx)
+                    x => dart_evalerror(format!("Expected bool. Got: {}", x), state)
 
                 }
             }
@@ -1113,9 +1090,9 @@ pub fn eval(
 
             for c in &node.children {
 
-                stack.garbagecollect(objsys, constructing);
+                state.stack.garbagecollect(&mut state.objsys, &state.constructing);
 
-                let retval = eval(c, looktables, globals, stack, objsys, ctx, constructing, true);
+                let retval = eval(c, state, true);
 
                 match &retval {
                     Object::Return(_) => {
@@ -1165,12 +1142,7 @@ fn create_function(funcnode: &Node) -> Object {
 fn call_function(
     funcobj: Object,
     args: &Node,
-    looktables: &HashMap<String, HashMap<String, usize>>,
-    globals: &Vec<Node>,
-    store: &mut Stack,
-    objsys: &mut ObjSys,
-    building: &mut Vec<String>,
-    ctx: &mut Ctx) -> Object {
+    state: &mut State) -> Object {
 
     match funcobj {
 
@@ -1178,32 +1150,27 @@ fn call_function(
 
             let mut argobjs = argnodes_to_argobjs(
                 &args.children,
-                looktables,
-                globals,
-                store,
-                objsys,
-                building,
-                ctx
+                state
             );
 
             // Argtrees must be evaluated in callers context, but stored in new context.
 
-            store.push_call();
+            state.stack.push_call();
             for i in 0..params.len() {
-                store.add(params[i].name.as_str(), argobjs.remove(0));
+                state.stack.add(params[i].name.as_str(), argobjs.remove(0));
             }
 
-            let oldfilepath = ctx.filepath.clone();
+            let oldfilepath = state.filepath.clone();
 
-            ctx.filepath = filename;
-            println!("Setting filepath: {}", &ctx.filepath);
+            state.filepath = filename;
+            println!("Setting filepath: {}", &state.filepath);
 
-            let result = eval(&body, looktables, globals, store, objsys, ctx, building, true);
+            let result = eval(&body, state, true);
 
-            ctx.filepath = oldfilepath;
-            println!("Restoring filepath: {}", &ctx.filepath);
+            state.filepath = oldfilepath;
+            println!("Restoring filepath: {}", &state.filepath);
 
-            store.pop_call();
+            state.stack.pop_call();
 
             return match result {
                 Object::Return(v) => {
@@ -1253,12 +1220,7 @@ fn create_constructor(funcnode: &Node) -> Object {
 fn call_constructor(
     funcobj: &Object,
     args: &Node,
-    looktables: &HashMap<String, HashMap<String, usize>>,
-    globals: &Vec<Node>,
-    store: &mut Stack,
-    objsys: &mut ObjSys,
-    building: &mut Vec<String>,
-    ctx: &mut Ctx) -> Object {
+    state: &mut State) -> Object {
 
     match funcobj {
 
@@ -1266,57 +1228,52 @@ fn call_constructor(
 
             let args = argnodes_to_argobjs(
                 &args.children,
-                looktables,
-                globals,
-                store,
-                objsys,
-                building,
-                ctx
+                state
             );
 
             // Argtrees must be evaluated in callers context, but stored in new context.
 
-            store.push_call();
+            state.stack.push_call();
             for i in 0..params.len() {
                 // Field initializers does not need to be in symbol table.
                 // They are set directly on the instance. See below.
                 if !params[i].fieldinit {
-                    store.add(params[i].name.as_str(), args[i].clone());
+                    state.stack.add(params[i].name.as_str(), args[i].clone());
                 }
             }
 
             // Make an instance.
 
-            let class = objsys.get_class(cname.as_str());
+            let class = state.objsys.get_class(cname.as_str());
             let mut inst = class.instantiate();
 
             // Evaluate the initial field values.
 
             let field_nodes = class.fields.clone();
             for (_, fname, initexpr) in &field_nodes {
-                inst.set_field(fname.clone(), eval(initexpr, looktables, globals, store, objsys, ctx, building, true));
+                inst.set_field(fname.clone(), eval(initexpr, state, true));
             }
 
-            let instref = objsys.register_instance(inst);
+            let instref = state.objsys.register_instance(inst);
 
             // Run the constructor body.
 
             match &instref {
                 Object::Reference(refid) => {
 
-                    building.push(refid.clone());
+                    state.constructing.push(refid.clone());
 
-                    let oldfilename = ctx.filepath.clone();
-                    ctx.filepath = filename.clone();
+                    let oldfilename = state.filepath.clone();
+                    state.filepath = filename.clone();
 
 
-                    let oldthis = objsys.get_this();
-                    objsys.set_this(refid.clone());
+                    let oldthis = state.objsys.get_this();
+                    state.objsys.set_this(refid.clone());
                     println!("Set this: {}, classname: {}, filename: {}", refid, cname, filename);
 
                     // Set fields from params that uses "this" to auto-init.
                     // Ie Bike(this.gears)
-                    let inst = objsys.get_this_instance_mut();
+                    let inst = state.objsys.get_this_instance_mut();
                     for i in 0..params.len() {
                         if params[i].fieldinit {
                             inst.set_field(params[i].name.clone(),args[i].clone());
@@ -1324,16 +1281,16 @@ fn call_constructor(
                     }
 
                     // Run body
-                    eval(&body, looktables, globals, store, objsys, ctx, building, true);
+                    eval(&body, state, true);
 
-                    objsys.set_this(oldthis);
-                    ctx.filepath = oldfilename;
-                    println!("Resetting filepath to {}", ctx.filepath);
+                    state.objsys.set_this(oldthis);
+                    state.filepath = oldfilename;
+                    println!("Resetting filepath to {}", state.filepath);
 
-                    assert!(building.last().unwrap() == refid);
-                    building.pop();
+                    assert!(state.constructing.last().unwrap() == refid);
+                    state.constructing.pop();
 
-                    store.pop_call();
+                    state.stack.pop_call();
 
                     return instref.clone();
                 }
@@ -1350,14 +1307,9 @@ fn call_constructor(
 
 fn argnodes_to_argobjs(
     argnodes: &Vec<Node>,
-    looktables: &HashMap<String, HashMap<String, usize>>,
-    globals: &Vec<Node>,
-    store: &mut Stack,
-    objsys: &mut ObjSys,
-    building: &mut Vec<String>,
-    ctx: &mut Ctx) -> Vec<Object> {
+    state: &mut State) -> Vec<Object> {
 
     argnodes.iter().map(
-        |argtree| eval(&argtree, looktables, globals, store, objsys, ctx, building, true)
+        |argtree| eval(&argtree, state, true)
     ).collect()
 }

@@ -1,4 +1,4 @@
-use context::Ctx;
+use state::State;
 use reader::Reader;
 use token::Token;
 use node::{NodeType, Node};
@@ -7,7 +7,7 @@ use utils::{dprint, dart_parseerror};
 use queues::*;
 
 
-pub fn expression(reader: &mut Reader, ctx: &Ctx) -> Node {
+pub fn expression(reader: &mut Reader, ctx: &State) -> Node {
     dprint(format!("Parse: expression: {}", reader.sym()));
 
     disjunction(reader, ctx)
@@ -26,10 +26,10 @@ pub fn expression(reader: &mut Reader, ctx: &Ctx) -> Node {
 // This is also the case for bit-or, bit-xor and bit-and.
 // Use the simpler right-tree parsing until proven stupid.
 
-fn disjunction(reader: &mut Reader, ctx: &Ctx) -> Node {
+fn disjunction(reader: &mut Reader, state: &State) -> Node {
     dprint(format!("Parse: disjunction: {}", reader.sym()));
 
-    let left = conjunction(reader, ctx);
+    let left = conjunction(reader, state);
 
     if reader.len() <= reader.pos() {
         return left;
@@ -41,7 +41,7 @@ fn disjunction(reader: &mut Reader, ctx: &Ctx) -> Node {
         Token::LogOr(_, _) => {
 
             reader.next();
-            let right = disjunction(reader, ctx);
+            let right = disjunction(reader, state);
 
             let mut disnode = Node::new(NodeType::LogOr);
             disnode.children.push(left);
@@ -55,10 +55,10 @@ fn disjunction(reader: &mut Reader, ctx: &Ctx) -> Node {
 }
 
 
-fn conjunction(reader: &mut Reader, ctx: &Ctx) -> Node {
+fn conjunction(reader: &mut Reader, state: &State) -> Node {
     dprint(format!("Parse: conjunction: {}", reader.sym()));
 
-    let left = equality(reader, ctx);
+    let left = equality(reader, state);
 
     if reader.len() <= reader.pos() {
         return left;
@@ -70,7 +70,7 @@ fn conjunction(reader: &mut Reader, ctx: &Ctx) -> Node {
         Token::LogAnd(_, _) => {
 
             reader.next();
-            let right = conjunction(reader, ctx);
+            let right = conjunction(reader, state);
 
             let mut connode = Node::new(NodeType::LogAnd);
             connode.children.push(left);
@@ -84,10 +84,10 @@ fn conjunction(reader: &mut Reader, ctx: &Ctx) -> Node {
 }
 
 
-fn equality(reader: &mut Reader, ctx: &Ctx) -> Node {
+fn equality(reader: &mut Reader, state: &State) -> Node {
     dprint(format!("Parse: equality: {}", reader.sym()));
 
-    let left = comparison(reader, ctx);
+    let left = comparison(reader, state);
 
     if reader.len() <= reader.pos() {
         return left;
@@ -99,7 +99,7 @@ fn equality(reader: &mut Reader, ctx: &Ctx) -> Node {
         Token::Equal(_, _) => {
 
             reader.next();
-            let right = comparison(reader, ctx);
+            let right = comparison(reader, state);
 
             let mut eqnode = Node::new(NodeType::Equal);
             eqnode.children.push(left);
@@ -113,10 +113,10 @@ fn equality(reader: &mut Reader, ctx: &Ctx) -> Node {
 }
 
 
-fn comparison(reader: &mut Reader, ctx: &Ctx) -> Node {
+fn comparison(reader: &mut Reader, state: &State) -> Node {
     dprint(format!("Parse: comparison: {}", reader.sym()));
 
-    let left = bit_or(reader, ctx);
+    let left = bit_or(reader, state);
 
     if reader.len() <= reader.pos() {
         return left;
@@ -128,7 +128,7 @@ fn comparison(reader: &mut Reader, ctx: &Ctx) -> Node {
         Token::LessThan(_, _) => {
 
             reader.next();
-            let right = bit_or(reader, ctx);
+            let right = bit_or(reader, state);
 
             let mut connode = Node::new(NodeType::LessThan);
             connode.children.push(left);
@@ -139,7 +139,7 @@ fn comparison(reader: &mut Reader, ctx: &Ctx) -> Node {
         Token::GreaterThan(_, _) => {
 
             reader.next();
-            let right = bit_or(reader, ctx);
+            let right = bit_or(reader, state);
 
             let mut connode = Node::new(NodeType::GreaterThan);
             connode.children.push(left);
@@ -150,7 +150,7 @@ fn comparison(reader: &mut Reader, ctx: &Ctx) -> Node {
         Token::LessOrEq(_, _) => {
 
             reader.next();
-            let right = bit_or(reader, ctx);
+            let right = bit_or(reader, state);
 
             let mut connode = Node::new(NodeType::LessOrEq);
             connode.children.push(left);
@@ -161,7 +161,7 @@ fn comparison(reader: &mut Reader, ctx: &Ctx) -> Node {
         Token::GreaterOrEq(_, _) => {
 
             reader.next();
-            let right= bit_or(reader, ctx);
+            let right= bit_or(reader, state);
 
             let mut connode = Node::new(NodeType::GreaterOrEq);
             connode.children.push(left);
@@ -175,10 +175,10 @@ fn comparison(reader: &mut Reader, ctx: &Ctx) -> Node {
 }
 
 
-fn bit_or(reader: &mut Reader, ctx: &Ctx) -> Node {
+fn bit_or(reader: &mut Reader, state: &State) -> Node {
     dprint(format!("Parse: bit_or: {}", reader.sym()));
 
-    let left = bit_xor(reader, ctx);
+    let left = bit_xor(reader, state);
 
     if reader.len() <= reader.pos() {
         return left;
@@ -192,7 +192,7 @@ fn bit_or(reader: &mut Reader, ctx: &Ctx) -> Node {
             node.children.push(left);
 
             reader.next();
-            let right = bit_or(reader, ctx);
+            let right = bit_or(reader, state);
             node.children.push(right);
 
             node
@@ -203,10 +203,10 @@ fn bit_or(reader: &mut Reader, ctx: &Ctx) -> Node {
 
 
 // fn bit_xor(reader: &mut Reader, ctx: &Ctx) -> (Node, usize) {
-fn bit_xor(reader: &mut Reader, ctx: &Ctx) -> Node {
+fn bit_xor(reader: &mut Reader, state: &State) -> Node {
     dprint(format!("Parse: bit_xor: {}", reader.sym()));
 
-    let left = bit_and(reader, ctx);
+    let left = bit_and(reader, state);
 
     if reader.len() <= reader.pos() {
         return left;
@@ -220,7 +220,7 @@ fn bit_xor(reader: &mut Reader, ctx: &Ctx) -> Node {
             node.children.push(left);
 
             reader.next();
-            let right = bit_xor(reader, ctx);
+            let right = bit_xor(reader, state);
             node.children.push(right);
 
             node
@@ -230,10 +230,10 @@ fn bit_xor(reader: &mut Reader, ctx: &Ctx) -> Node {
 }
 
 
-fn bit_and(reader: &mut Reader, ctx: &Ctx) -> Node {
+fn bit_and(reader: &mut Reader, state: &State) -> Node {
     dprint(format!("Parse: bit_and: {}", reader.sym()));
 
-    let left= sum(reader, ctx);
+    let left= sum(reader, state);
 
     if reader.len() <= reader.pos() {
         return left;
@@ -247,7 +247,7 @@ fn bit_and(reader: &mut Reader, ctx: &Ctx) -> Node {
             node.children.push(left);
 
             reader.next();
-            let right = bit_and(reader, ctx);
+            let right = bit_and(reader, state);
             node.children.push(right);
 
             node
@@ -257,16 +257,16 @@ fn bit_and(reader: &mut Reader, ctx: &Ctx) -> Node {
 }
 
 
-fn sum(reader: &mut Reader, ctx: &Ctx) -> Node {
+fn sum(reader: &mut Reader, state: &State) -> Node {
     dprint(format!("Parse: sum: {}", reader.sym()));
 
-    sum_help(reader, &mut queue![], &mut queue![], ctx)
+    sum_help(reader, &mut queue![], &mut queue![], state)
 }
 
 
-fn sum_help(reader: &mut Reader, righties: &mut Queue<Node>, ops: &mut Queue<Node>, ctx: &Ctx) -> Node {
+fn sum_help(reader: &mut Reader, righties: &mut Queue<Node>, ops: &mut Queue<Node>, state: &State) -> Node {
 
-    let n = product(reader, ctx);
+    let n = product(reader, state);
     righties.add(n).ok();
 
     if reader.len() <= reader.pos() {
@@ -282,7 +282,7 @@ fn sum_help(reader: &mut Reader, righties: &mut Queue<Node>, ops: &mut Queue<Nod
             ops.add(Node::new(NodeType::Add)).ok();
 
             reader.next();
-            let deeper = sum_help(reader, righties, ops, ctx);
+            let deeper = sum_help(reader, righties, ops, state);
 
             let mut node = ops.remove().unwrap();
             node.children.push(deeper);
@@ -294,7 +294,7 @@ fn sum_help(reader: &mut Reader, righties: &mut Queue<Node>, ops: &mut Queue<Nod
             ops.add(Node::new(NodeType::Sub)).ok();
 
             reader.next();
-            let deeper = sum_help(reader, righties, ops, ctx);
+            let deeper = sum_help(reader, righties, ops, state);
 
             let mut node = ops.remove().unwrap();
             node.children.push(deeper);
@@ -310,14 +310,14 @@ fn sum_help(reader: &mut Reader, righties: &mut Queue<Node>, ops: &mut Queue<Nod
 }
 
 
-fn product(reader: &mut Reader, ctx: &Ctx) -> Node {
+fn product(reader: &mut Reader, ctx: &State) -> Node {
     dprint(format!("Parse: product: {}", reader.sym()));
 
     product_help(reader, &mut queue![], &mut queue![], ctx)
 }
 
 
-fn product_help(reader: &mut Reader, righties: &mut Queue<Node>, ops: &mut Queue<Node>, ctx: &Ctx) -> Node {
+fn product_help(reader: &mut Reader, righties: &mut Queue<Node>, ops: &mut Queue<Node>, ctx: &State) -> Node {
 
     let n = access(reader, ctx);
     righties.add(n).ok();
@@ -364,7 +364,7 @@ fn product_help(reader: &mut Reader, righties: &mut Queue<Node>, ops: &mut Queue
 }
 
 
-fn access(reader: &mut Reader, ctx: &Ctx) -> Node {
+fn access(reader: &mut Reader, ctx: &State) -> Node {
 
     let n = term(reader, ctx);
 
@@ -377,7 +377,7 @@ fn access(reader: &mut Reader, ctx: &Ctx) -> Node {
 }
 
 
-fn access_help(reader: &mut Reader, owner: Node, ctx: &Ctx) -> Node {
+fn access_help(reader: &mut Reader, owner: Node, ctx: &State) -> Node {
 
     match reader.sym() {
 
@@ -442,7 +442,7 @@ fn access_help(reader: &mut Reader, owner: Node, ctx: &Ctx) -> Node {
 }
 
 
-fn term(reader: &mut Reader, ctx: &Ctx) -> Node {
+fn term(reader: &mut Reader, state: &State) -> Node {
     dprint(format!("Parse: term: {}", reader.sym()));
 
     match reader.sym() {
@@ -461,7 +461,7 @@ fn term(reader: &mut Reader, ctx: &Ctx) -> Node {
             // As Dart.
             dart_parseerror(
                 "'+' is not a prefix operator.",
-                ctx,
+                state,
                 reader.tokens(),
                 reader.pos()
             );
@@ -471,7 +471,7 @@ fn term(reader: &mut Reader, ctx: &Ctx) -> Node {
             // This handles unary minus.
             reader.next();
             let mut unary = Node::new(NodeType::Sub);
-            let next = term(reader, ctx);
+            let next = term(reader, state);
             unary.children.push(next);
             unary
         }
@@ -479,7 +479,7 @@ fn term(reader: &mut Reader, ctx: &Ctx) -> Node {
         Token::Not(_, _) => {
             reader.next();
             let mut notnode = Node::new(NodeType::Not);
-            let next = term(reader, ctx);
+            let next = term(reader, state);
             notnode.children.push(next);
             notnode
         }
@@ -496,7 +496,7 @@ fn term(reader: &mut Reader, ctx: &Ctx) -> Node {
 
                     let mut r = Reader::new(itp);
 
-                    let itpn = expression(&mut r, ctx);
+                    let itpn = expression(&mut r, state);
                     node.children.push(itpn);
                 }
                 // May be empty when inside interpol recursion.
@@ -537,7 +537,7 @@ fn term(reader: &mut Reader, ctx: &Ctx) -> Node {
                 }
                 if let Token::Paren1(_, _) = reader.sym() {
                     // Function call.
-                    let args_node = arglist(reader, ctx);
+                    let args_node = arglist(reader, state);
                     let mut funcall_node = Node::new(NodeType::FunCall(s.to_string()));
                     // FIXME, already set above
                     funcall_node.nodetype = NodeType::FunCall(s.to_string());
@@ -577,8 +577,8 @@ fn term(reader: &mut Reader, ctx: &Ctx) -> Node {
 
         Token::Paren1(_, _) => {
             reader.next();
-            let wnode = expression(reader, ctx);
-            reader.skip(")", ctx);
+            let wnode = expression(reader, state);
+            reader.skip(")", state);
             wnode
         }
 
@@ -619,7 +619,7 @@ fn term(reader: &mut Reader, ctx: &Ctx) -> Node {
                             }
                         }
                         expect_sep = true;
-                        let entry = expression(reader, ctx);
+                        let entry = expression(reader, state);
                         list_node.children.push(entry);
                     }
                     list_node

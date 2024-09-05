@@ -14,17 +14,15 @@ mod token;
 mod node;
 mod object;
 mod testlist;
-mod context;
+mod state;
 mod reader;
 
 use std::io::prelude::*;
 use std::env;
 use std::fs::File;
 use std::collections::HashMap;
-use context::Ctx;
-use stack::Stack;
-use objsys::ObjSys;
-use node::{Node, NodeType};
+use state::State;
+use node::NodeType;
 
 
 fn main() {
@@ -36,10 +34,8 @@ fn main() {
         return;
     }
 
-    let mut ctx = Ctx{
-        filepath: String::from(""),
-        debug: true
-    };
+
+    let mut state = State::new();
 
     let a1 = &args[1];
 
@@ -49,16 +45,16 @@ fn main() {
                 println!("Please specify file ...");
                 return;
             }
-            ctx.filepath = String::from(&args[2]);
-            do_task("lex",args[2].clone(), &mut ctx);
+            state.filepath = String::from(&args[2]);
+            do_task("lex",args[2].clone(), &mut state);
         }
         "parse" => {
             if args.len() < 3 {
                 println!("Please specify file...");
                 return;
             }
-            ctx.filepath = String::from(&args[2]);
-            do_task("parse",args[2].clone(), &mut ctx);
+            state.filepath = String::from(&args[2]);
+            do_task("parse",args[2].clone(), &mut state);
         }
         "test" => {
             if args.len() < 3 {
@@ -68,8 +64,8 @@ fn main() {
                     println!("Running test: {}", s);
                     println!("----------------------------------------------------");
                     let path = format!("{}/{}", testlist::TESTPATH, s);
-                    ctx.filepath = String::from(path.as_str());
-                    do_task("eval", String::from(path.as_str()), &mut ctx);
+                    state.filepath = String::from(path.as_str());
+                    do_task("eval", String::from(path.as_str()), &mut state);
                 }
                 return;
             }
@@ -96,16 +92,16 @@ fn main() {
             }
 
             let filepath = testlist::get_filepath(nextarg.clone());
-            ctx.filepath = filepath.clone();
-            do_task(task, filepath, &mut ctx);
+            state.filepath = filepath.clone();
+            do_task(task, filepath, &mut state);
         }
         "testfail" => {
             if args.len() < 3 {
                 println!("Running all fail tests:");
                 for s in testlist::FAILTESTS {
                     let path = format!("{}/{}", testlist::FAILTESTPATH, s);
-                    ctx.filepath = String::from(path.as_str());
-                    do_task("eval", String::from(path.as_str()), &mut ctx);
+                    state.filepath = String::from(path.as_str());
+                    do_task("eval", String::from(path.as_str()), &mut state);
                 }
                 return;
             }
@@ -132,8 +128,8 @@ fn main() {
             }
 
             let filepath = testlist::get_failfilepath(nextarg.clone());
-            ctx.filepath = filepath.clone();
-            do_task(task, filepath, &mut ctx);
+            state.filepath = filepath.clone();
+            do_task(task, filepath, &mut state);
         }
         _ => {
             println!("Illegal argument: {}", a1);
@@ -142,7 +138,8 @@ fn main() {
 }
 
 
-fn do_task(action: &str, filepath: String, ctx: &mut Ctx) {
+fn do_task(action: &str, filepath: String, state: &mut State) {
+
 
     match action {
         "lex" => {
@@ -156,16 +153,15 @@ fn do_task(action: &str, filepath: String, ctx: &mut Ctx) {
         "parse" => {
             let input = read_file(filepath.as_str());
             let mut tokens = lexer::lex(&input);
-            let mut globals: Vec<Node> = Vec::new();
-            let mut objsys = ObjSys::new();
-            parser::parse(&mut tokens, &mut globals, &mut objsys, ctx);
+            // let mut globals: Vec<Node> = Vec::new();
+            parser::parse(&mut tokens, state);
 
-            for f in globals {
+            for f in &state.globals {
                 println!("\n{}\n", f);
             }
         }
         "eval" => {
-            evaluate(filepath, ctx);
+            evaluate(filepath, state);
         }
         x => {
             println!("Unknown action: {}", x);
@@ -178,11 +174,7 @@ fn filecurse(
     basepath: String,
     filepath: String,
     memo: &mut HashMap<String, (usize, usize)>,
-    looktables: &mut HashMap<String, HashMap<String, usize>>,
-    globals: &mut Vec<Node>,
-    store: &mut Stack,
-    objsys: &mut ObjSys,
-    ctx: &mut Ctx) {
+    state: &mut State) {
 
 
     let mut fpath = basepath.clone();
@@ -195,20 +187,20 @@ fn filecurse(
     let input = read_file(fpath.as_str());
     let mut tokens = lexer::lex(&input);
 
-    ctx.filepath = filepath.clone();
+    state.filepath = filepath.clone();
 
 
-    let oldlen = globals.len();
+    let oldlen = state.globals.len();
 
-    let imports = parser::parse(&mut tokens, globals, objsys, ctx);
+    let imports = parser::parse(&mut tokens, state);
 
-    memo.insert(filepath.clone(), (oldlen, globals.len()));
+    memo.insert(filepath.clone(), (oldlen, state.globals.len()));
 
     let mut looktable: HashMap<String, usize> = HashMap::new();
 
 
-    for i in oldlen..globals.len() {
-        let f = &globals[i];
+    for i in oldlen..state.globals.len() {
+        let f = &state.globals[i];
 
         match &f.nodetype {
             NodeType::FunDef(funcname, _) => {
@@ -231,7 +223,7 @@ fn filecurse(
             continue;
         }
 
-        filecurse(basepath.clone(), s.clone(), memo, looktables, globals, store, objsys, ctx);
+        filecurse(basepath.clone(), s.clone(), memo, state);
 
         // For every import, merge its functions into this files looktable.
 
@@ -239,7 +231,7 @@ fn filecurse(
 
         for i in childstart..childend {
 
-            let f = &globals[i];
+            let f = &state.globals[i];
             match &f.nodetype {
                 NodeType::FunDef(funcname, _) => {
                     looktable.insert(funcname.clone(), i);
@@ -254,30 +246,24 @@ fn filecurse(
         }
     }
 
-    looktables.insert(filepath.clone(), looktable);
+    state.looktables.insert(filepath.clone(), looktable);
 
 }
 
 
-fn evaluate(filepath: String, ctx: &mut Ctx) {
+fn evaluate(filepath: String, state: &mut State) {
 
-    let mut globals: Vec<Node> = Vec::new();
     let mut memo: HashMap<String, (usize, usize)> = HashMap::new();
-    let mut looktables: HashMap<String, HashMap<String, usize>> = HashMap::new();
-    let mut store = Stack::new();
-    let mut objsys = ObjSys::new();
-    let mut building: Vec<String> = Vec::new();
-
 
     let mut parts: Vec<&str> = filepath.split('/').collect();
 
     let filename = parts.remove(parts.len() - 1);
     let basepath = parts.join("/");
 
-    filecurse(basepath.clone(), String::from(filename), &mut memo, &mut looktables, &mut globals, &mut store, &mut objsys, ctx);
+    filecurse(basepath.clone(), String::from(filename), &mut memo, state);
 
 
-    let toptable = &looktables[filename];
+    let toptable = &state.looktables[filename];
 
 
     if !toptable.contains_key("main") {
@@ -287,11 +273,12 @@ fn evaluate(filepath: String, ctx: &mut Ctx) {
 
 
     let mainindex: &usize = toptable.get("main").unwrap();
-    let mainfunc = &globals[*mainindex];
-    ctx.filepath = filename.to_string();
+    let mainfunc = &state.globals[*mainindex].clone();
+    state.filepath = filename.to_string();
 
 
     match &mainfunc.nodetype {
+
         NodeType::FunDef(_, _) => {
             utils::dprint(" ");
             utils::dprint("EVALUATE");
@@ -299,9 +286,9 @@ fn evaluate(filepath: String, ctx: &mut Ctx) {
 
             let mainbody = &mainfunc.children[1];
 
-            store.push_call();
-            evaluator::eval(mainbody, &looktables, &globals, &mut store, &mut objsys, ctx, &mut building, true);
-            store.pop_call();
+            state.stack.push_call();
+            evaluator::eval(mainbody, state, true);
+            state.stack.pop_call();
         }
         x => {
             panic!("Unexpected type of 'main': {:?}", x)

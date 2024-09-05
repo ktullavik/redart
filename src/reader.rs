@@ -1,6 +1,6 @@
 use token::Token;
 use utils::dart_parseerror;
-use context::Ctx;
+use state::State;
 
 pub struct Reader {
     pos: usize,
@@ -17,22 +17,22 @@ impl Reader {
         }
     }
 
-    pub fn expect(&self, sym: &str, ctx: &Ctx) {
+    pub fn expect(&self, sym: &str, state: &State) {
 
         let t = &self.tokens[self.pos];
 
         if format!("{}", t) != sym {
             dart_parseerror(
                 format!("Expected: '{}'. Got: '{}'.", sym, t),
-                ctx,
+                state,
                 self.tokens(),
                 self.pos()
             );
         }
     }
 
-    pub fn skip(&mut self, sym: &str, ctx: &Ctx) {
-        self.expect(sym, ctx);
+    pub fn skip(&mut self, sym: &str, state: &State) {
+        self.expect(sym, state);
         self.next();
     }
 

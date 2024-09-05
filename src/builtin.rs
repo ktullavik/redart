@@ -1,4 +1,4 @@
-use context::Ctx;
+use state::State;
 use std::process;
 use object::Object;
 
@@ -12,7 +12,7 @@ pub fn has_function(name: &str) -> bool {
 }
 
 
-pub fn call(name: &str, args: &Vec<Object>, ctx: &Ctx) -> Object {
+pub fn call(name: &str, args: &Vec<Object>, state: &State) -> Object {
     match name {
 
         "assert" => {
@@ -33,7 +33,7 @@ pub fn call(name: &str, args: &Vec<Object>, ctx: &Ctx) -> Object {
                             msg = format!("{}", &args[1]);
                         }
 
-                        let filepath = &ctx.filepath;
+                        let filepath = &state.filepath;
                         let linenum = 0;
                         let sympos = 0;
                         println!("'file://{}': Failed assertion: line {} pos {}: argument: {}", filepath, linenum, sympos, msg);
@@ -47,7 +47,7 @@ pub fn call(name: &str, args: &Vec<Object>, ctx: &Ctx) -> Object {
                     // Should be caught generally, by type system. For now, msg like dart.
                     // TODO, get line number, symbol number and object type.
 
-                    let filepath = &ctx.filepath;
+                    let filepath = &state.filepath;
                     let linenum = 0;
                     let sympos = 0;
                     let objtype = "unknown";
