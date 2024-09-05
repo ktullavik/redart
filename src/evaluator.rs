@@ -1226,7 +1226,6 @@ fn call_constructor(
                     let oldfilename = state.filepath.clone();
                     state.filepath = filename.clone();
 
-
                     let oldthis = state.objsys.get_this();
                     state.objsys.set_this(refid.clone());
 
