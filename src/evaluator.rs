@@ -16,7 +16,7 @@ pub fn eval(
     match t {
 
         NodeType::Assign => {
-            dprint("Eval: NodeType::Assign");
+
             match &node.children[0].nodetype {
                 NodeType::Name(name) => {
 
@@ -69,7 +69,6 @@ pub fn eval(
         }
 
         NodeType::Not => {
-            dprint("Eval: NodeType::Not");
 
             let obj = eval(&node.children[0], state, true);
 
@@ -82,7 +81,6 @@ pub fn eval(
         }
 
         NodeType::LogOr => {
-            dprint("Eval: NodeType::LogOr");
 
             let left_obj = eval(&node.children[0], state, true);
 
@@ -105,7 +103,6 @@ pub fn eval(
         }
 
         NodeType::LogAnd => {
-            dprint("Eval: NodeType::LogAnd");
 
             let left_obj = eval(&node.children[0], state, true);
 
@@ -128,7 +125,6 @@ pub fn eval(
         }
 
         NodeType::LessThan => {
-            dprint("Eval: NodeType::LessThan");
 
             let left_obj = eval(&node.children[0], state, true);
 
@@ -169,7 +165,6 @@ pub fn eval(
         }
 
         NodeType::GreaterThan => {
-            dprint("Eval: NodeType::GreaterThan");
 
             let left_obj = eval(&node.children[0], state, true);
 
@@ -210,7 +205,6 @@ pub fn eval(
         }
 
         NodeType::LessOrEq => {
-            dprint("Eval: NodeType::LessOrEq");
 
             let left_obj = eval(&node.children[0], state, true);
 
@@ -292,7 +286,6 @@ pub fn eval(
         }
 
         NodeType::Equal => {
-            dprint("Eval: NodeType::Equal");
 
             let left_obj = eval(&node.children[0], state, true);
             let right_obj = eval(&node.children[1], state, true);
@@ -343,7 +336,6 @@ pub fn eval(
         }
 
         NodeType::BitAnd => {
-            dprint("Eval: NodeType::BitAnd");
 
             let left_obj = eval(&node.children[0], state, true);
 
@@ -366,7 +358,6 @@ pub fn eval(
         }
 
         NodeType::BitOr => {
-            dprint("Eval: NodeType::BitOr");
 
             let left_obj = eval(&node.children[0], state, true);
 
@@ -389,7 +380,6 @@ pub fn eval(
         }
 
         NodeType::BitXor => {
-            dprint("Eval: NodeType::BitXor");
 
             let left_obj = eval(&node.children[0], state, true);
 
@@ -412,7 +402,6 @@ pub fn eval(
         }
 
         NodeType::Add => {
-            dprint("Eval: NodeType::Add");
 
             let left_obj = eval(&node.children[0], state, true);
 
@@ -461,7 +450,6 @@ pub fn eval(
         }
 
         NodeType::Sub => {
-            dprint("Eval: NodeType::Sub");
 
             let left_obj = eval(&node.children[0], state, true);
 
@@ -509,9 +497,7 @@ pub fn eval(
             }
         }
 
-
         NodeType::Mul => {
-            dprint("Eval: NodeType::Mul");
 
             let left_obj = eval(&node.children[0], state, true);
 
@@ -548,7 +534,6 @@ pub fn eval(
         }
 
         NodeType::Div => {
-            dprint("Eval: NodeType::Div");
 
             let left_obj = eval(&node.children[0], state, true);
 
@@ -586,7 +571,6 @@ pub fn eval(
         }
 
         NodeType::PreIncrement => {
-            dprint("Eval: NodeType::PreIncrement");
 
             let valnode = &node.children[0];
 
@@ -624,7 +608,6 @@ pub fn eval(
         }
 
         NodeType::PreDecrement => {
-            dprint("Eval: NodeType::PreDecrement");
 
             let valnode = &node.children[0];
 
@@ -662,7 +645,6 @@ pub fn eval(
         }
 
         NodeType::PostIncrement => {
-            dprint("Eval: NodeType::PostIncrement");
 
             let valnode = &node.children[0];
 
@@ -701,7 +683,6 @@ pub fn eval(
         }
 
         NodeType::PostDecrement => {
-            dprint("Eval: NodeType::PostDecrement");
 
             let valnode = &node.children[0];
 
@@ -739,22 +720,19 @@ pub fn eval(
         }
 
         NodeType::Int(val) => {
-            dprint("Eval: NodeType::Int");
             Object::Int(*val)
         },
 
         NodeType::Double(val) => {
-            dprint("Eval: NodeType::Double");
             Object::Double(*val)
         },
 
         NodeType::Bool(v) => {
-            dprint("Eval: NodeType::Bool");
             Object::Bool(*v)
         },
 
         NodeType::Str(s) => {
-            dprint("Eval: NodeType::Str");
+
             if node.children.is_empty() {
                 return Object::String(s.clone())
             }
@@ -777,7 +755,6 @@ pub fn eval(
         },
 
         NodeType::Name(s) => {
-            dprint(format!("Eval: NodeType::Name({})", s));
 
             // For Name, having a child means having an owner.
             if node.children.len() > 0 {
@@ -822,17 +799,13 @@ pub fn eval(
         }
 
         NodeType::Return => {
-            dprint(format!("Eval: NodeType::Return"));
             let retval = eval(&node.children[0], state, true);
             return Object::Return(Box::new(retval));
         }
 
         NodeType::MethodCall(name, owner, filename) => {
-            dprint(format!("Eval: NodeType::MethodCall({})", name));
-
 
             let reference: Object = eval(owner, state, true);
-
 
             if let Object::Reference(refid) = reference {
 
@@ -891,7 +864,6 @@ pub fn eval(
         }
 
         NodeType::FunCall(s) => {
-            dprint(format!("Eval: NodeType::FunCall({})", s));
 
             if state.stack.has(s) {
                 let funcobj = state.stack.get(s).clone();
@@ -914,7 +886,6 @@ pub fn eval(
                 return builtin::call(s, &args, state);
             }
             else {
-                println!("FuncCall, table: {}", &state.filepath);
                 let ltable = &state.looktables[&state.filepath];
                 if ltable.contains_key(s) {
 
@@ -943,14 +914,12 @@ pub fn eval(
         }
 
         NodeType::FunDef(s, _) => {
-            dprint("Eval: NodeType::FunDef");
             let funcobj = create_function(node);
             state.stack.add(s, funcobj);
             return Object::Null;
         }
 
         NodeType::Conditional => {
-            dprint("Eval: NodeType::Conditional");
 
             for condnode in &node.children {
 
@@ -992,7 +961,6 @@ pub fn eval(
         }
 
         NodeType::While => {
-            dprint("Eval: NodeType::While");
 
             let boolnode = &node.children[0];
             let block = &node.children[1];
@@ -1023,7 +991,6 @@ pub fn eval(
         }
 
         NodeType::DoWhile => {
-            dprint("Eval: NodeType::DoWhile");
 
             let block = &node.children[0];
             let boolnode = &node.children[1];
@@ -1055,7 +1022,6 @@ pub fn eval(
         }
 
         NodeType::For => {
-            dprint("Eval: NodeType::For");
 
             let assign = &node.children[0];
             let condexpr = &node.children[1];
@@ -1086,7 +1052,6 @@ pub fn eval(
         }
 
         NodeType::Block => {
-            dprint("Eval: NodeType::Block");
 
             for c in &node.children {
 
@@ -1105,7 +1070,6 @@ pub fn eval(
         }
 
         NodeType::Null => {
-            dprint("Eval:: NodeType::Null");
             return Object::Null;
         }
 
@@ -1161,14 +1125,11 @@ fn call_function(
             }
 
             let oldfilepath = state.filepath.clone();
-
             state.filepath = filename;
-            println!("Setting filepath: {}", &state.filepath);
 
             let result = eval(&body, state, true);
 
             state.filepath = oldfilepath;
-            println!("Restoring filepath: {}", &state.filepath);
 
             state.stack.pop_call();
 
@@ -1269,7 +1230,6 @@ fn call_constructor(
 
                     let oldthis = state.objsys.get_this();
                     state.objsys.set_this(refid.clone());
-                    println!("Set this: {}, classname: {}, filename: {}", refid, cname, filename);
 
                     // Set fields from params that uses "this" to auto-init.
                     // Ie Bike(this.gears)
@@ -1285,7 +1245,6 @@ fn call_constructor(
 
                     state.objsys.set_this(oldthis);
                     state.filepath = oldfilename;
-                    println!("Resetting filepath to {}", state.filepath);
 
                     assert!(state.constructing.last().unwrap() == refid);
                     state.constructing.pop();
