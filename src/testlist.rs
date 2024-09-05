@@ -95,6 +95,8 @@ pub const FAILTESTS: &'static [&'static str] = &[
     "4.var_not_declared.dart",
     "5.var_not_declared2.dart",
     "6.extraneous_comma.dart",
+    "7.illegal_operand_pluss.dart",
+    "8.illegal_operand_minus.dart",
     "500.non_transitive_imports/main.dart",
 ];
 
