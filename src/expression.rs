@@ -387,6 +387,14 @@ fn access_help(reader: &mut Reader, owner: Node, ctx: &State) -> Node {
 
                 Token::Name(name, _, _) => {
 
+                    if !reader.more() {
+                        // This path is taken when we have string interpolation with dots.
+                        // Eg: print("${a.b}");
+                        let mut node = Node::new(NodeType::Name(name.clone()));
+                        node.children.push(owner);
+                        return node;
+                    }
+
                     return match reader.next() {
 
                         Token::Paren1(_, _) => {
@@ -407,7 +415,7 @@ fn access_help(reader: &mut Reader, owner: Node, ctx: &State) -> Node {
                             let mut ass_node = Node::new(NodeType::Assign);
                             ass_node.children.push(node);
                             ass_node.children.push(right_node);
-                            return ass_node;
+                            ass_node
                         }
 
                         Token::Decrement(_, _) => {
