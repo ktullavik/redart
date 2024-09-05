@@ -8,8 +8,6 @@ use queues::*;
 
 
 pub fn expression(reader: &mut Reader, ctx: &State) -> Node {
-    dprint(format!("Parse: expression: {}", reader.sym()));
-
     disjunction(reader, ctx)
 }
 
@@ -27,7 +25,6 @@ pub fn expression(reader: &mut Reader, ctx: &State) -> Node {
 // Use the simpler right-tree parsing until proven stupid.
 
 fn disjunction(reader: &mut Reader, state: &State) -> Node {
-    dprint(format!("Parse: disjunction: {}", reader.sym()));
 
     let left = conjunction(reader, state);
 
@@ -56,7 +53,6 @@ fn disjunction(reader: &mut Reader, state: &State) -> Node {
 
 
 fn conjunction(reader: &mut Reader, state: &State) -> Node {
-    dprint(format!("Parse: conjunction: {}", reader.sym()));
 
     let left = equality(reader, state);
 
@@ -85,7 +81,6 @@ fn conjunction(reader: &mut Reader, state: &State) -> Node {
 
 
 fn equality(reader: &mut Reader, state: &State) -> Node {
-    dprint(format!("Parse: equality: {}", reader.sym()));
 
     let left = comparison(reader, state);
 
@@ -114,7 +109,6 @@ fn equality(reader: &mut Reader, state: &State) -> Node {
 
 
 fn comparison(reader: &mut Reader, state: &State) -> Node {
-    dprint(format!("Parse: comparison: {}", reader.sym()));
 
     let left = bit_or(reader, state);
 
@@ -176,7 +170,6 @@ fn comparison(reader: &mut Reader, state: &State) -> Node {
 
 
 fn bit_or(reader: &mut Reader, state: &State) -> Node {
-    dprint(format!("Parse: bit_or: {}", reader.sym()));
 
     let left = bit_xor(reader, state);
 
@@ -204,7 +197,6 @@ fn bit_or(reader: &mut Reader, state: &State) -> Node {
 
 // fn bit_xor(reader: &mut Reader, ctx: &Ctx) -> (Node, usize) {
 fn bit_xor(reader: &mut Reader, state: &State) -> Node {
-    dprint(format!("Parse: bit_xor: {}", reader.sym()));
 
     let left = bit_and(reader, state);
 
@@ -231,7 +223,6 @@ fn bit_xor(reader: &mut Reader, state: &State) -> Node {
 
 
 fn bit_and(reader: &mut Reader, state: &State) -> Node {
-    dprint(format!("Parse: bit_and: {}", reader.sym()));
 
     let left= sum(reader, state);
 
@@ -258,8 +249,6 @@ fn bit_and(reader: &mut Reader, state: &State) -> Node {
 
 
 fn sum(reader: &mut Reader, state: &State) -> Node {
-    dprint(format!("Parse: sum: {}", reader.sym()));
-
     sum_help(reader, &mut queue![], &mut queue![], state)
 }
 
@@ -311,8 +300,6 @@ fn sum_help(reader: &mut Reader, righties: &mut Queue<Node>, ops: &mut Queue<Nod
 
 
 fn product(reader: &mut Reader, ctx: &State) -> Node {
-    dprint(format!("Parse: product: {}", reader.sym()));
-
     product_help(reader, &mut queue![], &mut queue![], ctx)
 }
 
@@ -451,7 +438,6 @@ fn access_help(reader: &mut Reader, owner: Node, ctx: &State) -> Node {
 
 
 fn term(reader: &mut Reader, state: &State) -> Node {
-    dprint(format!("Parse: term: {}", reader.sym()));
 
     match reader.sym() {
 
