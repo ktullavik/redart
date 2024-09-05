@@ -1196,8 +1196,7 @@ fn call_constructor(
 
             state.stack.push_call();
             for i in 0..params.len() {
-                // Field initializers does not need to be in symbol table.
-                // They are set directly on the instance. See below.
+                // Field initializers are set directly on the instance. See below.
                 if !params[i].fieldinit {
                     state.stack.add(params[i].name.as_str(), args.remove(i));
                 }
