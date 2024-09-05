@@ -1187,7 +1187,7 @@ fn call_constructor(
 
         Object::Constructor(cname, filename, body, params) => {
 
-            let args = argnodes_to_argobjs(
+            let mut args = argnodes_to_argobjs(
                 &args.children,
                 state
             );
@@ -1199,7 +1199,7 @@ fn call_constructor(
                 // Field initializers does not need to be in symbol table.
                 // They are set directly on the instance. See below.
                 if !params[i].fieldinit {
-                    state.stack.add(params[i].name.as_str(), args[i].clone());
+                    state.stack.add(params[i].name.as_str(), args.remove(i));
                 }
             }
 
