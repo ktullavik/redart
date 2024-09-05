@@ -460,7 +460,7 @@ pub fn eval(
                     Object::Double(x) => {
                         Object::Double(-*x)
                     }
-                    _ => panic!("Illegal operand unary minus: {:?}", &left_obj)
+                    _ => dart_evalerror(format!("Illegal operand for unary minus: {:?}", left_obj), state)
                 }
             }
 
