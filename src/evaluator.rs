@@ -314,6 +314,14 @@ pub fn eval(
                         _ => Object::Bool(false)
                     }
                 }
+                Object::Reference(k1) => {
+                    match right_obj {
+                        Object::Reference(k2) => {
+                            Object::Bool(k1 == k2)
+                        }
+                        _ => Object::Bool(false)
+                    }
+                }
                 _ => dart_evalerror(format!("Equality not implemented for object: {}", left_obj), state)
             }
         }
