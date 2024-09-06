@@ -277,48 +277,33 @@ pub fn eval(
 
                 Object::Int(n1) => {
                     match right_obj {
-                        Object::Int(n2) => {
-                            Object::Bool(n1 == n2)
-                        }
-                        Object::Double(x2) => {
-                            Object::Bool((n1 as f64) == x2)
-                        }
+                        Object::Int(n2) => Object::Bool(n1 == n2),
+                        Object::Double(x2) => Object::Bool((n1 as f64) == x2),
                         _ => Object::Bool(false)
                     }
                 }
                 Object::Double(x1) => {
                     match right_obj {
-                        Object::Int(n2) => {
-                            Object::Bool(x1 == (n2 as f64))
-                        }
-                        Object::Double(x2) => {
-                            Object::Bool(x1 == x2)
-                        }
+                        Object::Int(n2) => Object::Bool(x1 == (n2 as f64)),
+                        Object::Double(x2) => Object::Bool(x1 == x2),
                         _ => Object::Bool(false)
                     }
                 }
                 Object::Bool(b1) => {
                     match right_obj {
-                        Object::Bool(b2) => {
-                            Object::Bool(b1 == b2)
-                        }
+                        Object::Bool(b2) => Object::Bool(b1 == b2),
                         _ => Object::Bool(false)
                     }
-
                 }
                 Object::String(s1) => {
                     match right_obj {
-                        Object::String(s2) => {
-                            Object::Bool(s1 == s2)
-                        }
+                        Object::String(s2) => Object::Bool(s1 == s2),
                         _ => Object::Bool(false)
                     }
                 }
                 Object::Reference(k1) => {
                     match right_obj {
-                        Object::Reference(k2) => {
-                            Object::Bool(k1 == k2)
-                        }
+                        Object::Reference(k2) => Object::Bool(k1 == k2),
                         _ => Object::Bool(false)
                     }
                 }
