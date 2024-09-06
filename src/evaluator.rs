@@ -1,7 +1,7 @@
 use state::State;
 use node::{NodeType, Node};
 use builtin;
-use utils::{dprint, dart_evalerror};
+use utils::dart_evalerror;
 use object::{Object, ParamObj};
 use std::ops::{BitAnd, BitOr, BitXor};
 
