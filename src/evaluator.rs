@@ -273,10 +273,10 @@ pub fn eval(
             let left_obj = eval(&node.children[0], state, true);
             let right_obj = eval(&node.children[1], state, true);
 
-            match left_obj {
+            return match left_obj {
 
                 Object::Int(n1) => {
-                    return match right_obj {
+                    match right_obj {
                         Object::Int(n2) => {
                             Object::Bool(n1 == n2)
                         }
@@ -287,7 +287,7 @@ pub fn eval(
                     }
                 }
                 Object::Double(x1) => {
-                    return match right_obj {
+                    match right_obj {
                         Object::Int(n2) => {
                             Object::Bool(x1 == (n2 as f64))
                         }
@@ -298,7 +298,7 @@ pub fn eval(
                     }
                 }
                 Object::Bool(b1) => {
-                    return match right_obj {
+                    match right_obj {
                         Object::Bool(b2) => {
                             Object::Bool(b1 == b2)
                         }
@@ -307,7 +307,7 @@ pub fn eval(
 
                 }
                 Object::String(s1) => {
-                    return match right_obj {
+                    match right_obj {
                         Object::String(s2) => {
                             Object::Bool(s1 == s2)
                         }
