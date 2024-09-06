@@ -87,11 +87,9 @@ pub fn eval(
             match left_obj {
 
                 Object::Bool(b1) => {
-
                     let right_obj = eval(&node.children[1], state, true);
 
                     match right_obj {
-
                         Object::Bool(b2) => {
                             return Object::Bool(b1 || b2)
                         }
@@ -109,11 +107,9 @@ pub fn eval(
             match left_obj {
 
                 Object::Bool(b1) => {
-
                     let right_obj = eval(&node.children[1], state, true);
 
                     match right_obj {
-
                         Object::Bool(b2) => {
                             return Object::Bool(b1 && b2)
                         }
@@ -131,11 +127,9 @@ pub fn eval(
             match left_obj {
 
                 Object::Int(n1) => {
-
                     let right_obj = eval(&node.children[1], state, true);
 
                     match right_obj {
-
                         Object::Int(n2) => {
                             return Object::Bool(n1 < n2)
                         }
@@ -150,7 +144,6 @@ pub fn eval(
                     let right_obj = eval(&node.children[1], state, true);
 
                     match right_obj {
-
                         Object::Int(n2) => {
                             return Object::Bool(x1 < (n2 as f64))
                         }
@@ -171,11 +164,9 @@ pub fn eval(
             match left_obj {
 
                 Object::Int(n1) => {
-
                     let right_obj = eval(&node.children[1], state, true);
 
                     match right_obj {
-
                         Object::Int(n2) => {
                             return Object::Bool(n1 > n2)
                         }
@@ -190,7 +181,6 @@ pub fn eval(
                     let right_obj = eval(&node.children[1], state, true);
 
                     match right_obj {
-
                         Object::Int(n2) => {
                             return Object::Bool(x1 > (n2 as f64))
                         }
@@ -211,11 +201,9 @@ pub fn eval(
             match left_obj {
 
                 Object::Int(n1) => {
-
                     let right_obj = eval(&node.children[1], state, true);
 
                     match right_obj {
-
                         Object::Int(n2) => {
                             return Object::Bool(n1 <= n2)
                         }
@@ -230,7 +218,6 @@ pub fn eval(
                     let right_obj = eval(&node.children[1], state, true);
 
                     match right_obj {
-
                         Object::Int(n2) => {
                             return Object::Bool(x1 <= (n2 as f64))
                         }
@@ -251,11 +238,9 @@ pub fn eval(
             match left_obj {
 
                 Object::Int(n1) => {
-
                     let right_obj = eval(&node.children[1], state, true);
 
                     match right_obj {
-
                         Object::Int(n2) => {
                             return Object::Bool(n1 >= n2)
                         }
@@ -270,7 +255,6 @@ pub fn eval(
                     let right_obj = eval(&node.children[1], state, true);
 
                     match right_obj {
-
                         Object::Int(n2) => {
                             return Object::Bool(x1 >= (n2 as f64))
                         }
@@ -341,11 +325,9 @@ pub fn eval(
             match &left_obj {
 
                 Object::Int(s1) => {
-
                     let right_obj = eval(&node.children[1], state, true);
 
                     match &right_obj {
-
                         Object::Int(s2) => {
                             Object::Int(s1.bitand(s2))
                         }
@@ -363,11 +345,9 @@ pub fn eval(
             match &left_obj {
 
                 Object::Int(s1) => {
-
                     let right_obj = eval(&node.children[1], state, true);
 
                     match &right_obj {
-
                         Object::Int(s2) => {
                             Object::Int(s1.bitor(s2))
                         }
@@ -385,11 +365,9 @@ pub fn eval(
             match &left_obj {
 
                 Object::Int(s1) => {
-
                     let right_obj = eval(&node.children[1], state, true);
 
                     match &right_obj {
-
                         Object::Int(s2) => {
                             Object::Int(s1.bitxor(s2))
                         }
@@ -466,7 +444,6 @@ pub fn eval(
 
             match &left_obj {
                 Object::Int(s1) => {
-
                     let right_obj = eval(&node.children[1], state, true);
 
                     match &right_obj {
@@ -502,7 +479,6 @@ pub fn eval(
 
             match &left_obj {
                 Object::Int(s1) => {
-
                     let right_obj = eval(&node.children[1], state, true);
 
                     match &right_obj {
@@ -538,7 +514,6 @@ pub fn eval(
 
             match &left_obj {
                 Object::Int(s1) => {
-
                     let right_obj = eval(&node.children[1], state, true);
 
                     match &right_obj {
@@ -552,7 +527,6 @@ pub fn eval(
                     }
                 },
                 Object::Double(s1) => {
-
                     let right_obj = eval(&node.children[1], state, true);
 
                     match &right_obj {
@@ -954,7 +928,6 @@ pub fn eval(
 
                 }
             }
-
             return Object::Null;
         }
 
@@ -962,7 +935,6 @@ pub fn eval(
 
             let boolnode = &node.children[0];
             let block = &node.children[1];
-
             let mut cond = eval(boolnode, state, true);
 
             match &cond {
@@ -1000,7 +972,6 @@ pub fn eval(
             if let Object::Bool(mut b) = cond {
 
                 while b {
-
                     eval(block, state, true);
                     cond = eval(boolnode, state, true);
 
@@ -1029,7 +1000,6 @@ pub fn eval(
             eval(assign, state, true);
 
             loop {
-
                 let condobj = eval(condexpr, state, true);
 
                 match condobj {
@@ -1038,12 +1008,10 @@ pub fn eval(
                         if !b {
                             break;
                         }
-
                         eval(body, state, true);
                         eval(mutexpr, state, true);
                     }
                     x => dart_evalerror(format!("Expected bool. Got: {}", x), state)
-
                 }
             }
             return Object::Null;
@@ -1124,11 +1092,8 @@ fn call_function(
 
             let oldfilepath = state.filepath.clone();
             state.filepath = filename;
-
             let result = eval(&body, state, true);
-
             state.filepath = oldfilepath;
-
             state.stack.pop_call();
 
             return match result {
@@ -1168,7 +1133,6 @@ fn create_constructor(funcnode: &Node) -> Object {
                     x => panic!("Invalid parameter: {}", x)
                 }
             }
-
             return Object::Constructor(cname.to_string(), filename.clone(), bodynode.clone(), paramobjs);
         }
         _ => panic!("Invalid node type.")
@@ -1220,10 +1184,8 @@ fn call_constructor(
                 Object::Reference(refid) => {
 
                     state.constructing.push(refid.clone());
-
                     let oldfilename = state.filepath.clone();
                     state.filepath = filename.clone();
-
                     let oldthis = state.objsys.get_this();
                     state.objsys.set_this(refid.clone());
 
@@ -1241,10 +1203,8 @@ fn call_constructor(
 
                     state.objsys.set_this(oldthis);
                     state.filepath = oldfilename;
-
                     assert!(state.constructing.last().unwrap() == refid);
                     state.constructing.pop();
-
                     state.stack.pop_call();
 
                     return instref.clone();
