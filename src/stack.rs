@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 use object::Object;
 use objsys::ObjSys;
+use objsys::RefKey;
 
 
 pub struct Stack {
@@ -133,7 +134,7 @@ impl Stack {
     }
 
 
-    pub fn garbagecollect(&self, objsys: &mut ObjSys, building: &Vec<String>) {
+    pub fn garbagecollect(&self, objsys: &mut ObjSys, building: &Vec<RefKey>) {
 
         for b in building {
             objsys.mark(b);
@@ -197,7 +198,7 @@ impl Stack {
 
                 println!("level {},{}:", cl, ll);
                 for (k, v) in lexframe {
-                    println!("{} : {:?}", k, v);
+                    println!("{} : {}", k, v);
                 }
                 ll -= 1;
             }

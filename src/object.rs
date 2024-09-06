@@ -1,5 +1,7 @@
 use node::Node;
+use objsys::RefKey;
 use std::fmt;
+
 
 
 #[derive(Debug)]
@@ -20,7 +22,7 @@ impl fmt::Display for ParamObj {
 }
 
 
-#[derive(Debug)]
+// #[derive(Debug)]
 #[derive(Clone)]
 pub enum Object {
     Int(i64),
@@ -30,7 +32,7 @@ pub enum Object {
     // funcname, filename, body, params
     Function(String, String, Node, Vec<ParamObj>),    // funcname, filename, body, params
     Constructor(String, String, Node, Vec<ParamObj>), // consname, filename, body, params
-    Reference(String),
+    Reference(RefKey),
     Null,
     Return(Box<Object>)
 }

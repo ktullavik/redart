@@ -1,5 +1,6 @@
 use stack::Stack;
 use objsys::ObjSys;
+use objsys::RefKey;
 use node::Node;
 use std::collections::HashMap;
 
@@ -11,7 +12,7 @@ pub struct State {
     pub looktables: HashMap<String, HashMap<String, usize>>,
     pub stack: Stack,
     pub objsys: ObjSys,
-    pub constructing: Vec<String>,
+    pub constructing: Vec<RefKey>,
     pub debug: bool
 }
 

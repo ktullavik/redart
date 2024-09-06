@@ -1,11 +1,22 @@
+use std::fmt;
 use std::collections::HashMap;
 use utils::dprint;
 use object::Object;
 use node::Node;
 
 
+#[derive(Clone, PartialEq, Eq, Hash)]
+pub struct RefKey(String);
+
+impl fmt::Display for RefKey {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "RefKey<{}>", self.0)
+    }
+}
+
+
 pub struct Instance {
-    pub id: String,
+    pub id: RefKey,
     pub classname: String,
     pub fields: HashMap<String, Object>,
     pub marked: bool
@@ -14,7 +25,7 @@ pub struct Instance {
 
 impl Instance {
 
-    pub fn new(id: String, classname: String) -> Instance {
+    pub fn new(id: RefKey, classname: String) -> Instance {
         Instance {
             id,
             classname,
@@ -81,15 +92,15 @@ impl Class {
 
 
     pub fn instantiate(&self) -> Instance {
-        return Instance::new(nuid::next(), self.name.clone());
+        return Instance::new(RefKey(nuid::next()), self.name.clone());
     }
 }
 
 
 pub struct ObjSys {
     classmap: HashMap<String, Class>,
-    instancemap: HashMap<String, Instance>,
-    this: String,
+    instancemap: HashMap<RefKey, Instance>,
+    this: RefKey,
 }
 
 
@@ -99,7 +110,7 @@ impl ObjSys {
         ObjSys {
             classmap: HashMap::new(),
             instancemap: HashMap::new(),
-            this: String::from(""),
+            this: RefKey(String::from("")),
         }
     }
 
@@ -126,51 +137,46 @@ impl ObjSys {
     }
 
 
-    pub fn get_instance(&self, id: &str) -> &Instance {
+    pub fn get_instance(&self, id: &RefKey) -> &Instance {
 
         if self.instancemap.contains_key(id) {
             return self.instancemap.get(id).unwrap()
         }
-
-        dprint("Registered instances: ");
-        for (k, _) in &self.instancemap {
-            dprint(format!("    {}", k));
-        }
-        panic!("Could not get this instance: {}", id);
+        panic!("Instance not found: {}", id);
     }
 
 
-    pub fn get_instance_mut(&mut self, id: &str) -> &mut Instance {
+    pub fn get_instance_mut(&mut self, id: &RefKey) -> &mut Instance {
         return self.instancemap.get_mut(id).unwrap()
     }
 
 
-    pub fn has_instance(&self, id: &str) -> bool {
+    pub fn has_instance(&self, id: &RefKey) -> bool {
         self.instancemap.contains_key(id)
     }
 
 
     pub fn has_this(&self) -> bool {
-        self.has_instance(self.this.as_str())
+        self.has_instance(&self.this)
     }
 
 
     pub fn get_this_instance_mut(&mut self) -> &mut Instance {
-        return self.instancemap.get_mut(self.this.as_str()).unwrap();
+        return self.instancemap.get_mut(&self.this).unwrap();
     }
 
 
-    pub fn get_this(&self) -> String {
+    pub fn get_this(&self) -> RefKey {
         return self.this.clone();
     }
 
 
-    pub fn set_this(&mut self, instance_id: String) {
+    pub fn set_this(&mut self, instance_id: RefKey) {
         self.this = instance_id;
     }
 
 
-    pub fn mark(&mut self, refid: &str) {
+    pub fn mark(&mut self, refid: &RefKey) {
 
         let p = self.instancemap.get_mut(refid).unwrap();
 
@@ -179,7 +185,7 @@ impl ObjSys {
         }
         p.marked = true;
 
-        let mut childs: Vec<String> = Vec::new();
+        let mut childs: Vec<RefKey> = Vec::new();
         for (_, obj) in p.fields.iter() {
             if let Object::Reference(refid) = obj {
                 childs.push(refid.clone());
@@ -187,7 +193,7 @@ impl ObjSys {
         }
 
         for cid in childs {
-            self.mark(cid.as_str());
+            self.mark(&cid);
         }
     }
 
@@ -196,7 +202,7 @@ impl ObjSys {
 
         // FOR EASIER DEBUG USE THIS INSTEAD:
 
-        let mut del: Vec<String> = Vec::new();
+        let mut del: Vec<RefKey> = Vec::new();
         for (k, v) in self.instancemap.iter() {
             if !v.marked {
                 del.push(k.clone());
@@ -215,7 +221,7 @@ impl ObjSys {
 
     pub fn clearmark(&mut self) {
 
-        let mut clear: Vec<String> = Vec::new();
+        let mut clear: Vec<RefKey> = Vec::new();
 
         for k in self.instancemap.keys() {
             clear.push(k.clone());
