@@ -183,10 +183,9 @@ fn filecurse(
             format!("{}/{}", basepath, filepath)
         };
 
+    state.filepath = filepath.clone();
     let input = read_file(fullpath.as_str());
     let mut tokens = lexer::lex(&input);
-
-    state.filepath = filepath.clone();
 
     let oldlen = state.globals.len();
 
