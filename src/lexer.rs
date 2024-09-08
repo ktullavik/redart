@@ -359,7 +359,7 @@ fn lex_real(input: &str, startpos: usize, interpol: usize, mut linenum: usize, m
                 continue;
             }
 
-            x if x.is_alphabetic() => {
+            x if x.is_alphabetic() || x == '_' => {
                 let word_len: usize = read_word(&mut tokens, &chars, i, linenum, symnum);
                 if word_len > 0 {
                     i += word_len;
