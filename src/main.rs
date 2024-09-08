@@ -262,23 +262,17 @@ fn evaluate(filepath: String, state: &mut State, dirs: &Dirs) {
 
     filecurse(basepath.clone(), String::from(filename), &mut memo, state, dirs);
 
-
     let toptable = &state.looktables[filename];
-
-
     if !toptable.contains_key("main") {
         // As Dart.
         panic!("Error: No 'main' method found.");
     }
 
-
     let mainindex: &usize = toptable.get("main").unwrap();
     let mainfunc = &state.globals[*mainindex].clone();
     state.filepath = filename.to_string();
 
-
     match &mainfunc.nodetype {
-
         NodeType::FunDef(_, _) => {
             utils::dprint(" ");
             utils::dprint("EVALUATE");
@@ -303,4 +297,3 @@ fn read_file(filepath: &str) -> String {
     f.read_to_string(&mut input).expect("Error when reading input file.");
     return input;
 }
-
