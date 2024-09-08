@@ -266,12 +266,7 @@ fn evaluate(filepath: String, state: &mut State, dirs: &Dirs) {
 
     match &mainfunc.nodetype {
         NodeType::FunDef(_, _) => {
-            utils::dprint(" ");
-            utils::dprint("EVALUATE");
-            utils::dprint(" ");
-
             let mainbody = &mainfunc.children[1];
-
             state.stack.push_call();
             evaluator::eval(mainbody, state, true);
             state.stack.pop_call();
