@@ -24,6 +24,8 @@ use std::collections::HashMap;
 use state::State;
 use node::NodeType;
 
+const DARTLIBDIR: &str = "/usr/home/kt/devel/redart/src/dartlib";
+
 
 fn main() {
 
@@ -177,12 +179,24 @@ fn filecurse(
     state: &mut State) {
 
 
-    let mut fpath = basepath.clone();
-    fpath.push_str("/");
-    fpath.push_str(filepath.as_str());
-
-
     println!("basepath: {}, filepath: {}", basepath, filepath);
+
+    let mut fpath = basepath.clone();
+
+    if filepath.starts_with("dart:") {
+        // Built-in library
+        fpath = String::from(DARTLIBDIR);
+        fpath.push_str("/core/");
+        let libname = filepath.clone().split_off(5);
+        fpath.push_str(&libname);
+        fpath.push_str(".dart");
+    }
+    else {
+        // User provided library.
+        fpath.push_str("/");
+        fpath.push_str(filepath.as_str());
+    }
+
 
     let input = read_file(fpath.as_str());
     let mut tokens = lexer::lex(&input);
