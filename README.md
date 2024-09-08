@@ -3,7 +3,7 @@ WIP toy interpreter for the Dart language.
 
 The ambition is to create a simpler and more portable
 implementation of Dart. It should run anywhere Rust can run.
-With humble memory requirements.
+And with humble memory requirements.
 
 ## Top missing features:
 * ~~Garbage collector~~.
