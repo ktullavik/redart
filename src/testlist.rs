@@ -1,7 +1,5 @@
-use std::env;
+use dirs::Dirs;
 
-pub static TESTPATH: &str = "test";
-pub static FAILTESTPATH: &str = "testfail";
 
 pub const TESTS: &'static [&'static str] = &[
     "0.void.dart",
@@ -104,28 +102,27 @@ pub const FAILTESTS: &'static [&'static str] = &[
 ];
 
 
-pub fn get_failfilepath(s: String) -> String {
+pub fn get_failfilepath(s: String, paths: &Dirs) -> String {
 
     return match s.parse::<usize>() {
         Ok(i) => {
-            format!("{}/{}/{}", env::current_dir().unwrap().display(), FAILTESTPATH, FAILTESTS[i])
+            format!("{}/{}", paths.failtestdir(), FAILTESTS[i])
         },
         Err(_e) => {
-            format!("{}/{}/{}", env::current_dir().unwrap().display(), FAILTESTPATH, s)
+            format!("{}/{}", paths.failtestdir(), s)
         },
     };
 }
 
 
-pub fn get_filepath(s: String) -> String {
+pub fn get_filepath(s: String, paths: &Dirs) -> String {
 
     return match s.parse::<usize>() {
         Ok(i) => {
-            ;
-            format!("{}/{}/{}", env::current_dir().unwrap().display(), TESTPATH, TESTS[i])
+            format!("{}/{}", paths.testdir(), TESTS[i])
         },
         Err(_e) => {
-            format!("{}/{}/{}", env::current_dir().unwrap().display(), TESTPATH, s)
+            format!("{}/{}", paths.testdir(), s)
         },
     };
 }

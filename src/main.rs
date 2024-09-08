@@ -16,15 +16,15 @@ mod object;
 mod testlist;
 mod state;
 mod reader;
+mod dirs;
 
 use std::io::prelude::*;
 use std::env;
 use std::fs::File;
 use std::collections::HashMap;
 use state::State;
+use dirs::Dirs;
 use node::NodeType;
-
-const DARTLIBDIR: &str = "/usr/home/kt/devel/redart/src/dartlib";
 
 
 fn main() {
@@ -36,7 +36,7 @@ fn main() {
         return;
     }
 
-
+    let dirs = Dirs::new();
     let mut state = State::new();
 
     let a1 = &args[1];
@@ -48,7 +48,7 @@ fn main() {
                 return;
             }
             state.filepath = String::from(&args[2]);
-            do_task("lex",args[2].clone(), &mut state);
+            do_task("lex",args[2].clone(), &mut state, &dirs);
         }
         "parse" => {
             if args.len() < 3 {
@@ -56,7 +56,7 @@ fn main() {
                 return;
             }
             state.filepath = String::from(&args[2]);
-            do_task("parse",args[2].clone(), &mut state);
+            do_task("parse",args[2].clone(), &mut state, &dirs);
         }
         "test" => {
             if args.len() < 3 {
@@ -65,9 +65,9 @@ fn main() {
                     println!("____________________________________________________");
                     println!("Running test: {}", s);
                     println!("----------------------------------------------------");
-                    let path = format!("{}/{}", testlist::TESTPATH, s);
+                    let path = format!("{}/{}", dirs.testdir(), s);
                     state.filepath = String::from(path.as_str());
-                    do_task("eval", String::from(path.as_str()), &mut state);
+                    do_task("eval", String::from(path.as_str()), &mut state, &dirs);
                 }
                 return;
             }
@@ -93,17 +93,17 @@ fn main() {
                 }
             }
 
-            let filepath = testlist::get_filepath(nextarg.clone());
+            let filepath = testlist::get_filepath(nextarg.clone(), &dirs);
             state.filepath = filepath.clone();
-            do_task(task, filepath, &mut state);
+            do_task(task, filepath, &mut state, &dirs);
         }
         "testfail" => {
             if args.len() < 3 {
                 println!("Running all fail tests:");
                 for s in testlist::FAILTESTS {
-                    let path = format!("{}/{}", testlist::FAILTESTPATH, s);
+                    let path = format!("{}/{}", dirs.failtestdir(), s);
                     state.filepath = String::from(path.as_str());
-                    do_task("eval", String::from(path.as_str()), &mut state);
+                    do_task("eval", String::from(path.as_str()), &mut state, &dirs);
                 }
                 return;
             }
@@ -129,9 +129,9 @@ fn main() {
                 }
             }
 
-            let filepath = testlist::get_failfilepath(nextarg.clone());
+            let filepath = testlist::get_failfilepath(nextarg.clone(), &dirs);
             state.filepath = filepath.clone();
-            do_task(task, filepath, &mut state);
+            do_task(task, filepath, &mut state, &dirs);
         }
         _ => {
             println!("Illegal argument: {}", a1);
@@ -140,7 +140,7 @@ fn main() {
 }
 
 
-fn do_task(action: &str, filepath: String, state: &mut State) {
+fn do_task(action: &str, filepath: String, state: &mut State, dirs: &Dirs) {
 
 
     match action {
@@ -163,7 +163,7 @@ fn do_task(action: &str, filepath: String, state: &mut State) {
             }
         }
         "eval" => {
-            evaluate(filepath, state);
+            evaluate(filepath, state, dirs);
         }
         x => {
             println!("Unknown action: {}", x);
@@ -176,7 +176,8 @@ fn filecurse(
     basepath: String,
     filepath: String,
     memo: &mut HashMap<String, (usize, usize)>,
-    state: &mut State) {
+    state: &mut State,
+    dirs: &Dirs) {
 
 
     println!("basepath: {}, filepath: {}", basepath, filepath);
@@ -185,7 +186,7 @@ fn filecurse(
 
     if filepath.starts_with("dart:") {
         // Built-in library
-        fpath = String::from(DARTLIBDIR);
+        fpath = dirs.libdir();
         fpath.push_str("/core/");
         let libname = filepath.clone().split_off(5);
         fpath.push_str(&libname);
@@ -237,7 +238,7 @@ fn filecurse(
             continue;
         }
 
-        filecurse(basepath.clone(), s.clone(), memo, state);
+        filecurse(basepath.clone(), s.clone(), memo, state, dirs);
 
         // For every import, merge its functions into this files looktable.
 
@@ -265,7 +266,7 @@ fn filecurse(
 }
 
 
-fn evaluate(filepath: String, state: &mut State) {
+fn evaluate(filepath: String, state: &mut State, dirs: &Dirs) {
 
     let mut memo: HashMap<String, (usize, usize)> = HashMap::new();
 
@@ -274,7 +275,7 @@ fn evaluate(filepath: String, state: &mut State) {
     let filename = parts.remove(parts.len() - 1);
     let basepath = parts.join("/");
 
-    filecurse(basepath.clone(), String::from(filename), &mut memo, state);
+    filecurse(basepath.clone(), String::from(filename), &mut memo, state, dirs);
 
 
     let toptable = &state.looktables[filename];
