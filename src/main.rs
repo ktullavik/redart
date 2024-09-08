@@ -99,6 +99,7 @@ fn main() {
         "testfail" => {
             if args.len() < 3 {
                 println!("Error: Argument expected.");
+                return;
             }
 
             let a2 : &String =  &args[2];
