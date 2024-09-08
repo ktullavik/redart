@@ -1,6 +1,7 @@
+use std::env;
 
-pub static TESTPATH: &str = "/usr/home/kt/devel/redart/test";
-pub static FAILTESTPATH: &str = "/usr/home/kt/devel/redart/testfail";
+pub static TESTPATH: &str = "test";
+pub static FAILTESTPATH: &str = "testfail";
 
 pub const TESTS: &'static [&'static str] = &[
     "0.void.dart",
@@ -107,10 +108,10 @@ pub fn get_failfilepath(s: String) -> String {
 
     return match s.parse::<usize>() {
         Ok(i) => {
-            format!("{}/{}", FAILTESTPATH, FAILTESTS[i])
+            format!("{}/{}/{}", env::current_dir().unwrap().display(), FAILTESTPATH, FAILTESTS[i])
         },
         Err(_e) => {
-            format!("{}/{}", FAILTESTPATH, s)
+            format!("{}/{}/{}", env::current_dir().unwrap().display(), FAILTESTPATH, s)
         },
     };
 }
@@ -120,10 +121,11 @@ pub fn get_filepath(s: String) -> String {
 
     return match s.parse::<usize>() {
         Ok(i) => {
-            format!("{}/{}", TESTPATH, TESTS[i])
+            ;
+            format!("{}/{}/{}", env::current_dir().unwrap().display(), TESTPATH, TESTS[i])
         },
         Err(_e) => {
-            format!("{}/{}", TESTPATH, s)
+            format!("{}/{}/{}", env::current_dir().unwrap().display(), TESTPATH, s)
         },
     };
 }
