@@ -8,7 +8,7 @@ use std::io::Read;
 pub fn has_function(name: &str) -> bool {
     match name {
         "assert" |
-        "__IO_READ_AS_STRING" |
+        "__IO_FILE_READ_AS_STRING" |
         "print" => true,
         _ => false
     }
@@ -67,12 +67,12 @@ pub fn call(name: &str, args: &Vec<Object>, state: &State) -> Object {
             }
         }
 
-        "__IO_READ_AS_STRING" => {
+        "__IO_FILE_READ_AS_STRING" => {
             if args.len() < 1 {
-                panic!("Argument expected by __IO_READ_AS_STRING.");
+                panic!("Argument expected by __IO_FILE_READ_AS_STRING.");
             }
 
-            match(&args[0]) {
+            match &args[0] {
 
                 Object::String(s) => {
                     let mut file = File::open(s).unwrap();
