@@ -179,9 +179,6 @@ fn filecurse(
     state: &mut State,
     dirs: &Dirs) {
 
-
-    println!("basepath: {}, filepath: {}", basepath, filepath);
-
     let mut fpath = basepath.clone();
 
     if filepath.starts_with("dart:") {
@@ -198,12 +195,10 @@ fn filecurse(
         fpath.push_str(filepath.as_str());
     }
 
-
     let input = read_file(fpath.as_str());
     let mut tokens = lexer::lex(&input);
 
     state.filepath = filepath.clone();
-
 
     let oldlen = state.globals.len();
 
@@ -212,7 +207,6 @@ fn filecurse(
     memo.insert(filepath.clone(), (oldlen, state.globals.len()));
 
     let mut looktable: HashMap<String, usize> = HashMap::new();
-
 
     for i in oldlen..state.globals.len() {
         let f = &state.globals[i];
@@ -231,13 +225,11 @@ fn filecurse(
         }
     }
 
-
     for s in imports {
 
         if memo.contains_key(&s) {
             continue;
         }
-
         filecurse(basepath.clone(), s.clone(), memo, state, dirs);
 
         // For every import, merge its functions into this files looktable.
@@ -260,9 +252,7 @@ fn filecurse(
             }
         }
     }
-
     state.looktables.insert(filepath.clone(), looktable);
-
 }
 
 
