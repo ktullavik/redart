@@ -98,13 +98,7 @@ fn main() {
         }
         "testfail" => {
             if args.len() < 3 {
-                println!("Running all fail tests:");
-                for s in testlist::FAILTESTS {
-                    let path = format!("{}/{}", dirs.failtestdir(), s);
-                    state.filepath = String::from(path.as_str());
-                    do_task("eval", String::from(path.as_str()), &mut state, &dirs);
-                }
-                return;
+                println!("Error: Argument expected.");
             }
 
             let a2 : &String =  &args[2];
