@@ -44,7 +44,7 @@ fn main() {
     match a1.as_str() {
         "lex" => {
             if args.len() < 3 {
-                println!("Please specify file ...");
+                println!("Error: File argument expected.");
                 return;
             }
             state.filepath = String::from(&args[2]);
@@ -52,7 +52,7 @@ fn main() {
         }
         "parse" => {
             if args.len() < 3 {
-                println!("Please specify file...");
+                println!("Error: File argument expected.");
                 return;
             }
             state.filepath = String::from(&args[2]);
