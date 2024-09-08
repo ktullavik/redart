@@ -72,11 +72,10 @@ fn main() {
                 return;
             }
 
-            let a2 : &String =  &args[2];
             let mut task = "eval";
             let nextarg: &String;
 
-            match a2.as_str() {
+            match args[2].as_str() {
                 "lex" => {
                     task = "lex";
                     nextarg = &args[3];
