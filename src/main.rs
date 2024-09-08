@@ -142,7 +142,6 @@ fn main() {
 
 fn do_task(action: &str, filepath: String, state: &mut State, dirs: &Dirs) {
 
-
     match action {
         "lex" => {
             let input = read_file(filepath.as_str());
