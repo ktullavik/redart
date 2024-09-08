@@ -179,23 +179,18 @@ fn filecurse(
     state: &mut State,
     dirs: &Dirs) {
 
-    let mut fpath = basepath.clone();
+    let fullpath =
+        if filepath.starts_with("dart:") {
+            // Built-in library
+            let libname = filepath.clone().split_off(5);
+            format!("{}/core/{}.dart", dirs.libdir(), libname)
+        }
+        else {
+            // User provided library.
+            format!("{}/{}", basepath, filepath)
+        };
 
-    if filepath.starts_with("dart:") {
-        // Built-in library
-        fpath = dirs.libdir();
-        fpath.push_str("/core/");
-        let libname = filepath.clone().split_off(5);
-        fpath.push_str(&libname);
-        fpath.push_str(".dart");
-    }
-    else {
-        // User provided library.
-        fpath.push_str("/");
-        fpath.push_str(filepath.as_str());
-    }
-
-    let input = read_file(fpath.as_str());
+    let input = read_file(fullpath.as_str());
     let mut tokens = lexer::lex(&input);
 
     state.filepath = filepath.clone();
