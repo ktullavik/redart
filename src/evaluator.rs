@@ -830,6 +830,7 @@ pub fn eval(
 
         NodeType::FunCall(s) => {
 
+            // First look in stack.
             if state.stack.has(s) {
                 let funcobj = state.stack.get(s).clone();
 
@@ -843,39 +844,40 @@ pub fn eval(
                     _ => panic!("Called non-callable.")
                 }
             }
-            else if builtin::has_function(s) {
 
+            // Next we look at other functions available from current file.
+            let ltable = &state.looktables[&state.filepath];
+            if ltable.contains_key(s) {
+
+                let funcindex = ltable.get(s).unwrap();
+                let funcnode = &state.globals[*funcindex];
+
+                return match funcnode.nodetype {
+                    NodeType::FunDef(_, _) => {
+                        call_function(
+                            create_function(&funcnode),
+                            &node.children[0],
+                            state)
+                    }
+                    NodeType::Constructor(_, _) => {
+                        call_constructor(
+                            &create_constructor(&funcnode),
+                            &node.children[0],
+                            state)
+                    }
+                    _ => panic!("Expected function definition or constructor.")
+                }
+            }
+
+            // Third we check if we have a built-in function.
+            if builtin::has_function(s) {
                 let mut args = argnodes_to_argobjs(
                     &node.children[0].children,
                     state);
                 return builtin::call(s, &mut args, state);
             }
-            else {
-                let ltable = &state.looktables[&state.filepath];
-                if ltable.contains_key(s) {
 
-                    let funcindex = ltable.get(s).unwrap().clone();
-                    let funcnode = &state.globals[funcindex];
-
-                    return match funcnode.nodetype {
-                        NodeType::FunDef(_, _) => {
-                            call_function(
-                                create_function(&funcnode),
-                                &node.children[0],
-                                state)
-                        }
-                        NodeType::Constructor(_, _) => {
-                            call_constructor(
-                                &create_constructor(&funcnode),
-                                &node.children[0],
-                                state)
-                        }
-                        _ => panic!("Expected function definition or constructor.")
-                    }
-                }
-
-                panic!("Unknown function: {}", s)
-            }
+            dart_evalerror("Function not found.", state)
         }
 
         NodeType::FunDef(s, _) => {
