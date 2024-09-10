@@ -4,6 +4,7 @@ use builtin;
 use utils::dart_evalerror;
 use object::{Object, ParamObj};
 use std::ops::{BitAnd, BitOr, BitXor};
+use objsys::RefKey;
 
 
 pub fn eval(
@@ -768,62 +769,16 @@ pub fn eval(
             return Object::Return(Box::new(retval));
         }
 
-        NodeType::MethodCall(name, owner, filename) => {
+        NodeType::MethodCall(name, owner, _filename) => {
 
             let reference: Object = eval(owner, state, true);
 
             if let Object::Reference(refid) = reference {
-
                 let instance = state.objsys.get_instance(&refid);
                 let c = state.objsys.get_class(&instance.classname);
-                let instance_id = instance.id.clone();
+                let meth_obj = c.get_method(name);
 
-                let meth = c.get_method(name);
-                if let Object::Function(_, _, funcnode, params) = meth {
-
-                    let argslist = &node.children[0];
-
-                    if argslist.children.len() != params.len() {
-                        dart_evalerror(format!("In method call {}, {} arguments expected but {} given.",
-                        name, params.len(), argslist.children.len()), state);
-                    }
-
-                    // Args must be evaluated where they are passed.
-                    let mut argobjects = Vec::new();
-                    for i in 0 .. params.len() {
-                        let argtree = &argslist.children[i];
-                        let argobj = eval(argtree, state, true);
-                        argobjects.push(argobj);
-                    }
-
-                    // Args must go to the new call frame.
-                    state.stack.push_call();
-
-                    for i in 0 .. params.len() {
-                        state.stack.add(params[i].name.as_str(), argobjects.pop().unwrap());
-                    }
-
-                    let oldfilename = state.filepath.clone();
-                    state.filepath = filename.clone();
-                    let oldthis = state.objsys.get_this();
-                    state.objsys.set_this(instance_id);
-
-                    let result = eval(&funcnode, state, true);
-
-                    state.objsys.set_this(oldthis);
-                    state.filepath = oldfilename;
-                    state.stack.pop_call();
-
-                    return match result {
-                        Object::Return(v) => {
-                            *v.clone()
-                        }
-
-                        _ => {
-                            result.clone()
-                        }
-                    }
-                }
+                return call_function(MaybeRef::Ref(refid), &meth_obj, &node.children[0], state)
             }
             panic!("Can't access {} of {}", name, owner);
         }
@@ -836,7 +791,7 @@ pub fn eval(
 
                 return match funcobj {
                     Object::Function(_, _, _, _) => {
-                        call_function(funcobj, &node.children[0], state)
+                        call_function(MaybeRef::None, &funcobj, &node.children[0], state)
                     }
                     Object::Constructor(_, _, _, _) => {
                         call_constructor(&funcobj, &node.children[0], state)
@@ -855,7 +810,8 @@ pub fn eval(
                 return match funcnode.nodetype {
                     NodeType::FunDef(_, _) => {
                         call_function(
-                            create_function(&funcnode),
+                            MaybeRef::None,
+                            &create_function(&funcnode),
                             &node.children[0],
                             state)
                     }
@@ -1081,43 +1037,70 @@ fn create_function(funcnode: &Node) -> Object {
 }
 
 
-fn call_function(
-    funcobj: Object,
+pub enum MaybeRef {
+    None,
+    Ref(RefKey)
+}
+
+
+pub fn call_function(
+    instance: MaybeRef,
+    func: &Object,
     args: &Node,
     state: &mut State) -> Object {
+    
+    match func {
 
-    match funcobj {
+        Object::Function(funcname, filename, body, params) => {
 
-        Object::Function(_, filename, body, params) => {
-
+            if args.children.len() != params.len() {
+                dart_evalerror(format!("In method call {}, {} arguments expected but {} given.",
+                funcname, params.len(), args.children.len()), state);
+            }
+    
             let mut argobjs = argnodes_to_argobjs(
                 &args.children,
                 state
             );
-
-            // Argtrees must be evaluated in callers context, but stored in new context.
-
+    
+            // Argtrees must be evaluated in the callers context,
+            // but stored in the new call frame.
+    
             state.stack.push_call();
-            for i in 0..params.len() {
-                state.stack.add(params[i].name.as_str(), argobjs.remove(0));
+            for i in 0 .. params.len() {
+                state.stack.add(params[i].name.as_str(), argobjs.pop().unwrap());
+            }
+    
+            let oldfilename = state.filepath.clone();
+            state.filepath = filename.clone();
+
+            let mut oldthis = MaybeRef::None;
+            if let MaybeRef::Ref(rk) = instance {
+                oldthis = MaybeRef::Ref(state.objsys.get_this());
+                state.objsys.set_this(rk);
+            }
+    
+            let result = eval(&body, state, true);
+    
+            if let MaybeRef::Ref(old_rk) = oldthis {
+                state.objsys.set_this(old_rk);
             }
 
-            let oldfilepath = state.filepath.clone();
-            state.filepath = filename;
-            let result = eval(&body, state, true);
-            state.filepath = oldfilepath;
+            state.filepath = oldfilename;
             state.stack.pop_call();
-
+    
             return match result {
                 Object::Return(v) => {
-                    *v
+                    *v.clone()
                 }
+    
                 _ => {
-                    result
+                    result.clone()
                 }
             }
         }
-        _ => panic!("Called a non-function object.")
+
+        x => panic!("Called a non-function object: {}", x)
     }
 }
 
