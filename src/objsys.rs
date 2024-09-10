@@ -82,6 +82,11 @@ impl Class {
     }
 
 
+    pub fn has_method(&self, methname: &str) -> bool {
+        self.methods.contains_key(methname)
+    }
+
+
     pub fn get_method(&self, methname: &str) -> Object {
 
         if let Object::Function(_, _, _, _) = &self.methods[methname] {
