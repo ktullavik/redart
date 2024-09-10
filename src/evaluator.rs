@@ -845,10 +845,10 @@ pub fn eval(
             }
             else if builtin::has_function(s) {
 
-                let args = argnodes_to_argobjs(
+                let mut args = argnodes_to_argobjs(
                     &node.children[0].children,
                     state);
-                return builtin::call(s, &args, state);
+                return builtin::call(s, &mut args, state);
             }
             else {
                 let ltable = &state.looktables[&state.filepath];

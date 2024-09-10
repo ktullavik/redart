@@ -20,7 +20,9 @@ pub fn has_function(name: &str) -> bool {
 }
 
 
-pub fn call(name: &str, args: &Vec<Object>, state: &mut State) -> Object {
+// Warning: args can not only be changed internally. This function takes
+// ownership of the arg objects by removing them from the list.
+pub fn call(name: &str, args: &mut Vec<Object>, state: &mut State) -> Object {
     match name {
 
         "assert" => {
@@ -133,17 +135,18 @@ pub fn call(name: &str, args: &Vec<Object>, state: &mut State) -> Object {
                 panic!("Two arguments expected by __LIST_ADD.");
             }
 
-            // Arrrgh! Cloning the list is not nice.
-            match args[0].clone() {
+            let new_el = args[1].clone();
 
-                Object::__InternalList(mut vec) => {
-                    vec.push(args[1].clone());
-                    return Object::__InternalList(vec);
+            match args.get_mut(0).unwrap() {
+
+                Object::__InternalList(vec) => {
+                    vec.push(new_el);
                 }
 
                 x => panic!("Unexpected argument for __LIST_ADD: {}", x)
             }
 
+            return args.remove(0);
         }
 
         "__LIST_CLEAR" => {
@@ -151,16 +154,15 @@ pub fn call(name: &str, args: &Vec<Object>, state: &mut State) -> Object {
                 panic!("Argument expected by __LIST_CLEAR.");
             }
 
+            match args.get_mut(0).unwrap() {
 
-            match args[0].clone() {
-
-                Object::__InternalList(mut vec) => {
+                Object::__InternalList(vec) => {
                     vec.clear();
-                    return Object::__InternalList(vec);
                 }
 
                 x => panic!("Unexepcted argument for __LIST_CLEAR: {}", x)
             }
+            return args.remove(0);
         }
 
         "__LIST_TOSTRING" => {
