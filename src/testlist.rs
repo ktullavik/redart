@@ -84,6 +84,7 @@ pub const TESTS: &'static [&'static str] = &[
     "79.string_interpolation_with_dot.dart",
     "80.read_file_as_string.dart",
     "81.list_add_element.dart",
+    "82.list_clear.dart",
     "500.multifile/main.dart",
     "501.external_constructor/main.dart"
 ];
