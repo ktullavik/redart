@@ -3,7 +3,10 @@ use object::Object;
 use std::process;
 use std::fs::File;
 use std::io::Read;
-use evaluator::eval;
+use evaluator::call_function;
+use evaluator::MaybeRef;
+use NodeType;
+use node::Node;
 
 
 pub fn has_function(name: &str) -> bool {
@@ -79,31 +82,19 @@ pub fn call(name: &str, args: &mut Vec<Object>, state: &mut State) -> Object {
                 panic!("Argument expected by print.");
             }
             if let Object::Reference(k) = &args[0] {
+
                 let inst = state.objsys.get_instance(k);
-                
                 let c = state.objsys.get_class(&inst.classname);
                 let m = c.get_method("toString");
 
-                match m {
-
-                    Object::Function(_, filename, node, _) => {
-
-                        state.stack.push_call();
-                        let oldfilename = state.filepath.clone();
-                        state.filepath = filename.clone();
-                        let oldthis = state.objsys.get_this();
-                        state.objsys.set_this(inst.id.clone());
-
-                        eval(&node, state, true);
-
-                        state.objsys.set_this(oldthis);
-                        state.filepath = oldfilename;
-                        state.stack.pop_call();
+                match &m {
+                    Object::Function(_, _, _, _) => {
+                        let tostring_args = Node::new(NodeType::ArgList);
+                        let strobj = call_function(MaybeRef::Ref(inst.id.clone()), &m, &tostring_args, state);
+                        println!("{}", strobj);
                     }
-
                     x => panic!("Error: toString was not a function: {}", x)
                 }
-
             }
             else {
                 println!("{}", &args[0]);
@@ -169,9 +160,7 @@ pub fn call(name: &str, args: &mut Vec<Object>, state: &mut State) -> Object {
             if args.len() < 1 {
                 panic!("Argument expected by __LIST_TOSTRING");
             }
-
-            println!("{}", args[0]);
-            
+            return Object::String(format!("{}", args[0]));
         }
 
 
