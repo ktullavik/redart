@@ -776,6 +776,11 @@ pub fn eval(
             if let Object::Reference(refid) = reference {
                 let instance = state.objsys.get_instance(&refid);
                 let c = state.objsys.get_class(&instance.classname);
+
+                if !c.has_method(name) {
+                    dart_evalerror(format!("No method '{}' for object of type {}",
+                        name, &instance.classname), state);
+                }
                 let meth_obj = c.get_method(name);
 
                 return call_function(MaybeRef::Ref(refid), &meth_obj, &node.children[0], state)
