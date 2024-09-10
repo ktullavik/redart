@@ -1028,6 +1028,23 @@ pub fn eval(
             return Object::Null;
         }
 
+        NodeType::List => {
+
+            let class = state.objsys.get_class("List");
+            let mut inst = class.instantiate();
+            
+            let mut vals: Vec<Object> = Vec::new();
+            for c in &node.children {
+                let v = eval(c, state, true);
+                vals.push(v);
+            }
+            let ilist = Object::__InternalList(vals);
+            inst.set_field(String::from("__list"), ilist);
+
+            let instref = state.objsys.register_instance(inst);
+            return instref;
+        }
+
         NodeType::Null => {
             return Object::Null;
         }
