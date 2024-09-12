@@ -321,20 +321,36 @@ impl ObjSys {
 
     pub fn sweep(&mut self) {
 
-        // FOR EASIER DEBUG USE THIS INSTEAD:
+        // FOR EASIER DEBUG USE THIS:
 
-        let mut del: Vec<RefKey> = Vec::new();
+        let mut del_instances: Vec<RefKey> = Vec::new();
+        let mut del_lists: Vec<RefKey> = Vec::new();
+
         for (k, v) in self.instancemap.iter() {
             if !v.marked {
-                del.push(k.clone());
+                del_instances.push(k.clone());
             }
         }
-        for k in del {
+        for (k, v) in &self.listmap {
+            if !v.marked {
+                del_lists.push(k.clone());
+            }
+        }
+        for k in del_instances {
             println!("Garbagecollecting: {}", k);
             self.instancemap.remove(&k);
         }
+        for k in del_lists {
+            self.listmap.remove(&k);
+        }
+
+        // ELSE USE THIS:
 
         // self.instancemap.retain(|_, v| {
+            // v.marked
+        // });
+
+        // self.listmap.retain(|_, v| {
             // v.marked
         // });
     }
@@ -342,14 +358,21 @@ impl ObjSys {
 
     pub fn clearmark(&mut self) {
 
-        let mut clear: Vec<RefKey> = Vec::new();
+        let mut clear_instances: Vec<RefKey> = Vec::new();
+        let mut clear_lists: Vec<RefKey> = Vec::new();
 
         for k in self.instancemap.keys() {
-            clear.push(k.clone());
+            clear_instances.push(k.clone());
+        }
+        for k in self.listmap.keys() {
+            clear_lists.push(k.clone());
         }
 
-        for k in clear {
+        for k in clear_instances {
             self.instancemap.get_mut(&k).unwrap().marked = false;
+        }
+        for k in clear_lists {
+            self.listmap.get_mut(&k).unwrap().marked = false;
         }
     }
 
