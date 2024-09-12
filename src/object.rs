@@ -22,14 +22,16 @@ impl fmt::Display for ParamObj {
 }
 
 
-// #[derive(Debug)]
+// These are the primitive objects. They should
+// be passed by value and cloning should be allowed.
+// That is, they can't be made to depend on references
+// that may refer to stale copies of the object.
 #[derive(Clone)]
 pub enum Object {
     Int(i64),
     Double(f64),
     Bool(bool),
     String(String),
-    __InternalList(Vec<Object>),
     // funcname, filename, body, params
     Function(String, String, Node, Vec<ParamObj>),    // funcname, filename, body, params
     Constructor(String, String, Node, Vec<ParamObj>), // consname, filename, body, params
@@ -49,21 +51,6 @@ impl fmt::Display for Object {
             Object::Double(x) => write!(f, "{}", x),
             Object::Bool(b) => write!(f, "{}", b),
             Object::String(s) => write!(f, "{}", s),
-            Object::__InternalList(ilist) => {
-                let len = ilist.len();
-                if len == 0 {
-                    return write!(f, "[]");
-                }
-                let mut i = 0;
-                _ = write!(f, "[");
-                while i < len - 1 {
-                    _ = write!(f, "{}", ilist[i]);
-                    _ = write!(f, ",");
-                    i += 1;
-                }
-                _ = write!(f, "{}", ilist[i]);
-                return write!(f, "]")
-            },
             Object::Function(_, _, _, _) => {
                 // Dart prints a function signature, like: (int) => String.
                 // But since the function will turn into a closure, it really prints

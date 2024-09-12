@@ -16,6 +16,7 @@ pub fn has_function(name: &str) -> bool {
         "__IO_FILE_READ_AS_STRING" |
         "__LIST_ADD" |
         "__LIST_CLEAR" |
+        "__LIST_REMOVELAST" |
         "__LIST_TOSTRING"
         => true,
         _ => false
@@ -23,8 +24,6 @@ pub fn has_function(name: &str) -> bool {
 }
 
 
-// Warning: args can not only be changed internally. This function takes
-// ownership of the arg objects by removing them from the list.
 pub fn call(name: &str, args: &mut Vec<Object>, state: &mut State) -> Object {
     match name {
 
@@ -84,7 +83,7 @@ pub fn call(name: &str, args: &mut Vec<Object>, state: &mut State) -> Object {
             if let Object::Reference(k) = &args[0] {
 
                 let inst = state.objsys.get_instance(k);
-                let c = state.objsys.get_class(&inst.classname);
+                let c = state.objsys.get_class(inst.classname.as_str());
                 let m = c.get_method("toString");
 
                 match &m {
@@ -114,10 +113,7 @@ pub fn call(name: &str, args: &mut Vec<Object>, state: &mut State) -> Object {
                     file.read_to_string(&mut content).unwrap();
                     return Object::String(content);
                 }
-
-                _ => {
-                    panic!("Unexpected argument for __IO_READ_AS_STRING")
-                }
+                _ => panic!("Unexpected argument for __IO_READ_AS_STRING")
             }
         }
 
@@ -126,18 +122,15 @@ pub fn call(name: &str, args: &mut Vec<Object>, state: &mut State) -> Object {
                 panic!("Two arguments expected by __LIST_ADD.");
             }
 
-            let new_el = args[1].clone();
+            match args.get(0).unwrap() {
 
-            match args.get_mut(0).unwrap() {
-
-                Object::__InternalList(vec) => {
-                    vec.push(new_el);
+                Object::Reference(rk) => {
+                    let ilist = state.objsys.get_list_mut(rk);
+                    ilist.add(args[1].clone());
                 }
-
                 x => panic!("Unexpected argument for __LIST_ADD: {}", x)
             }
-
-            return args.remove(0);
+            return Object::Null;
         }
 
         "__LIST_CLEAR" => {
@@ -145,24 +138,44 @@ pub fn call(name: &str, args: &mut Vec<Object>, state: &mut State) -> Object {
                 panic!("Argument expected by __LIST_CLEAR.");
             }
 
-            match args.get_mut(0).unwrap() {
+            match args.get(0).unwrap() {
 
-                Object::__InternalList(vec) => {
-                    vec.clear();
+                Object::Reference(rk) => {
+                    let ilist = state.objsys.get_list_mut(rk);
+                    ilist.set_elements(Vec::new());
+                    // state.liststore.set_elements(rk.clone(), Vec::new())
                 }
-
                 x => panic!("Unexepcted argument for __LIST_CLEAR: {}", x)
             }
-            return args.remove(0);
+            return Object::Null;
+        }
+
+        "__LIST_REMOVELAST" => {
+            if args.len() < 1 {
+                panic!("Argument expected by __LIST_REMOVELAST");
+            }
+
+            match args.get(0).unwrap() {
+
+                Object::Reference(rk) => {
+                    let ilist = state.objsys.get_list_mut(rk);
+                    return ilist.remove_last();
+                }
+                x => panic!("Unexepected argument for __LIST_REMOVELAST: {}", x)
+            }
         }
 
         "__LIST_TOSTRING" => {
             if args.len() < 1 {
                 panic!("Argument expected by __LIST_TOSTRING");
             }
+
+            if let Object::Reference(rk) = &args[0]  {
+                let ilist = state.objsys.get_list(rk);
+                return Object::String(ilist.to_string());
+            }
             return Object::String(format!("{}", args[0]));
         }
-
 
         _ => panic!("Unknown command: {}", name)
     }

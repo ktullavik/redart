@@ -7,12 +7,18 @@ class List {
 
 
     void add(el) {
-        __list = __LIST_ADD(__list, el);
+        __LIST_ADD(__list, el);
     }
 
 
     void clear() {
-        __list = __LIST_CLEAR(__list);
+        __LIST_CLEAR(__list);
+    }
+
+
+    void removeLast() {
+        // Returns the removed element.
+        return __LIST_REMOVELAST(__list);
     }
 
 

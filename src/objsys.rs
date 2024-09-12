@@ -15,6 +15,60 @@ impl fmt::Display for RefKey {
 }
 
 
+pub struct InternalList {
+    pub id: RefKey,
+    pub els: Vec<Object>,
+    pub marked: bool
+}
+
+impl InternalList {
+    
+    pub fn new() -> InternalList {
+        InternalList {
+            id: RefKey(nuid::next()),
+            els: Vec::new(),
+            marked: false
+        }
+    }
+
+    pub fn set_elements(&mut self, new_els: Vec<Object>) {
+        self.els = new_els;
+    }
+
+
+    pub fn add(&mut self, el: Object) {
+        self.els.push(el);
+    }
+
+
+    pub fn remove_last(&mut self) -> Object {
+        if self.els.len() > 0 {
+            return self.els.pop().unwrap()
+        }
+        Object::Null
+    }
+
+
+    pub fn to_string(&self) -> String {
+        let mut s = String::from("[");
+
+        if self.els.len() == 0 {
+            return String::from("[]");
+        }
+
+        let mut i = 0;
+        while i < self.els.len() - 1 {
+            s.push_str(format!("{}", self.els[i]).as_str());
+            s.push_str(", ");
+            i += 1;
+        }
+        s.push_str(format!("{}", self.els[i]).as_str());
+        s.push_str("]");
+        return s;
+    }
+}
+
+
 pub struct Instance {
     pub id: RefKey,
     pub classname: String,
@@ -25,9 +79,9 @@ pub struct Instance {
 
 impl Instance {
 
-    pub fn new(id: RefKey, classname: String) -> Instance {
+    pub fn new(classname: String) -> Instance {
         Instance {
-            id,
+            id: RefKey(nuid::next()),
             classname,
             fields: HashMap::new(),
             marked: false
@@ -46,6 +100,15 @@ impl Instance {
     pub fn has_field(&self, name: String) -> bool {
         self.fields.contains_key(name.as_str())
     }
+
+
+    // pub fn print_fields(&self) {
+    //     println!("FIELDS FOR {} of type {}", self.id, self.classname);
+    //     for (fieldname, val) in &self.fields {
+    //         println!("{} = {}", fieldname, val);
+    //     }
+    // }
+
 }
 
 
@@ -96,15 +159,16 @@ impl Class {
     }
 
 
-    pub fn instantiate(&self) -> Instance {
-        return Instance::new(RefKey(nuid::next()), self.name.clone());
+    pub fn instantiate(&self) -> Box<Instance> {
+        return Box::new(Instance::new(self.name.clone()));
     }
 }
 
 
 pub struct ObjSys {
     classmap: HashMap<String, Class>,
-    instancemap: HashMap<RefKey, Instance>,
+    instancemap: HashMap<RefKey, Box::<Instance>>,
+    listmap: HashMap<RefKey, Box::<InternalList>>,
     this: RefKey,
 }
 
@@ -115,6 +179,7 @@ impl ObjSys {
         ObjSys {
             classmap: HashMap::new(),
             instancemap: HashMap::new(),
+            listmap: HashMap::new(),
             this: RefKey(String::from("")),
         }
     }
@@ -131,28 +196,50 @@ impl ObjSys {
 
 
     pub fn get_class(&self, name: &str) -> &Class {
+        println!("Get class: {}", name);
         self.classmap.get(name).unwrap()
     }
 
 
     pub fn register_instance(&mut self, instance: Instance) -> Object {
-        let id = instance.id.clone();
-        self.instancemap.insert(id.clone(), instance);
-        return Object::Reference(id);
+        let inst = Box::new(instance);
+        let rk = inst.id.clone();
+        self.instancemap.insert(rk.clone(), inst);
+        return Object::Reference(rk);
+    }
+
+
+    pub fn register_list(&mut self, list: InternalList) -> Object {
+        let inst = Box::new(list);
+        let rk = inst.id.clone();
+        self.listmap.insert(rk.clone(), inst);
+        return Object::Reference(rk);
     }
 
 
     pub fn get_instance(&self, id: &RefKey) -> &Instance {
-
         if self.instancemap.contains_key(id) {
-            return self.instancemap.get(id).unwrap()
+            return &self.instancemap.get(id).unwrap();
         }
         panic!("Instance not found: {}", id);
     }
 
 
+    pub fn get_list(&self, id: &RefKey) -> &InternalList {
+        if self.listmap.contains_key(id) {
+            return &self.listmap.get(id).unwrap();
+        }
+        panic!("InternalList not found: {}", id);
+    }
+
+
     pub fn get_instance_mut(&mut self, id: &RefKey) -> &mut Instance {
-        return self.instancemap.get_mut(id).unwrap()
+        return self.instancemap.get_mut(id).unwrap();
+    }
+
+
+    pub fn get_list_mut(&mut self, id: &RefKey) -> &mut InternalList {
+        return self.listmap.get_mut(id).unwrap();
     }
 
 
@@ -161,6 +248,13 @@ impl ObjSys {
     }
 
 
+    pub fn has_list(&self, id: &RefKey) -> bool {
+        self.instancemap.contains_key(id)
+    }
+
+    // NB, only Instances can be THIS for now.
+
+    // This could just check if the this string is empty?
     pub fn has_this(&self) -> bool {
         self.has_instance(&self.this)
     }
@@ -181,20 +275,42 @@ impl ObjSys {
     }
 
 
-    pub fn mark(&mut self, refid: &RefKey) {
-
-        let p = self.instancemap.get_mut(refid).unwrap();
-
-        if p.marked {
-            return;
-        }
-        p.marked = true;
+    pub fn mark(&mut self, rk: &RefKey) {
 
         let mut childs: Vec<RefKey> = Vec::new();
-        for (_, obj) in p.fields.iter() {
-            if let Object::Reference(refid) = obj {
-                childs.push(refid.clone());
+
+        if self.instancemap.contains_key(rk) {
+
+            let p = self.instancemap.get_mut(rk).unwrap();
+
+            if p.marked {
+                return;
             }
+            p.marked = true;
+
+            for (_, obj) in p.fields.iter() {
+                if let Object::Reference(refid) = obj {
+                    childs.push(refid.clone());
+                }
+            }
+        }
+        else if self.listmap.contains_key(rk) {
+            let p = self.listmap.get_mut(rk).unwrap();
+
+            if p.marked {
+                return;
+            }
+            p.marked = true;
+
+
+            for obj in p.els.iter() {
+                if let Object::Reference(refid) = obj {
+                    childs.push(refid.clone());
+                }
+            }
+        }
+        else {
+            panic!("GC could not find heap object: {}", rk)
         }
 
         for cid in childs {
@@ -236,8 +352,6 @@ impl ObjSys {
             self.instancemap.get_mut(&k).unwrap().marked = false;
         }
     }
-
-
 
 }
 

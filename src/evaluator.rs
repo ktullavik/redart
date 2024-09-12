@@ -5,6 +5,7 @@ use utils::dart_evalerror;
 use object::{Object, ParamObj};
 use std::ops::{BitAnd, BitOr, BitXor};
 use objsys::RefKey;
+use objsys::InternalList;
 
 
 pub fn eval(
@@ -1001,10 +1002,14 @@ pub fn eval(
                 let v = eval(c, state, true);
                 vals.push(v);
             }
-            let ilist = Object::__InternalList(vals);
-            inst.set_field(String::from("__list"), ilist);
 
-            let instref = state.objsys.register_instance(inst);
+            let mut ilist = InternalList::new();
+            ilist.set_elements(vals);
+
+            inst.set_field(String::from("__list"), Object::Reference(ilist.id.clone()));
+            state.objsys.register_list(ilist);
+
+            let instref = state.objsys.register_instance(*inst);
             return instref;
         }
 
@@ -1176,7 +1181,7 @@ fn call_constructor(
                 inst.set_field(fname.clone(), eval(initexpr, state, true));
             }
 
-            let instref = state.objsys.register_instance(inst);
+            let instref = state.objsys.register_instance(*inst);
 
             // Run the constructor body.
 
