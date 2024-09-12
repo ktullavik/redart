@@ -114,7 +114,6 @@ impl Instance {
 
 pub struct Class {
     pub name: String,
-    pub classid: String,
     pub fields: Vec<(String, String, Node)>,
     pub methods: HashMap<String, Object>,
 }
@@ -126,7 +125,6 @@ impl Class {
 
         Class {
             name,
-            classid: nuid::next(),
             fields: Vec::new(),
             methods: HashMap::new()
         }
@@ -247,10 +245,6 @@ impl ObjSys {
         self.instancemap.contains_key(id)
     }
 
-
-    pub fn has_list(&self, id: &RefKey) -> bool {
-        self.instancemap.contains_key(id)
-    }
 
     // NB, only Instances can be THIS for now.
 
