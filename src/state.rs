@@ -17,7 +17,7 @@ pub struct State {
     pub stack: Stack,
     pub objsys: ObjSys,
     pub constructing: Vec<RefKey>,
-    pub time: Instant,
+    pub start_time: Instant,
     pub last_gc: Instant,
     pub debug: bool
 }
@@ -33,7 +33,7 @@ impl  State {
             stack: Stack::new(),
             objsys: ObjSys::new(),
             constructing: Vec::new(),
-            time: Instant::now(),
+            start_time: Instant::now(),
             last_gc: Instant::now(),
             debug: false
         }

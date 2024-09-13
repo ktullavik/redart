@@ -984,9 +984,9 @@ pub fn eval(
             for c in &node.children {
 
                 if Instant::now() - state.last_gc > GC_TIME {
-                    let gc_start = state.time.elapsed();
+                    let gc_start = state.start_time.elapsed();
                     state.stack.garbagecollect(&mut state.objsys, &state.constructing);
-                    let gc_end = state.time.elapsed();
+                    let gc_end = state.start_time.elapsed();
                     state.last_gc = Instant::now();
                     println!("Garbage collected in {}μs", (gc_end - gc_start).as_micros());
                 }
