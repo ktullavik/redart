@@ -23,6 +23,7 @@ use std::io::prelude::*;
 use std::env;
 use std::fs::File;
 use std::collections::HashMap;
+use std::time::Instant;
 use state::State;
 use dirs::Dirs;
 use node::NodeType;
@@ -62,6 +63,7 @@ fn main() {
         "test" => {
             if args.len() < 3 {
                 println!("Running all tests:");
+                let start = Instant::now();
                 for s in testlist::TESTS {
                     println!("____________________________________________________");
                     println!("Running test: {}", s);
@@ -70,6 +72,9 @@ fn main() {
                     state.filepath = String::from(path.as_str());
                     do_task("eval", String::from(path.as_str()), &mut state, &dirs);
                 }
+                let end = Instant::now();
+                println!("____________________________________________________");
+                println!("Ran {} tests in {}ms.", testlist::TESTS.len(), (end - start).as_millis());
                 return;
             }
 
