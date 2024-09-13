@@ -1,12 +1,12 @@
-use state::State;
-use object::Object;
 use std::process;
 use std::io::Read;
+use state::State;
+use object::Object;
 use evaluator::call_function;
 use evaluator::MaybeRef;
 use NodeType;
 use node::Node;
-use objsys::InternalFile;
+use crate::heapobjs::InternalFile;
 
 
 

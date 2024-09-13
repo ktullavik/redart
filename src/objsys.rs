@@ -3,11 +3,15 @@ use std::collections::HashMap;
 use utils::dprint;
 use object::Object;
 use node::Node;
-use std::fs::File;
+use crate::heapobjs::{
+    Instance,
+    InternalFile,
+    InternalList
+};
 
 
 #[derive(Clone, PartialEq, Eq, Hash)]
-pub struct RefKey(String);
+pub struct RefKey(pub String);
 
 impl fmt::Display for RefKey {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -15,122 +19,6 @@ impl fmt::Display for RefKey {
     }
 }
 
-
-pub struct InternalFile {
-    pub id: RefKey,
-    pub file: File,
-    pub marked: bool
-}
-
-
-impl InternalFile {
-
-    pub fn new(filename: String) -> InternalFile {
-        
-        InternalFile {
-            id: RefKey(nuid::next()),
-            file: File::open(filename).unwrap(),
-            marked: false
-        }
-    }
-}
-
-
-pub struct InternalList {
-    pub id: RefKey,
-    pub els: Vec<Object>,
-    pub marked: bool
-}
-
-impl InternalList {
-    
-    pub fn new() -> InternalList {
-        InternalList {
-            id: RefKey(nuid::next()),
-            els: Vec::new(),
-            marked: false
-        }
-    }
-
-    pub fn set_elements(&mut self, new_els: Vec<Object>) {
-        self.els = new_els;
-    }
-
-
-    pub fn add(&mut self, el: Object) {
-        self.els.push(el);
-    }
-
-
-    pub fn remove_last(&mut self) -> Object {
-        if self.els.len() > 0 {
-            return self.els.pop().unwrap()
-        }
-        Object::Null
-    }
-
-
-    pub fn to_string(&self) -> String {
-        let mut s = String::from("[");
-
-        if self.els.len() == 0 {
-            return String::from("[]");
-        }
-
-        let mut i = 0;
-        while i < self.els.len() - 1 {
-            s.push_str(format!("{}", self.els[i]).as_str());
-            s.push_str(", ");
-            i += 1;
-        }
-        s.push_str(format!("{}", self.els[i]).as_str());
-        s.push_str("]");
-        return s;
-    }
-}
-
-
-pub struct Instance {
-    pub id: RefKey,
-    pub classname: String,
-    pub fields: HashMap<String, Object>,
-    pub marked: bool
-}
-
-
-impl Instance {
-
-    pub fn new(classname: String) -> Instance {
-        Instance {
-            id: RefKey(nuid::next()),
-            classname,
-            fields: HashMap::new(),
-            marked: false
-        }
-    }
-
-
-    pub fn set_field(&mut self, name: String, value: Object) {
-        self.fields.insert(name, value);
-    }
-
-    pub fn get_field(&self, name: String) -> &Object {
-        self.fields.get(name.as_str()).unwrap()
-    }
-
-    pub fn has_field(&self, name: String) -> bool {
-        self.fields.contains_key(name.as_str())
-    }
-
-
-    // pub fn print_fields(&self) {
-    //     println!("FIELDS FOR {} of type {}", self.id, self.classname);
-    //     for (fieldname, val) in &self.fields {
-    //         println!("{} = {}", fieldname, val);
-    //     }
-    // }
-
-}
 
 
 pub struct Class {
@@ -313,13 +201,22 @@ impl ObjSys {
     }
 
 
-    pub fn mark(&mut self, rk: &RefKey) {
+}
+
+
+pub mod trashman {
+    use crate::object::Object;
+    use super::ObjSys;
+    use super::RefKey;
+
+    
+    pub fn mark(obs: &mut ObjSys, rk: &RefKey) {
 
         let mut childs: Vec<RefKey> = Vec::new();
 
-        if self.instancemap.contains_key(rk) {
+        if obs.instancemap.contains_key(rk) {
 
-            let p = self.instancemap.get_mut(rk).unwrap();
+            let p = obs.instancemap.get_mut(rk).unwrap();
 
             if p.marked {
                 return;
@@ -332,8 +229,8 @@ impl ObjSys {
                 }
             }
         }
-        else if self.listmap.contains_key(rk) {
-            let p = self.listmap.get_mut(rk).unwrap();
+        else if obs.listmap.contains_key(rk) {
+            let p = obs.listmap.get_mut(rk).unwrap();
 
             if p.marked {
                 return;
@@ -346,8 +243,8 @@ impl ObjSys {
                 }
             }
         }
-        else if self.filemap.contains_key(rk) {
-            let p = self.filemap.get_mut(rk).unwrap();
+        else if obs.filemap.contains_key(rk) {
+            let p = obs.filemap.get_mut(rk).unwrap();
             p.marked = true;
         }
         else {
@@ -355,12 +252,12 @@ impl ObjSys {
         }
 
         for cid in childs {
-            self.mark(&cid);
+            mark(obs, &cid);
         }
     }
 
 
-    pub fn sweep(&mut self) {
+    pub fn sweep(obs: &mut ObjSys) {
 
         // FOR EASIER DEBUG USE THIS:
 
@@ -368,33 +265,33 @@ impl ObjSys {
         let mut del_lists: Vec<RefKey> = Vec::new();
         let mut del_files: Vec<RefKey> = Vec::new();
 
-        for (k, v) in self.instancemap.iter() {
+        for (k, v) in obs.instancemap.iter() {
             if !v.marked {
                 del_instances.push(k.clone());
             }
         }
-        for (k, v) in &self.listmap {
+        for (k, v) in &obs.listmap {
             if !v.marked {
                 del_lists.push(k.clone());
             }
         }
-        for (k, v) in &self.filemap {
+        for (k, v) in &obs.filemap {
             if !v.marked {
                 del_files.push(k.clone());
             }
         }
 
         for k in del_instances {
-            println!("Garbagecollecting: {}", k);
-            self.instancemap.remove(&k);
+            println!("GC instance: {}", k);
+            obs.instancemap.remove(&k);
         }
         for k in del_lists {
-            println!("Garbagecollecting: {}", k);
-            self.listmap.remove(&k);
+            println!("GC list: {}", k);
+            obs.listmap.remove(&k);
         }
         for k in del_files {
-            println!("Garbagecollecting: {}", k);
-            self.filemap.remove(&k);
+            println!("GC file: {}", k);
+            obs.filemap.remove(&k);
         }
 
 
@@ -410,32 +307,30 @@ impl ObjSys {
     }
 
 
-    pub fn clearmark(&mut self) {
+    pub fn clearmark(obs: &mut ObjSys) {
 
         let mut clear_instances: Vec<RefKey> = Vec::new();
         let mut clear_lists: Vec<RefKey> = Vec::new();
         let mut clear_files: Vec<RefKey> = Vec::new();
 
-        for k in self.instancemap.keys() {
+        for k in obs.instancemap.keys() {
             clear_instances.push(k.clone());
         }
-        for k in self.listmap.keys() {
+        for k in obs.listmap.keys() {
             clear_lists.push(k.clone());
         }
-        for k in self.filemap.keys() {
+        for k in obs.filemap.keys() {
             clear_files.push(k.clone());
         }
 
         for k in clear_instances {
-            self.instancemap.get_mut(&k).unwrap().marked = false;
+            obs.instancemap.get_mut(&k).unwrap().marked = false;
         }
         for k in clear_lists {
-            self.listmap.get_mut(&k).unwrap().marked = false;
+            obs.listmap.get_mut(&k).unwrap().marked = false;
         }
         for k in clear_files {
-            self.filemap.get_mut(&k).unwrap().marked = false;
+            obs.filemap.get_mut(&k).unwrap().marked = false;
         }
-    }
-
+    } 
 }
-

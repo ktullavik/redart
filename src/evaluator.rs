@@ -5,7 +5,7 @@ use utils::dart_evalerror;
 use object::{Object, ParamObj};
 use std::ops::{BitAnd, BitOr, BitXor};
 use objsys::RefKey;
-use objsys::InternalList;
+use crate::heapobjs::internallist::InternalList;
 
 
 pub fn eval(

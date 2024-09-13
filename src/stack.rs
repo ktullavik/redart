@@ -1,7 +1,6 @@
 use std::collections::HashMap;
 use object::Object;
-use objsys::ObjSys;
-use objsys::RefKey;
+use objsys::{ObjSys, RefKey, trashman};
 
 
 pub struct Stack {
@@ -137,11 +136,11 @@ impl Stack {
     pub fn garbagecollect(&self, objsys: &mut ObjSys, building: &Vec<RefKey>) {
 
         for b in building {
-            objsys.mark(b);
+            trashman::mark(objsys, b);
         }
         self.markroots(objsys);
-        objsys.sweep();
-        objsys.clearmark();
+        trashman::sweep(objsys);
+        trashman::clearmark(objsys);
         println!("GARBAGE COLLECTED");
     }
 
@@ -149,7 +148,7 @@ impl Stack {
     pub fn markroots(&self, objsys: &mut ObjSys) {
 
         if objsys.has_this() {
-            objsys.mark(&objsys.get_this());
+            trashman::mark(objsys,&objsys.get_this());
         }
 
         let mut cl = self.call_level;
@@ -162,10 +161,10 @@ impl Stack {
 
                 for (_, v) in lexframe {
                     match v {
-                        Object::Reference(s) => {
+                        Object::Reference(rk) => {
 
-                            if objsys.has_instance(s) {
-                                objsys.mark(s)
+                            if objsys.has_instance(rk) {
+                                trashman::mark(objsys, rk)
                             }
                             // else it refers to something
                             // on the stack. Leave it.
@@ -174,8 +173,6 @@ impl Stack {
                             println!("Not Reference: {}", v);
                         }
                     }
-
-
                 }
                 ll -= 1;
             }

@@ -17,6 +17,7 @@ mod testlist;
 mod state;
 mod reader;
 mod dirs;
+mod heapobjs;
 
 use std::io::prelude::*;
 use std::env;
