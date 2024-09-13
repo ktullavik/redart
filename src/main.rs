@@ -39,8 +39,6 @@ fn main() {
     }
 
     let dirs = Dirs::new();
-    let mut state = State::new();
-
     let a1 = &args[1];
 
     match a1.as_str() {
@@ -49,16 +47,14 @@ fn main() {
                 println!("Error: File argument expected.");
                 return;
             }
-            state.filepath = String::from(&args[2]);
-            do_task("lex",args[2].clone(), &mut state, &dirs);
+            do_task("lex", args[2].clone(), &dirs);
         }
         "parse" => {
             if args.len() < 3 {
                 println!("Error: File argument expected.");
                 return;
             }
-            state.filepath = String::from(&args[2]);
-            do_task("parse",args[2].clone(), &mut state, &dirs);
+            do_task("parse", args[2].clone(), &dirs);
         }
         "test" => {
             if args.len() < 3 {
@@ -69,8 +65,7 @@ fn main() {
                     println!("Running test: {}", s);
                     println!("----------------------------------------------------");
                     let path = format!("{}/{}", dirs.testdir(), s);
-                    state.filepath = String::from(path.as_str());
-                    do_task("eval", String::from(path.as_str()), &mut state, &dirs);
+                    do_task("eval", String::from(path.as_str()), &dirs);
                 }
                 let end = Instant::now();
                 println!("____________________________________________________");
@@ -99,8 +94,7 @@ fn main() {
             }
 
             let filepath = testlist::get_filepath(nextarg.clone(), &dirs);
-            state.filepath = filepath.clone();
-            do_task(task, filepath, &mut state, &dirs);
+            do_task(task, filepath, &dirs);
         }
         "testfail" => {
             if args.len() < 3 {
@@ -130,8 +124,7 @@ fn main() {
             }
 
             let filepath = testlist::get_failfilepath(nextarg.clone(), &dirs);
-            state.filepath = filepath.clone();
-            do_task(task, filepath, &mut state, &dirs);
+            do_task(task, filepath, &dirs);
         }
         _ => {
             println!("Illegal argument: {}", a1);
@@ -140,7 +133,10 @@ fn main() {
 }
 
 
-fn do_task(action: &str, filepath: String, state: &mut State, dirs: &Dirs) {
+fn do_task(action: &str, filepath: String, dirs: &Dirs) {
+
+    let mut state = State::new();
+    state.filepath = filepath.clone();
 
     match action {
         "lex" => {
@@ -154,15 +150,14 @@ fn do_task(action: &str, filepath: String, state: &mut State, dirs: &Dirs) {
         "parse" => {
             let input = read_file(filepath.as_str());
             let mut tokens = lexer::lex(&input);
-            // let mut globals: Vec<Node> = Vec::new();
-            parser::parse(&mut tokens, state);
+            parser::parse(&mut tokens, &mut state);
 
             for f in &state.globals {
                 println!("\n{}\n", f);
             }
         }
         "eval" => {
-            evaluate(filepath, state, dirs);
+            evaluate(filepath, &mut state, dirs);
         }
         x => {
             println!("Unknown action: {}", x);
