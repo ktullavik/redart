@@ -1,18 +1,20 @@
 use state::State;
 use object::Object;
 use std::process;
-use std::fs::File;
 use std::io::Read;
 use evaluator::call_function;
 use evaluator::MaybeRef;
 use NodeType;
 use node::Node;
+use objsys::InternalFile;
+
 
 
 pub fn has_function(name: &str) -> bool {
     match name {
         "assert" |
         "print" |
+        "__IO_FILE_CREATE" |
         "__IO_FILE_READ_AS_STRING" |
         "__LIST_ADD" |
         "__LIST_CLEAR" |
@@ -100,6 +102,32 @@ pub fn call(name: &str, args: &mut Vec<Object>, state: &mut State) -> Object {
             }
         }
 
+        "__IO_FILE_CREATE" => {
+            if args.len() != 2 {
+                panic!("Wrong number of arguments for __IO_FILE_CREATE.");
+            }
+
+            match &args[0] {
+
+                Object::Reference(rk) => {
+
+                    match &args[1] {
+
+                        Object::String(s) => {
+                            let ifile = InternalFile::new(s.to_string());
+                            let internal_rk = state.objsys.register_file(ifile);
+
+                            let dfile = state.objsys.get_instance_mut(rk);
+                            dfile.set_field(String::from("_internalFile"), internal_rk);
+                            return Object::Reference(rk.clone());
+                        }
+                        _ => panic!("Unexpected second arg for __IO_FILE_CREATE")
+                    }
+                }
+                _ => panic!("Unexpected first arg for __IO_FILE_CREATE")
+            }
+        }
+
         "__IO_FILE_READ_AS_STRING" => {
             if args.len() < 1 {
                 panic!("Argument expected by __IO_FILE_READ_AS_STRING.");
@@ -107,10 +135,10 @@ pub fn call(name: &str, args: &mut Vec<Object>, state: &mut State) -> Object {
 
             match &args[0] {
 
-                Object::String(s) => {
-                    let mut file = File::open(s).unwrap();
+                Object::Reference(rk) => {
+                    let ifile = state.objsys.get_file_mut(rk);
                     let mut content = String::new();
-                    file.read_to_string(&mut content).unwrap();
+                    ifile.file.read_to_string(&mut content).unwrap();
                     return Object::String(content);
                 }
                 _ => panic!("Unexpected argument for __IO_READ_AS_STRING")

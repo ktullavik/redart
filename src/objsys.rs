@@ -3,6 +3,7 @@ use std::collections::HashMap;
 use utils::dprint;
 use object::Object;
 use node::Node;
+use std::fs::File;
 
 
 #[derive(Clone, PartialEq, Eq, Hash)]
@@ -11,6 +12,26 @@ pub struct RefKey(String);
 impl fmt::Display for RefKey {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "RefKey<{}>", self.0)
+    }
+}
+
+
+pub struct InternalFile {
+    pub id: RefKey,
+    pub file: File,
+    pub marked: bool
+}
+
+
+impl InternalFile {
+
+    pub fn new(filename: String) -> InternalFile {
+        
+        InternalFile {
+            id: RefKey(nuid::next()),
+            file: File::open(filename).unwrap(),
+            marked: false
+        }
     }
 }
 
@@ -167,6 +188,7 @@ pub struct ObjSys {
     classmap: HashMap<String, Class>,
     instancemap: HashMap<RefKey, Box::<Instance>>,
     listmap: HashMap<RefKey, Box::<InternalList>>,
+    filemap: HashMap<RefKey, Box::<InternalFile>>,
     this: RefKey,
 }
 
@@ -178,6 +200,7 @@ impl ObjSys {
             classmap: HashMap::new(),
             instancemap: HashMap::new(),
             listmap: HashMap::new(),
+            filemap: HashMap::new(),
             this: RefKey(String::from("")),
         }
     }
@@ -215,6 +238,14 @@ impl ObjSys {
     }
 
 
+    pub fn register_file(&mut self, file: InternalFile) -> Object {
+        let boxed = Box::new(file);
+        let rk = boxed.id.clone();
+        self.filemap.insert(rk.clone(), boxed);
+        return Object::Reference(rk);
+    }
+
+
     pub fn get_instance(&self, id: &RefKey) -> &Instance {
         if self.instancemap.contains_key(id) {
             return &self.instancemap.get(id).unwrap();
@@ -231,6 +262,14 @@ impl ObjSys {
     }
 
 
+    pub fn get_file(&self, id: &RefKey) -> &InternalFile {
+        if self.filemap.contains_key(id) {
+            return &self.filemap.get(id).unwrap();
+        }
+        panic!("InternalFile not found: {}", id);
+    }
+
+
     pub fn get_instance_mut(&mut self, id: &RefKey) -> &mut Instance {
         return self.instancemap.get_mut(id).unwrap();
     }
@@ -238,6 +277,11 @@ impl ObjSys {
 
     pub fn get_list_mut(&mut self, id: &RefKey) -> &mut InternalList {
         return self.listmap.get_mut(id).unwrap();
+    }
+
+
+    pub fn get_file_mut(&mut self, id: &RefKey) -> &mut InternalFile {
+        return self.filemap.get_mut(id).unwrap();
     }
 
 
@@ -296,12 +340,15 @@ impl ObjSys {
             }
             p.marked = true;
 
-
             for obj in p.els.iter() {
                 if let Object::Reference(refid) = obj {
                     childs.push(refid.clone());
                 }
             }
+        }
+        else if self.filemap.contains_key(rk) {
+            let p = self.filemap.get_mut(rk).unwrap();
+            p.marked = true;
         }
         else {
             panic!("GC could not find heap object: {}", rk)
@@ -319,6 +366,7 @@ impl ObjSys {
 
         let mut del_instances: Vec<RefKey> = Vec::new();
         let mut del_lists: Vec<RefKey> = Vec::new();
+        let mut del_files: Vec<RefKey> = Vec::new();
 
         for (k, v) in self.instancemap.iter() {
             if !v.marked {
@@ -330,13 +378,25 @@ impl ObjSys {
                 del_lists.push(k.clone());
             }
         }
+        for (k, v) in &self.filemap {
+            if !v.marked {
+                del_files.push(k.clone());
+            }
+        }
+
         for k in del_instances {
             println!("Garbagecollecting: {}", k);
             self.instancemap.remove(&k);
         }
         for k in del_lists {
+            println!("Garbagecollecting: {}", k);
             self.listmap.remove(&k);
         }
+        for k in del_files {
+            println!("Garbagecollecting: {}", k);
+            self.filemap.remove(&k);
+        }
+
 
         // ELSE USE THIS:
 
@@ -354,6 +414,7 @@ impl ObjSys {
 
         let mut clear_instances: Vec<RefKey> = Vec::new();
         let mut clear_lists: Vec<RefKey> = Vec::new();
+        let mut clear_files: Vec<RefKey> = Vec::new();
 
         for k in self.instancemap.keys() {
             clear_instances.push(k.clone());
@@ -361,12 +422,18 @@ impl ObjSys {
         for k in self.listmap.keys() {
             clear_lists.push(k.clone());
         }
+        for k in self.filemap.keys() {
+            clear_files.push(k.clone());
+        }
 
         for k in clear_instances {
             self.instancemap.get_mut(&k).unwrap().marked = false;
         }
         for k in clear_lists {
             self.listmap.get_mut(&k).unwrap().marked = false;
+        }
+        for k in clear_files {
+            self.filemap.get_mut(&k).unwrap().marked = false;
         }
     }
 
