@@ -1013,6 +1013,14 @@ pub fn eval(
             return instref;
         }
 
+        NodeType::This => {
+
+            if state.objsys.has_this() {
+                return Object::Reference(state.objsys.get_this());
+            }
+            dart_evalerror("Not found in context: 'this'.", state)
+        }
+
         NodeType::Null => {
             return Object::Null;
         }

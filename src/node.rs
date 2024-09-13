@@ -39,6 +39,7 @@ pub enum NodeType {
     For,
     Block,
     List,
+    This,
     FunDef(String, String), // funcname, filename
     FunCall(String),
     MethodCall(String, Box<Node>, String),  // methodname, owner, filename
@@ -81,6 +82,7 @@ impl fmt::Display for NodeType {
             NodeType::Bool(v)                        => write!(f, "{}", v),
             NodeType::Name(s)                       => write!(f, "{}", s),
             NodeType::TypedVar(tp, name)  => write!(f, "{}:{}", name, tp),
+            NodeType::This => write!(f, "this"),
             NodeType::FunDef(s, _filename)                     => write!(f, "{}() {{}}", s),
             NodeType::FunCall(s)                    => write!(f, "{}()", s),
             NodeType::MethodCall(name, owner, _) => write!(f, "{}.{}()", name, owner),

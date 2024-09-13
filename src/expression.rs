@@ -621,6 +621,11 @@ fn term(reader: &mut Reader, state: &State) -> Node {
             }
         }
 
+        Token::This(_, _) => {
+            reader.next();
+            Node::new(NodeType::This)
+        }
+
         x => {
             panic!("Unexpected token {}.", x)
         }
