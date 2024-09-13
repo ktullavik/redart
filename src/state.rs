@@ -1,8 +1,9 @@
+use std::time::Instant;
+use std::collections::HashMap;
 use stack::Stack;
 use objsys::ObjSys;
 use objsys::RefKey;
 use node::Node;
-use std::collections::HashMap;
 
 
 // globals is where all the top level nodes (functions, constructors)
@@ -16,6 +17,8 @@ pub struct State {
     pub stack: Stack,
     pub objsys: ObjSys,
     pub constructing: Vec<RefKey>,
+    pub time: Instant,
+    pub last_gc: Instant,
     pub debug: bool
 }
 
@@ -30,6 +33,8 @@ impl  State {
             stack: Stack::new(),
             objsys: ObjSys::new(),
             constructing: Vec::new(),
+            time: Instant::now(),
+            last_gc: Instant::now(),
             debug: false
         }
     }

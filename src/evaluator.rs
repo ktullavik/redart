@@ -1,4 +1,6 @@
 use std::ops::{BitAnd, BitOr, BitXor};
+use std::time::Duration;
+use std::time::Instant;
 use state::State;
 use node::{NodeType, Node};
 use builtin;
@@ -6,6 +8,9 @@ use utils::dart_evalerror;
 use object::{Object, ParamObj};
 use objsys::RefKey;
 use crate::heapobjs::internallist::InternalList;
+
+
+static GC_TIME: Duration = Duration::from_micros(400);
 
 
 pub fn eval(
@@ -978,7 +983,13 @@ pub fn eval(
 
             for c in &node.children {
 
-                state.stack.garbagecollect(&mut state.objsys, &state.constructing);
+                if Instant::now() - state.last_gc > GC_TIME {
+                    let gc_start = state.time.elapsed();
+                    state.stack.garbagecollect(&mut state.objsys, &state.constructing);
+                    let gc_end = state.time.elapsed();
+                    state.last_gc = Instant::now();
+                    println!("Garbage collected in {}μs", (gc_end - gc_start).as_micros());
+                }
 
                 let retval = eval(c, state, true);
 
