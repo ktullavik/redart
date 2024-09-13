@@ -1,9 +1,9 @@
+use std::ops::{BitAnd, BitOr, BitXor};
 use state::State;
 use node::{NodeType, Node};
 use builtin;
 use utils::dart_evalerror;
 use object::{Object, ParamObj};
-use std::ops::{BitAnd, BitOr, BitXor};
 use objsys::RefKey;
 use crate::heapobjs::internallist::InternalList;
 
