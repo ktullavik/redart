@@ -8,6 +8,13 @@ use object::{ParamObj, Object};
 use objsys::Class;
 
 
+fn autoincludes() -> Vec<String> {
+    vec![
+        "auto:list.dart".to_string()
+    ]
+}
+
+
 pub fn parse(reader: &mut Reader, ctx: &mut State) -> Vec<String> {
 
     dprint(" ");
@@ -28,7 +35,7 @@ pub fn parse(reader: &mut Reader, ctx: &mut State) -> Vec<String> {
 fn directives(reader: &mut Reader, ctx: &State) -> Vec<String> {
     dprint(format!("Parse: directives: {}", reader.sym()));
 
-    let mut imports : Vec<String> = Vec::new();
+    let mut imports = autoincludes();
 
     while reader.more() {
 

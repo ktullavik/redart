@@ -174,8 +174,13 @@ fn filecurse(
     dirs: &Dirs) {
 
     let fullpath =
-        if filepath.starts_with("dart:") {
-            // Built-in library
+        if filepath.starts_with("auto:") {
+            // Auto included library.
+            let libname = filepath.clone().split_off(5);
+            format!("{}/auto/{}", dirs.libdir(), libname)
+        }
+        else if filepath.starts_with("dart:") {
+            // Built-in library.
             let libname = filepath.clone().split_off(5);
             format!("{}/core/{}.dart", dirs.libdir(), libname)
         }

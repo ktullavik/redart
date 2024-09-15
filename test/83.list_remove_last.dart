@@ -1,4 +1,3 @@
-import 'dart:list';
 
 void main() {
     List l = [1,2,3,4];
@@ -6,4 +5,3 @@ void main() {
     print(l);
     print("Removed: ${a}");
 }
-

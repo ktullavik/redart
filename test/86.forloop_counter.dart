@@ -1,4 +1,3 @@
-import 'dart:list';
 
 void main() {
 
@@ -9,4 +8,3 @@ void main() {
     }
     print("Should be 3: ${i}");
 }
-
