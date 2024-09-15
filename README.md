@@ -8,14 +8,19 @@ And with humble memory requirements.
 ## Top missing features:
 * ~~Garbage collector~~.
 * Type system.
-* Standard library.
+* Standard library. (In progress)
 * Inheritance.
 * Isolates.
 * Async/await.
 * Getters/setters.
 * Static members.
-* List.
+* ~~List~~.
 * Maps.
+* Static members.
+* const.
+* final.
+* Factory constructors.
+* Operator overloading.
 * Packages.
 
 ## Installation
