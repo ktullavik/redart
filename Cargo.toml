@@ -7,4 +7,4 @@ authors = ["kt <ktullavik@gmail.com>"]
 nuid = "0.4.1"
 queues = "1.1.0"
 rustyline = "11.0.0"
-
+rand = "0.8.5"

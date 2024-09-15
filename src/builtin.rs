@@ -1,5 +1,6 @@
 use std::process;
 use std::io::Read;
+use rand::Rng;
 use state::State;
 use object::Object;
 use evaluator::call_function;
@@ -7,6 +8,7 @@ use evaluator::MaybeRef;
 use NodeType;
 use node::Node;
 use crate::heapobjs::InternalFile;
+use crate::utils::dart_evalerror;
 
 
 
@@ -19,7 +21,8 @@ pub fn has_function(name: &str) -> bool {
         "__LIST_ADD" |
         "__LIST_CLEAR" |
         "__LIST_REMOVELAST" |
-        "__LIST_TOSTRING"
+        "__LIST_TOSTRING" |
+        "__MATH_NEXT_INT"
         => true,
         _ => false
     }
@@ -180,7 +183,7 @@ pub fn call(name: &str, args: &mut Vec<Object>, state: &mut State) -> Object {
 
         "__LIST_REMOVELAST" => {
             if args.len() < 1 {
-                panic!("Argument expected by __LIST_REMOVELAST");
+                panic!("Argument expected by __LIST_REMOVELAST.");
             }
 
             match args.get(0).unwrap() {
@@ -195,7 +198,7 @@ pub fn call(name: &str, args: &mut Vec<Object>, state: &mut State) -> Object {
 
         "__LIST_TOSTRING" => {
             if args.len() < 1 {
-                panic!("Argument expected by __LIST_TOSTRING");
+                panic!("Argument expected by __LIST_TOSTRING.");
             }
 
             if let Object::Reference(rk) = &args[0]  {
@@ -203,6 +206,23 @@ pub fn call(name: &str, args: &mut Vec<Object>, state: &mut State) -> Object {
                 return Object::String(ilist.to_string());
             }
             return Object::String(format!("{}", args[0]));
+        }
+
+        "__MATH_NEXT_INT" => {
+            if args.len() != 1 {
+                panic!("Expected 1 argument for __MATH_NEXT_INT. Got: {}", args.len());
+            }
+
+            match &args[0] {
+
+                Object::Int(n) => {
+                    let mut rng = rand::thread_rng();
+                    let r = rng.gen_range(0 .. *n);
+                    return Object::Int(r);
+                }
+                x => dart_evalerror(format!("Expected int. Got {}", x), state)
+            }
+
         }
 
         _ => panic!("Unknown command: {}", name)

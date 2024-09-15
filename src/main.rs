@@ -1,6 +1,7 @@
 extern crate rustyline;
 extern crate nuid;
 extern crate queues;
+extern crate rand;
 
 mod parser;
 mod lexer;
