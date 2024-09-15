@@ -843,7 +843,7 @@ pub fn eval(
                 return builtin::call(s, &mut args, state);
             }
 
-            dart_evalerror("Function not found.", state)
+            dart_evalerror(format!("Function not found: {}", s), state)
         }
 
         NodeType::FunDef(s, _) => {
