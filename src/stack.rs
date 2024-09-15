@@ -87,10 +87,29 @@ impl Stack {
 
 
     // Add a new key-value pair to the current frame.
-    pub fn add(&mut self, s: &str, v: Object) {
+    pub fn add_new(&mut self, s: &str, v: Object) {
         let callframe = self.stack.last_mut().unwrap();
         let lexframe = callframe.last_mut().unwrap();
         lexframe.insert(String::from(s), v);
+    }
+
+
+    // Update an existing value on the lex stack.
+    pub fn update(&mut self, s: &str, v: Object) -> bool {
+        let callframe = self.stack.last_mut().unwrap();
+
+        let mut ll = self.lex_level;
+
+        while ll > 0 {
+            let lexframe = callframe.get_mut(ll - 1).unwrap();
+            if lexframe.contains_key(s) {
+                lexframe.insert(String::from(s), v.clone());
+                return true;
+            }
+
+            ll = ll - 1;
+        }
+        return false;
     }
 
 

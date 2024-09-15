@@ -31,8 +31,7 @@ pub fn eval(
                     let right_obj = eval(&node.children[1], state, true);
 
                     if state.stack.has(name) {
-                        // If right_obj is a reference, then it should be cloned?
-                        state.stack.add(name, right_obj);
+                        state.stack.update(name, right_obj);
                         return Object::Null;
                     }
 
@@ -67,7 +66,7 @@ pub fn eval(
                         // As dart.
                         dart_evalerror(format!("'{}' is already declared in this scope.", name), state);
                     }
-                    state.stack.add(name, right_obj);
+                    state.stack.add_new(name, right_obj);
 
                     return Object::Null;
                 }
@@ -556,7 +555,7 @@ pub fn eval(
                         match oldval {
                             Object::Int(n) => {
                                 let newval = Object::Int(n + 1);
-                                state.stack.add(s.as_str(), newval.clone());
+                                state.stack.update(s.as_str(), newval.clone());
                                 return newval;
                             }
                             _ => dart_evalerror(format!("Illegal operand for preincrement: {}", oldval), state)
@@ -593,7 +592,7 @@ pub fn eval(
                         match oldval {
                             Object::Int(n) => {
                                 let newval = Object::Int(n - 1);
-                                state.stack.add(s.as_str(), newval.clone());
+                                state.stack.update(s.as_str(), newval.clone());
                                 return newval;
                             }
                             _ => dart_evalerror(format!("Illegal operand for predecrement: {}", oldval), state)
@@ -630,7 +629,7 @@ pub fn eval(
                         match oldval {
                             Object::Int(n) => {
                                 let newval = Object::Int(n + 1);
-                                state.stack.add(s.as_str(), newval);
+                                state.stack.update(s.as_str(), newval);
                                 return oldval;
                             }
                             _ => dart_evalerror(format!("Illegal operand for increment: {}", oldval), state)
@@ -667,7 +666,7 @@ pub fn eval(
                         match oldval {
                             Object::Int(n) => {
                                 let newval = Object::Int(n - 1);
-                                state.stack.add(s.as_str(), newval);
+                                state.stack.update(s.as_str(), newval);
                                 return oldval;
                             }
                             _ => dart_evalerror(format!("Illegal operand for decrement: {}", oldval), state)
@@ -849,7 +848,7 @@ pub fn eval(
 
         NodeType::FunDef(s, _) => {
             let funcobj = create_function(node);
-            state.stack.add(s, funcobj);
+            state.stack.add_new(s, funcobj);
             return Object::Null;
         }
 
@@ -984,7 +983,7 @@ pub fn eval(
                                 for c in cloned {
                                     match &typedvar.nodetype {
                                         NodeType::TypedVar(_, name) => {
-                                            state.stack.add(name, c);
+                                            state.stack.add_new(name, c);
                                             eval(body, state, true);
                                         }
                                         _ => {
@@ -1150,7 +1149,7 @@ pub fn call_function(
     
             state.stack.push_call();
             for i in 0 .. params.len() {
-                state.stack.add(params[i].name.as_str(), argobjs.pop().unwrap());
+                state.stack.add_new(params[i].name.as_str(), argobjs.pop().unwrap());
             }
     
             let oldfilename = state.filepath.clone();
@@ -1237,7 +1236,7 @@ fn call_constructor(
             for i in 0..params.len() {
                 // Field initializers are set directly on the instance. See below.
                 if !params[i].fieldinit {
-                    state.stack.add(params[i].name.as_str(), args.remove(i));
+                    state.stack.add_new(params[i].name.as_str(), args.remove(i));
                 }
             }
 
