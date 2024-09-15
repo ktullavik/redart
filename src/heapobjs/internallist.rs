@@ -35,6 +35,14 @@ impl InternalList {
     }
 
 
+    pub fn foreach(&self, f: &dyn Fn(&Object)) {
+
+        for obj in &self.els {
+            f(obj);
+        }
+    }
+
+
     pub fn to_string(&self) -> String {
         let mut s = String::from("[");
 

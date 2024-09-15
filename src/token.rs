@@ -40,6 +40,7 @@ pub enum Token {
   While(usize, usize),
   Do(usize, usize),
   For(usize, usize),
+  In(usize, usize),
   Paren1(usize, usize),
   Paren2(usize, usize),
   Block1(usize, usize),
@@ -109,6 +110,7 @@ impl fmt::Display for Token {
       Token::While(_, _) => write!(f, "while"),
       Token::Do(_, _) => write!(f, "do"),
       Token::For(_, _) => write!(f, "for"),
+      Token::In(_, _) => write!(f, "in"),
       Token::Paren1(_, _) => write!(f, "("),
       Token::Paren2(_, _) => write!(f, ")"),
       Token::Block1(_, _) => write!(f, "{{"),
@@ -166,6 +168,7 @@ impl Token {
       Token::While(l, i) |
       Token::Do(l, i) |
       Token::For(l, i) |
+      Token::In(l, i) |
       Token::Paren1(l, i) |
       Token::Paren2(l, i) |
       Token::Block1(l, i) |

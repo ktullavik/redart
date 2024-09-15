@@ -664,30 +664,60 @@ fn statement(reader: &mut Reader, state: &State) -> Node {
 
                             let typvar = Node::new(NodeType::TypedVar(n1, n2));
 
-                            reader.skip("=", state);
+                            match reader.sym() {
 
-                            let initexpr = expression(reader, state);
+                                Token::Assign(_, _) => {
+                                    reader.skip("=", state);
 
-                            let mut assign = Node::new(NodeType::Assign);
-                            assign.children.push(typvar);
-                            assign.children.push(initexpr);
+                                    let initexpr = expression(reader, state);
+        
+                                    let mut assign = Node::new(NodeType::Assign);
+                                    assign.children.push(typvar);
+                                    assign.children.push(initexpr);
+        
+                                    reader.skip(";", state);
+        
+                                    let condexpr = expression(reader, state);
+        
+                                    reader.skip(";", state);
+        
+                                    let mutexpr = expression(reader, state);
+        
+                                    reader.skip(")", state);
+                                    reader.skip("{", state);
+        
+                                    let body = block(reader, state);
+        
+                                    let mut forloop = Node::new(NodeType::For);
+                                    forloop.children.extend([assign, condexpr, mutexpr, body]);
+                                    return forloop;
+                                }
 
-                            reader.skip(";", state);
+                                Token::In(_, _) => {
+                                    reader.next();
 
-                            let condexpr = expression(reader, state);
+                                    let iterable = expression(reader, state);
+                                    reader.skip(")", state);
+                                    reader.skip("{", state);
+                                    let body = block(reader, state);
 
-                            reader.skip(";", state);
+                                    let mut forloop = Node::new(NodeType::For);
+                                    // let mut in_node = Node::new(NodeType::In);
+                                    forloop.children.push(typvar);
+                                    forloop.children.push(iterable);
+                                    // forloop.children.push(in_node);
+                                    forloop.children.push(body);
+                                    return forloop;
+                                }
 
-                            let mutexpr = expression(reader, state);
-
-                            reader.skip(")", state);
-                            reader.skip("{", state);
-
-                            let body = block(reader, state);
-
-                            let mut forloop = Node::new(NodeType::For);
-                            forloop.children.extend([assign, condexpr, mutexpr, body]);
-                            return forloop;
+                                x => dart_parseerror(
+                                    format!("Unexpected token in for-loop: {}", x),
+                                    state,
+                                    &reader.tokens(),
+                                    reader.pos()
+                                )
+                            }
+ 
                         }
 
                         // Without declaration

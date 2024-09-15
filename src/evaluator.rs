@@ -954,26 +954,79 @@ pub fn eval(
 
         NodeType::For => {
 
-            let assign = &node.children[0];
-            let condexpr = &node.children[1];
-            let mutexpr = &node.children[2];
-            let body = &node.children[3];
+            if node.children.len() == 3 {
+                // Three children mean 'for x in name' loop.
+                // First child is an the variable, second the
+                // free variable, and third the body block. 
+                let typedvar = &node.children[0];
+                let iter_ref = eval(&node.children[1], state, true);
+                let body = &node.children[2];
 
-            eval(assign, state, true);
+                match iter_ref {
 
-            loop {
-                let condobj = eval(condexpr, state, true);
+                    Object::Reference(rk) => {
+                        let ulist = state.objsys.get_instance(&rk);
+                        let ilist_ref = ulist.get_field(String::from("__list"));
 
-                match condobj {
-                    Object::Bool(b) => {
+                        match &ilist_ref {
 
-                        if !b {
-                            break;
+                            Object::Reference(ilist_rk) => {
+                                let ilist = state.objsys.get_list(&ilist_rk);
+
+                                // Put var on new, inner, stack frame
+                                let mut cloned = Vec::new();
+                                for obj in &ilist.els {
+                                    cloned.push(obj.clone());
+                                }
+        
+                                state.stack.push_lex();
+        
+                                for c in cloned {
+                                    match &typedvar.nodetype {
+                                        NodeType::TypedVar(_, name) => {
+                                            state.stack.add(name, c);
+                                            eval(body, state, true);
+                                        }
+                                        _ => {
+                                            panic!("For loop expecped typed var. Got: {}", &typedvar);
+                                        }
+                                    }
+                                }
+                                state.stack.pop_lex();
+                            }
+                            x => panic!("Expected reference, got: {}", x)
                         }
-                        eval(body, state, true);
-                        eval(mutexpr, state, true);
+                        return Object::Null;
                     }
-                    x => dart_evalerror(format!("Expected bool. Got: {}", x), state)
+                    x => {
+                        dart_evalerror(format!("Not iterable: {}", x), state)
+                    }
+                }
+            }
+            else if node.children.len() == 4 {
+                // Four children means loop of the form
+                // for (var i=0, i<10, i++).
+                let assign = &node.children[0];
+                let condexpr = &node.children[1];
+                let mutexpr = &node.children[2];
+                let body = &node.children[3];
+
+                eval(assign, state, true);
+
+                loop {
+                    let condobj = eval(condexpr, state, true);
+
+                    match condobj {
+                        Object::Bool(b) => {
+
+                            if !b {
+                                break;
+                            }
+                            eval(body, state, true);
+                            eval(mutexpr, state, true);
+                        }
+                        x => dart_evalerror(format!("Expected bool. Got: {}", x), state)
+                    }
                 }
             }
             return Object::Null;
