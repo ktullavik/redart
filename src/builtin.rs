@@ -22,6 +22,8 @@ pub fn has_function(name: &str) -> bool {
         "__LIST_CLEAR" |
         "__LIST_REMOVELAST" |
         "__LIST_TOSTRING" |
+        "__MATH_NEXT_BOOL" |
+        "__MATH_NEXT_DOUBLE" |
         "__MATH_NEXT_INT"
         => true,
         _ => false
@@ -208,6 +210,26 @@ pub fn call(name: &str, args: &mut Vec<Object>, state: &mut State) -> Object {
             return Object::String(format!("{}", args[0]));
         }
 
+        "__MATH_NEXT_BOOL" => {
+            if args.len() != 0 {
+                panic!("Expected 0 arguments for __MATH_NEXT_BOOL. Got: {}", args.len());
+            }
+            
+            let mut rng = rand::thread_rng();
+            let r = rng.gen_range(0 .. 2);
+            return Object::Bool(r == 1);
+        }
+
+        "__MATH_NEXT_DOUBLE" => {
+            if args.len() != 0 {
+                panic!("Expected 0 arguments for __MATH_NEXT_DOUBLE. Got: {}", args.len());
+            }
+
+            let mut rng = rand::thread_rng();
+            let r = rng.gen::<f64>();
+            return Object::Double(r);
+        }
+
         "__MATH_NEXT_INT" => {
             if args.len() != 1 {
                 panic!("Expected 1 argument for __MATH_NEXT_INT. Got: {}", args.len());
@@ -222,8 +244,8 @@ pub fn call(name: &str, args: &mut Vec<Object>, state: &mut State) -> Object {
                 }
                 x => dart_evalerror(format!("Expected int. Got {}", x), state)
             }
-
         }
+
 
         _ => panic!("Unknown command: {}", name)
     }
