@@ -20,6 +20,7 @@ implementation of Dart. It should run anywhere Rust can run.
 * final.
 * Factory constructors.
 * Operator overloading.
+* Mixins.
 * Packages.
 
 ## Installation
