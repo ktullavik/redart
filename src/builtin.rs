@@ -22,6 +22,19 @@ pub fn has_function(name: &str) -> bool {
         "__LIST_CLEAR" |
         "__LIST_REMOVELAST" |
         "__LIST_TOSTRING" |
+        "__MATH_ACOS" |
+        "__MATH_ASIN" |
+        "__MATH_ATAN" |
+        "__MATH_ATAN2" |
+        "__MATH_COS" |
+        "__MATH_EXP" |
+        "__MATH_LOG" |
+        "__MATH_MAX" |
+        "__MATH_MIN" |
+        "__MATH_POW" |
+        "__MATH_SIN" |
+        "__MATH_SQRT" |
+        "__MATH_TAN" |
         "__MATH_NEXT_BOOL" |
         "__MATH_NEXT_DOUBLE" |
         "__MATH_NEXT_INT"
@@ -208,6 +221,269 @@ pub fn call(name: &str, args: &mut Vec<Object>, state: &mut State) -> Object {
                 return Object::String(ilist.to_string());
             }
             return Object::String(format!("{}", args[0]));
+        }
+
+        "__MATH_ACOS" => {
+            if args.len() != 1 {
+                panic!("Expected 1 argument for __MATH_ACOS. Got: {}", args.len());
+            }
+
+            match &args[0] {
+                Object::Double(x) => {
+                    return Object::Double(x.acos());
+                }
+                x => panic!("Unexpected argument for __MATH_ACOS: {}", x)
+            }
+        }
+
+        "__MATH_ASIN" => {
+            if args.len() != 1 {
+                panic!("Expected 1 argument for __MATH_ASIN. Got: {}", args.len());
+            }
+
+            match &args[0] {
+                Object::Double(x) => {
+                    return Object::Double(x.asin());
+                }
+                x => panic!("Unexpected argument for __MATH_ASIN: {}", x)
+            }
+        }
+
+        "__MATH_ATAN" => {
+            if args.len() != 1 {
+                panic!("Expected 1 argument for __MATH_ATAN. Got: {}", args.len());
+            }
+
+            match &args[0] {
+                Object::Double(x) => {
+                    return Object::Double(x.atan());
+                }
+                x => panic!("Unexpected argument for __MATH_ATAN: {}", x)
+            }
+        }
+
+        "__MATH_ATAN2" => {
+            if args.len() != 2 {
+                panic!("Expected 2 arguments for __MATH_ATAN2. Got: {}", args.len());
+            }
+
+            match &args[0] {
+                Object::Double(x) => {
+                    return Object::Double(x.atan2(*x));
+                }
+                x => panic!("Unexpected argument for __MATH_ATAN2: {}", x)
+            }
+        }
+
+        "__MATH_COS" => {
+            if args.len() != 1 {
+                panic!("Expected 1 argument for __MATH_COS. Got: {}", args.len());
+            }
+
+            match &args[0] {
+                Object::Double(x) => {
+                    return Object::Double(x.cos());
+                }
+                x => panic!("Unexpected argument for __MATH_COS: {}", x)
+            }
+        }
+
+        "__MATH_EXP" => {
+            if args.len() != 1 {
+                panic!("Expected 1 argument for __MATH_EXP. Got: {}", args.len());
+            }
+
+            match &args[0] {
+                Object::Double(x) => {
+                    return Object::Double(x.exp());
+                }
+                x => panic!("Unexpected argument for __MATH_EXP: {}", x)
+            }
+        }
+
+        "__MATH_LOG" => {
+            if args.len() != 1 {
+                panic!("Expected 1 argument for __MATH_LOG. Got: {}", args.len());
+            }
+
+            match &args[0] {
+                Object::Double(x) => {
+                    return Object::Double(x.ln());
+                }
+                x => panic!("Unexpected argument for __MATH_LOG: {}", x)
+            }
+        }
+
+        "__MATH_MAX" => {
+            if args.len() != 1 {
+                panic!("Expected 2 arguments for __MATH_MAX. Got: {}", args.len());
+            }
+
+            match &args[0] {
+                Object::Double(x1) => {
+                    match &args[1] {
+                        Object::Double(x2) => {
+                            if *x1 >= *x2 {
+                                return Object::Double(x1.clone());
+                            }
+                            return Object::Double(x2.clone());
+                        }
+                        Object::Int(n2) => {
+                            if *x1 >= (*n2 as f64) {
+                                return Object::Double(x1.clone());
+                            }
+                            return Object::Int(n2.clone())
+                        }
+                        x => panic!("Unexpected second argument for __MATH_MAX: {}", x)
+                    }
+                }
+                Object::Int(n1) => {
+                    match &args[1] {
+                        Object::Double(x2) => {
+                            if (*n1 as f64) > *x2 {
+                                return Object::Int(n1.clone());
+                            }
+                            return Object::Double(x2.clone());
+                        }
+                        Object::Int(n2) => {
+                            if *n1 >= *n2 {
+                                return Object::Int(n1.clone());
+                            }
+                            return Object::Int(n2.clone())
+                        }
+                        x => panic!("Unexpected second argument for __MATH_MAX: {}", x)
+                    }
+                }
+                x => panic!("Unexpected first argument for __MATH_MAX: {}", x)
+            }
+        }
+
+        "__MATH_MIN" => {
+            if args.len() != 1 {
+                panic!("Expected 2 arguments for __MATH_MIN. Got: {}", args.len());
+            }
+
+            match &args[0] {
+                Object::Double(x1) => {
+                    match &args[1] {
+                        Object::Double(x2) => {
+                            if *x1 <= *x2 {
+                                return Object::Double(x1.clone());
+                            }
+                            return Object::Double(x2.clone());
+                        }
+                        Object::Int(n2) => {
+                            if *x1 <= (*n2 as f64) {
+                                return Object::Double(x1.clone());
+                            }
+                            return Object::Int(n2.clone())
+                        }
+                        x => panic!("Unexpected second argument for __MATH_MIN: {}", x)
+                    }
+                }
+                Object::Int(n1) => {
+                    match &args[1] {
+                        Object::Double(x2) => {
+                            if (*n1 as f64) < *x2 {
+                                return Object::Int(n1.clone());
+                            }
+                            return Object::Double(x2.clone());
+                        }
+                        Object::Int(n2) => {
+                            if *n1 <= *n2 {
+                                return Object::Int(n1.clone());
+                            }
+                            return Object::Int(n2.clone())
+                        }
+                        x => panic!("Unexpected second argument for __MATH_MIN: {}", x)
+                    }
+                }
+                x => panic!("Unexpected first argument for __MATH_MIN: {}", x)
+            }
+        }
+
+        "__MATH_POW" => {
+            if args.len() != 2 {
+                panic!("Expected 2 arguments for __MATH_POW. Got: {}", args.len());
+            }
+
+            match &args[0] {
+
+                Object::Double(x1) => {
+
+                    match &args[1] {
+                        Object::Double(x2) => {
+                            return Object::Double(x1.powf(*x2));
+                        }
+                        Object::Int(n2) => {
+                            return Object::Double(x1.powi(*n2 as i32));
+                        }
+                        x => panic!("Unexpected second argument for __MATH_POW: {}", x)
+                    }
+                }
+                Object::Int(n1) => {
+
+                    match &args[1] {
+                        Object::Double(x2) => {
+                            return Object::Double((*n1 as f64).powf(*x2));
+                        }
+                        Object::Int(n2) => {
+                            return Object::Double((*n1 as f64).powi(*n2 as i32));
+                        }
+                        x => panic!("Unexpected second argument for __MATH_POW: {}", x)
+                    }
+                    
+                }
+                x => panic!("Unexpected first argument for __MATH_POW: {}", x)
+            }
+        }
+
+        "__MATH_SIN" => {
+            if args.len() != 1 {
+                panic!("Expected 1 argument for __MATH_SIN. Got: {}", args.len());
+            }
+
+            match &args[0] {
+                Object::Double(x) => {
+                    return Object::Double(x.sin());
+                }
+                Object::Int(n) => {
+                    return Object::Double((*n as f64).sin())
+                }
+                x => panic!("Unexpected argument for __MATH_SIN: {}", x)
+            }
+        }
+
+        "__MATH_SQRT" => {
+            if args.len() != 1 {
+                panic!("Expected 1 argument for __MATH_SQRT. Got: {}", args.len());
+            }
+
+            match &args[0] {
+                Object::Int(n) => {
+                    return Object::Double((*n as f64).sqrt());
+                }
+                Object::Double(x) => {
+                    return Object::Double(x.sqrt());
+                }
+                x => panic!("Unexpected argument for __MATH_SQRT: {}", x)
+            }
+        }
+
+        "__MATH_TAN" => {
+            if args.len() != 1 {
+                panic!("Expected 1 argument for __MATH_TAN. Got: {}", args.len());
+            }
+
+            match &args[0] {
+                Object::Int(n) => {
+                    return Object::Double((*n as f64).tan());
+                }
+                Object::Double(x) => {
+                    return Object::Double(x.tan());
+                }
+                x => panic!("Unexpected argument for __MATH_TAN: {}", x)
+            }
         }
 
         "__MATH_NEXT_BOOL" => {
