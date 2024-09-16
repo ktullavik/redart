@@ -3,19 +3,27 @@ WIP toy interpreter for the Dart language.
 
 The ambition is to create a simpler and more portable
 implementation of Dart. It should run anywhere Rust can run.
-And with humble memory requirements.
 
 ## Top missing features:
 * ~~Garbage collector~~.
 * Type system.
-* Standard library.
+* Standard library. (In progress)
 * Inheritance.
+* Private members.
+* Getters/setters.
+* Abstract classes.
 * Isolates.
 * Async/await.
-* Getters/setters.
 * Static members.
-* List.
+* ~~Lists~~.
 * Maps.
+* Tuples.
+* Static members.
+* const.
+* final.
+* Factory constructors.
+* Operator overloading.
+* Mixins.
 * Packages.
 
 ## Installation
