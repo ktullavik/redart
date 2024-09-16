@@ -15,8 +15,9 @@ implementation of Dart. It should run anywhere Rust can run.
 * Isolates.
 * Async/await.
 * Static members.
-* ~~List~~.
+* ~~Lists~~.
 * Maps.
+* Tuples.
 * Static members.
 * const.
 * final.
