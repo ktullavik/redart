@@ -9,9 +9,11 @@ implementation of Dart. It should run anywhere Rust can run.
 * Type system.
 * Standard library. (In progress)
 * Inheritance.
+* Private members.
+* Getters/setters.
+* Abstract classes.
 * Isolates.
 * Async/await.
-* Getters/setters.
 * Static members.
 * ~~List~~.
 * Maps.
