@@ -92,6 +92,7 @@ pub const TESTS: &'static [&'static str] = &[
     "87.random_int.dart",
     "88.random_bool.dart",
     "89.random_double.dart",
+    "90.top_level_var.dart",
     "500.multifile/main.dart",
     "501.external_constructor/main.dart"
 ];

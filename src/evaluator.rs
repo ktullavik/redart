@@ -762,11 +762,22 @@ pub fn eval(
                 }
                 return this.get_field(s.clone()).clone();
             }
-            else {
-                state.stack.printstack();
-                // As dart.
-                dart_evalerror(format!("Undefined name: '{}'.", s), state);
+
+            let ltable = &state.looktables[&state.filepath];
+            if ltable.contains_key(s) {
+                let index = ltable.get(s).unwrap();
+                let n = &state.globals[*index].clone();
+                return eval(n, state, true);
             }
+
+            state.stack.printstack();
+            // As dart.
+            dart_evalerror(format!("Undefined name: '{}'.", s), state);
+        }
+
+        NodeType::TypedVar(_, _) => {
+            let valtree = &node.children[0];
+            return eval(valtree, state, true);
         }
 
         NodeType::Return => {
