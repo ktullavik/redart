@@ -1,7 +1,9 @@
 use std::fmt;
 
+use crate::object::Object;
 
-#[derive(Debug)]
+
+
 #[derive(Clone)]
 pub enum NodeType {
     Add,
@@ -29,7 +31,7 @@ pub enum NodeType {
     Str(String),
     Bool(bool),
     Name(String),
-    TypedVar(String, String),
+    TypedVar(String, String),  // type, name
     Conditional,
     If,
     ElseIf,
@@ -49,6 +51,8 @@ pub enum NodeType {
     Return,
     Constructor(String, String), // consname, filename
     Null,
+    TopVar(String, String, Box<Object>), // type, name
+    TopVarLazy(String, String)
 }
 
 
@@ -101,12 +105,14 @@ impl fmt::Display for NodeType {
             NodeType::Return => write!(f, "Return"),
             NodeType::Constructor(name, _filename) => write!(f, "Constructor({})", name),
             NodeType::Null => write!(f, "null"),
+            NodeType::TopVar(typ, name, val) => write!(f, "TopVar({}, {}, {})", typ, name, val),
+            NodeType::TopVarLazy(typ, name) => write!(f, "TopVarLazy({}, {})", typ, name)
         }
     }
 }
 
 
-#[derive(Debug)]
+// #[derive(Debug)]
 #[derive(Clone)]
 pub struct Node {
     pub nodetype: NodeType,

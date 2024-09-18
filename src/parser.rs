@@ -66,22 +66,50 @@ fn decl(reader: &mut Reader, state: &mut State) {
     match reader.sym() {
 
         // The return type of a top level function definition.
-        Token::Name(_, _, _) => {
+        Token::Name(typ, _, _) => {
 
             match reader.next() {
 
                 // Name of top level function.
-                Token::Name(fname, _, _) => {
-                    reader.next();
-                    let mut node = Node::new(NodeType::FunDef(fname.to_string(), state.filepath.clone()));
-                    let params = paramlist(reader, state);
-                    node.children.push(params);
+                Token::Name(name, _, _) => {
 
-                    reader.skip("{", state);
-                    let body = block(reader, state);
-                    node.children.push(body);
-                    state.globals.push(node.clone());
-                    return;
+                    match reader.next() {
+
+                        Token::Paren1(_, _) => {
+                            // Top level function
+                            let mut node = Node::new(NodeType::FunDef(name.to_string(), state.filepath.clone()));
+                            let params = paramlist(reader, state);
+                            node.children.push(params);
+
+                            reader.skip("{", state);
+                            let body = block(reader, state);
+                            node.children.push(body);
+                            state.globals.push(node.clone());
+                            return;
+                        }
+
+                        Token::Assign(_, _) => {
+                            // Top level variable.
+                            // These are lazy initialized (by first access) in dart.
+                            // So we put the node tree into globals and then the
+                            // interpreter will replace the TopVarLazy with a TopVar
+                            // upon execution.
+                            reader.next();
+                            let mut node = Node::new(NodeType::TopVarLazy(typ, name));
+                            let val = expression(reader, state);
+                            node.children.push(val);
+                            state.globals.push(node);
+                            reader.skip(";", state);
+                            return;
+                        }
+
+                        _ => dart_parseerror(format!("Unexpected token: {}",
+                                reader.sym()),
+                                state,
+                                reader.tokens(),
+                                reader.pos()
+                            )
+                    }
                 }
 
                 _ => {

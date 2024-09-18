@@ -30,31 +30,47 @@ pub fn eval(
                     let left_obj = eval(&node.children[0], state, false);
                     let right_obj = eval(&node.children[1], state, true);
 
+                    // Look on the stack.
                     if state.stack.has(name) {
                         state.stack.update(name, right_obj);
                         return Object::Null;
                     }
 
-
+                    // Look in the heap.
                     if let Object::Reference(refid) = left_obj {
                         let left_ref = state.objsys.get_instance_mut(&refid);
                         left_ref.set_field(name.to_string(), right_obj);
                         return Object::Null;
                     }
 
-                    if !state.objsys.has_this() {
-                        // As dart.
-                        dart_evalerror(format!("Setter not found: '{}'", name), state)
+                    // Look in the 'this' instance.
+                    if state.objsys.has_this() {
+                        let this = state.objsys.get_this_instance_mut();
+                        if this.has_field(name.to_string()) {
+                            this.set_field(name.to_string(), right_obj);
+                            return Object::Null;
+                        }
                     }
-                    let this = state.objsys.get_this_instance_mut();
 
-                    if !this.has_field(name.to_string()) {
-                        // As dart.
-                        dart_evalerror(format!("The setter '{}' isn't defined for the class '{}'", name, this.classname), state)
+                    // Look for globals.
+                    let ltable = &state.looktables[&state.filepath];
+                    if ltable.contains_key(name) {
+                        let index = ltable.get(name).unwrap().clone();
+                        let n = state.globals[index].clone();
+
+                        match &n.nodetype {
+
+                            NodeType::TopVarLazy(typ, _) |
+                            NodeType::TopVar(typ, _, _) => {
+                                let newval = Node::new(NodeType::TopVar(typ.clone(), name.clone(), Box::new(right_obj)));
+                                state.globals[index] = newval;
+                                return Object::Null;
+                            }
+                            _ => panic!("Unexpected node type in globals: {}", n)
+                        }
                     }
-                    this.set_field(name.to_string(), right_obj);
 
-                    return Object::Null;
+                    dart_evalerror(format!("Setter not found: '{}'", name), state)
                 }
                 NodeType::TypedVar(_, name) => {
 
@@ -649,7 +665,7 @@ pub fn eval(
                         }
                     }
                 }
-                _ => dart_evalerror(format!("Illegal operand for increment: {:?}", valnode), state)
+                _ => dart_evalerror(format!("Illegal operand for increment: {}", valnode), state)
             }
         }
 
@@ -686,7 +702,7 @@ pub fn eval(
                         }
                     }
                 }
-                _ => dart_evalerror(format!("Illegal operand for decrement: {:?}", valnode), state)
+                _ => dart_evalerror(format!("Illegal operand for decrement: {}", valnode), state)
             }
         }
 
@@ -762,11 +778,41 @@ pub fn eval(
                 }
                 return this.get_field(s.clone()).clone();
             }
-            else {
-                state.stack.printstack();
-                // As dart.
-                dart_evalerror(format!("Undefined name: '{}'.", s), state);
+
+            let ltable = &state.looktables[&state.filepath];
+            if ltable.contains_key(s) {
+                let index = ltable.get(s).unwrap().clone();
+                let n = state.globals[index].clone();
+
+                match &n.nodetype {
+
+                    NodeType::TopVarLazy(typ, name) => {
+
+                        if *name == state.eval_var {
+                            dart_evalerror("Top level variable '{}' depends on itself.", state);
+                        }
+                        if state.eval_var.len() == 0 {
+                            state.eval_var = name.clone();
+                        }
+
+                        let res = eval(&n.children[0], state, true);
+                        state.eval_var = String::from("");
+                        let resolved_node = Node::new(NodeType::TopVar(typ.clone(), name.clone(), Box::new(res.clone())));
+                        state.globals[index] = resolved_node;
+                        return res;
+                    }
+
+                    NodeType::TopVar(_, _, val) => {
+                        return *val.clone();
+                    }
+
+                    _ => panic!("Unexpected node type in globals: {}", n)
+                }
             }
+
+            state.stack.printstack();
+            // As dart.
+            dart_evalerror(format!("Undefined name: '{}'.", s), state);
         }
 
         NodeType::Return => {

@@ -208,9 +208,11 @@ fn filecurse(
         match &f.nodetype {
             NodeType::FunDef(funcname, _) => {
                 looktable.insert(funcname.clone(), i);
-
             }
             NodeType::Constructor(name, _) => {
+                looktable.insert(name.clone(), i);
+            }
+            NodeType::TopVarLazy(_, name) => {
                 looktable.insert(name.clone(), i);
             }
             _ => {
@@ -238,6 +240,9 @@ fn filecurse(
                     looktable.insert(funcname.clone(), i);
                 }
                 NodeType::Constructor(name, _) => {
+                    looktable.insert(name.clone(), i);
+                }
+                NodeType::TopVarLazy(_, name) => {
                     looktable.insert(name.clone(), i);
                 }
                 _ => {
@@ -279,7 +284,7 @@ fn evaluate(filepath: String, state: &mut State, dirs: &Dirs) {
             state.stack.pop_call();
         }
         x => {
-            panic!("Unexpected type of 'main': {:?}", x)
+            panic!("Unexpected type of 'main': {}", x)
         }
     }
 }

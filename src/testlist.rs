@@ -92,6 +92,8 @@ pub const TESTS: &'static [&'static str] = &[
     "87.random_int.dart",
     "88.random_bool.dart",
     "89.random_double.dart",
+    "90.toplevel_var.dart",
+    "91.toplevel_var_set.dart",
     "500.multifile/main.dart",
     "501.external_constructor/main.dart"
 ];
@@ -108,6 +110,7 @@ pub const FAILTESTS: &'static [&'static str] = &[
     "7.illegal_operand_pluss.dart",
     "8.illegal_operand_minus.dart",
     "500.non_transitive_imports/main.dart",
+    "501.topvar_cycle/main.dart"
 ];
 
 
