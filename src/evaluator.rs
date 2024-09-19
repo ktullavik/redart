@@ -195,7 +195,7 @@ pub fn eval(
                         Object::Double(x2) => {
                             return Object::Bool((n1 as f64) > x2)
                         }
-                        _ => panic!("Illegal right operand for >")
+                        _ => dart_evalerror(format!("Illegal right operand for comparison: {}", right_obj), state)
                     }
                 }
 
@@ -209,10 +209,10 @@ pub fn eval(
                         Object::Double(x2) => {
                             return Object::Bool(x1 > x2)
                         }
-                        _ => panic!("Illegal right operand for >")
+                        _ => dart_evalerror(format!("Illegal right operand for comparison: {}", right_obj), state)
                     }
                 }
-                _ => panic!("Illegal left operand for >")
+                _ => dart_evalerror(format!("Illegal left operand for comparison: {}", left_obj), state)
             }
         }
 
@@ -591,7 +591,7 @@ pub fn eval(
                         }
                     }
                 }
-                _ => panic!("Illegal operand for preincrement: {}", valnode)
+                _ => dart_evalerror(format!("Illegal operand for preincrement: {}", valnode), state)
             }
         }
 
@@ -764,7 +764,6 @@ pub fn eval(
                         return owner;
                     }
                 }
-
                 panic!("Unexpected owner for {}: {}", s, owner);
             }
 
