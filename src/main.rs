@@ -251,14 +251,23 @@ fn filecurse(
 
             let f = &state.globals[i];
             match &f.nodetype {
-                NodeType::FunDef(funcname, _) => {
-                    looktable.insert(funcname.clone(), i);
+                NodeType::FunDef(name, _) => {
+                    if !looktable.contains_key(name) {
+                        looktable.insert(name.clone(), i);
+                    }
+                    // else it is shadowed
                 }
                 NodeType::Constructor(name, _) => {
-                    looktable.insert(name.clone(), i);
+                    if !looktable.contains_key(name) {
+                        looktable.insert(name.clone(), i);
+                    }
+                    // else it is shadowed
                 }
                 NodeType::TopVarLazy(_, name) => {
-                    looktable.insert(name.clone(), i);
+                    if !looktable.contains_key(name) {
+                        looktable.insert(name.clone(), i);
+                    }
+                    // else it is shadowed
                 }
                 _ => {
                     panic!("Unexpected node type in globals");

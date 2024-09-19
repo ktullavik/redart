@@ -94,6 +94,7 @@ pub const TESTS: &'static [&'static str] = &[
     "89.random_double.dart",
     "90.toplevel_var.dart",
     "91.toplevel_var_set.dart",
+    "100.shaded_topvar/main.dart",
     "500.multifile/main.dart",
     "501.external_constructor/main.dart"
 ];
