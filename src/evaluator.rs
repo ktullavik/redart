@@ -902,14 +902,12 @@ pub fn eval(
             for condnode in &node.children {
 
                 match condnode.nodetype {
-
                     NodeType::If |
                     NodeType::ElseIf => {
                         let boolnode= &condnode.children[0];
-
                         let cond = eval(&boolnode, state, true);
-                        match cond {
 
+                        match cond {
                             Object::Bool(v) => {
                                 if v {
                                     let bodynode= &condnode.children[1];
@@ -922,7 +920,6 @@ pub fn eval(
                             _ => panic!("Expected bool in conditional")
                         }
                     }
-
                     NodeType::Else => {
                         let bodynode= &condnode.children[0];
                         state.stack.push_lex();
@@ -931,7 +928,6 @@ pub fn eval(
                         return ret;
                     }
                     _ => panic!("Invalid node in conditional!")
-
                 }
             }
             return Object::Null;
