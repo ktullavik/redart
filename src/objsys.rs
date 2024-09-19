@@ -94,11 +94,6 @@ impl ObjSys {
     }
 
 
-    pub fn new_class(&self, name: String) -> Class {
-        return Class::new(name);
-    }
-
-
     pub fn register_class(&mut self, class: Class) {
         self.classmap.insert(class.name.clone(), class);
     }

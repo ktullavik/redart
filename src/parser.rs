@@ -145,7 +145,7 @@ fn class(reader: &mut Reader, state: &mut State) {
     match reader.next() {
         Token::Name(classname, _, _) => {
 
-            let mut class = state.objsys.new_class(classname.clone());
+            let mut class = Class::new(classname.clone());
 
             reader.next();
             reader.skip("{", state);
