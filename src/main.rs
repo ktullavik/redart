@@ -218,6 +218,13 @@ fn filecurse(
                 looktable.insert(name.clone(), i);
             }
             NodeType::Constructor(name, _) => {
+                if looktable.contains_key(name) {
+                    // As dart.
+                    dart_evalerror(
+                        format!("'{}' is already declared in this scope.", name),
+                        state
+                    )
+                }
                 looktable.insert(name.clone(), i);
             }
             NodeType::TopVarLazy(_, name) => {
