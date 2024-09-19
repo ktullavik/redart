@@ -789,7 +789,7 @@ pub fn eval(
                     NodeType::TopVarLazy(typ, name) => {
 
                         if *name == state.eval_var {
-                            dart_evalerror("Top level variable '{}' depends on itself.", state);
+                            dart_evalerror(format!("Top level variable '{}' depends on itself.", name), state);
                         }
                         if state.eval_var.len() == 0 {
                             state.eval_var = name.clone();
