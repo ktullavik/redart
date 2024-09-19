@@ -28,6 +28,7 @@ use std::time::Instant;
 use state::State;
 use dirs::Dirs;
 use node::NodeType;
+use utils::dart_evalerror;
 
 
 fn main() {
@@ -206,13 +207,27 @@ fn filecurse(
         let f = &state.globals[i];
 
         match &f.nodetype {
-            NodeType::FunDef(funcname, _) => {
-                looktable.insert(funcname.clone(), i);
+            NodeType::FunDef(name, _) => {
+                if looktable.contains_key(name) {
+                    // As dart.
+                    dart_evalerror(
+                        format!("'{}' is already declared in this scope.", name),
+                        state
+                    )
+                }
+                looktable.insert(name.clone(), i);
             }
             NodeType::Constructor(name, _) => {
                 looktable.insert(name.clone(), i);
             }
             NodeType::TopVarLazy(_, name) => {
+                if looktable.contains_key(name) {
+                    // As dart.
+                    dart_evalerror(
+                        format!("'{}' is already declared in this scope.", name),
+                        state
+                    )
+                }
                 looktable.insert(name.clone(), i);
             }
             _ => {
