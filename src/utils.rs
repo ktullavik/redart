@@ -5,34 +5,33 @@ use State;
 
 pub fn dprint<S: Into<String>>(s: S) {
     let debug = false;
-
     if debug {
         println!("{}", s.into());
     }
 }
 
 
-pub fn dart_parseerror<S: Into<String>>(msg: S, ctx: &State, tokens: &Vec<Token>, index: usize) -> ! {
+pub fn dart_parseerror<S: Into<String>>(msg: S, state: &State, tokens: &Vec<Token>, index: usize) -> ! {
 
     let (linenum, symnum) = &tokens[index].find_token_position();
 
-    if ctx.debug {
-        panic!("{}:{}:{}: Error: {}", ctx.filepath, linenum, symnum, msg.into());
+    if state.debug {
+        panic!("{}:{}:{}: Error: {}", state.filepath, linenum, symnum, msg.into());
     }
     else {
-        println!("{}:{}:{}: Error: {}", ctx.filepath, linenum, symnum, msg.into());
+        println!("{}:{}:{}: Error: {}", state.filepath, linenum, symnum, msg.into());
         process::exit(1);
     }
 }
 
 
-pub fn dart_evalerror<S: Into<String>>(msg: S, ctx: &State) -> ! {
+pub fn dart_evalerror<S: Into<String>>(msg: S, state: &State) -> ! {
 
-    if ctx.debug {
-        panic!("{}: Error: {}", ctx.filepath, msg.into());
+    if state.debug {
+        panic!("{}: Error: {}", state.filepath, msg.into());
     }
     else {
-        println!("{}: Error: {}", ctx.filepath, msg.into());
+        println!("{}: Error: {}", state.filepath, msg.into());
         process::exit(1);
     }
 }
