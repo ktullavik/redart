@@ -49,14 +49,14 @@ fn main() {
                 println!("Error: File argument expected.");
                 return;
             }
-            do_task("lex", args[2].clone(), &dirs);
+            do_task("lex", &args[2], &dirs);
         }
         "parse" => {
             if args.len() < 3 {
                 println!("Error: File argument expected.");
                 return;
             }
-            do_task("parse", args[2].clone(), &dirs);
+            do_task("parse", &args[2], &dirs);
         }
         "test" => {
             if args.len() < 3 {
@@ -67,7 +67,7 @@ fn main() {
                     println!("Running test: {}", s);
                     println!("----------------------------------------------------");
                     let path = format!("{}/{}", dirs.testdir(), s);
-                    do_task("eval", String::from(path.as_str()), &dirs);
+                    do_task("eval", &path, &dirs);
                 }
                 let end = Instant::now();
                 println!("____________________________________________________");
@@ -96,7 +96,7 @@ fn main() {
             }
 
             let filepath = testlist::get_filepath(nextarg.clone(), &dirs);
-            do_task(task, filepath, &dirs);
+            do_task(task, &filepath, &dirs);
         }
         "testfail" => {
             if args.len() < 3 {
@@ -126,7 +126,7 @@ fn main() {
             }
 
             let filepath = testlist::get_failfilepath(nextarg.clone(), &dirs);
-            do_task(task, filepath, &dirs);
+            do_task(task, &filepath, &dirs);
         }
         _ => {
             println!("Illegal argument: {}", a1);
@@ -135,23 +135,23 @@ fn main() {
 }
 
 
-fn do_task(action: &str, filepath: String, dirs: &Dirs) {
+fn do_task(action: &str, filepath: &str, dirs: &Dirs) {
 
     let mut state = State::new();
-    state.filepath = filepath.clone();
+    state.filepath = String::from(filepath);
 
     match action {
         "lex" => {
-            let input = read_file(filepath.as_str());
-            let reader = lexer::lex(&input, filepath.as_str());
+            let input = read_file(filepath);
+            let reader = lexer::lex(&input, filepath);
             for t in reader.tokens() {
                 print!("{} ", t);
             }
             println!();
         }
         "parse" => {
-            let input = read_file(filepath.as_str());
-            let mut tokens = lexer::lex(&input, filepath.as_str());
+            let input = read_file(filepath);
+            let mut tokens = lexer::lex(&input, filepath);
             parser::parse(&mut tokens, &mut state);
 
             for f in &state.globals {
@@ -159,7 +159,7 @@ fn do_task(action: &str, filepath: String, dirs: &Dirs) {
             }
         }
         "eval" => {
-            evaluate(filepath, &mut state, dirs);
+            evaluate(String::from(filepath), &mut state, dirs);
         }
         x => {
             println!("Unknown action: {}", x);
