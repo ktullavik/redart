@@ -97,6 +97,7 @@ pub const TESTS: &'static [&'static str] = &[
     "92.multifile/main.dart",
     "93.external_constructor/main.dart",
     "94.shaded_topvar/main.dart",
+    "95.const_topvar.dart",
 ];
 
 
@@ -113,6 +114,7 @@ pub const FAILTESTS: &'static [&'static str] = &[
     "9.topvar_double_decl.dart",
     "10.non_transitive_imports/main.dart",
     "11.topvar_cycle/main.dart",
+    "12.const_topvar_set.dart",
 ];
 
 

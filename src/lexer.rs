@@ -35,6 +35,7 @@ fn read_word(tokens: &mut Vec<Token>, chars: &[char], start: usize, linenum: usi
         "do"     => tokens.push(Token::Do(linenum, symnum)),
         "for"    => tokens.push(Token::For(linenum, symnum)),
         "in"     => tokens.push(Token::In(linenum, symnum)),
+        "const"  => tokens.push(Token::Const(linenum, symnum)),
         "return" => tokens.push(Token::Return(linenum, symnum)),
         "class"  => tokens.push(Token::Class(linenum, symnum)),
         "this"   => tokens.push(Token::This(linenum, symnum)),

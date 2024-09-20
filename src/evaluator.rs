@@ -66,6 +66,12 @@ pub fn eval(
                                 state.globals[index] = newval;
                                 return Object::Null;
                             }
+                            NodeType::ConstLazy(_, name) => {
+                                dart_evalerror(format!("Cannot change const: {}", name), state)
+                            }
+                            NodeType::ConstVar(_, name, _) => {
+                                dart_evalerror(format!("Cannot change const: {}", name), state)
+                            }
                             _ => panic!("Unexpected node type in globals: {}", n)
                         }
                     }
@@ -743,6 +749,10 @@ pub fn eval(
 
         NodeType::Name(s) => {
 
+            if state.in_const {
+                dart_evalerror("Not a constant expression.", state)
+            }
+
             // For Name, having a child means having an owner.
             if node.children.len() > 0 {
 
@@ -805,10 +815,33 @@ pub fn eval(
                         return *val.clone();
                     }
 
+                    NodeType::ConstLazy(typ, name) => {
+
+                        if *name == state.eval_var {
+                            dart_evalerror(format!("Top level const '{}' depends on itself.", name), state);
+                        }
+                        if state.eval_var.len() == 0 {
+                            state.eval_var = name.clone();
+                        }
+
+                        state.in_const = true;
+                        let res = eval(&n.children[0], state, true);
+                        state.in_const = false;
+                        state.eval_var = String::from("");
+                        let resolved_node = Node::new(NodeType::ConstVar(typ.clone(), name.clone(), Box::new(res.clone())));
+                        state.globals[index] = resolved_node;
+                        return res;
+                    }
+
+                    NodeType::ConstVar(_, _, val) => {
+                        println!("Found ConstVar");
+
+                        return *val.clone();
+                    }
+
                     _ => panic!("Unexpected node type in globals: {}", n)
                 }
             }
-
             state.stack.printstack();
             // As dart.
             dart_evalerror(format!("Undefined name: '{}'.", s), state);
@@ -820,6 +853,10 @@ pub fn eval(
         }
 
         NodeType::MethodCall(name, owner, _filename) => {
+
+            if state.in_const {
+                dart_evalerror("Not a constant expression.", state)
+            }
 
             let reference: Object = eval(owner, state, true);
 
@@ -839,6 +876,10 @@ pub fn eval(
         }
 
         NodeType::FunCall(s) => {
+
+            if state.in_const {
+                dart_evalerror("Not a constant expression.", state)
+            }
 
             // First look in stack.
             if state.stack.has(s) {

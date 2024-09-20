@@ -48,6 +48,8 @@ pub enum Token {
   Brack1(usize, usize),
   Brack2(usize, usize),
   Comma(usize, usize),
+  // Modifiers
+  Const(usize, usize),
   // Other
   Assign(usize, usize),
   Access(usize, usize),
@@ -118,6 +120,8 @@ impl fmt::Display for Token {
       Token::Brack1(_, _) => write!(f, "["),
       Token::Brack2(_, _) => write!(f, "]"),
       Token::Comma(_, _) => write!(f, ","),
+      // Modifiers
+      Token::Const(_, _) => write!(f, "const"),
       // Other
       Token::Assign(_, _) => write!(f, "="),
       Token::Access(_, _) => write!(f, "."),
@@ -176,6 +180,8 @@ impl Token {
       Token::Brack1(l, i) |
       Token::Brack2(l, i) |
       Token::Comma(l, i) |
+      // Modifiers
+      Token::Const(l, i) |
       // Other
       Token::Assign(l, i) |
       Token::Access(l, i) |

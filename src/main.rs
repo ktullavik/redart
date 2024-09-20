@@ -207,27 +207,10 @@ fn filecurse(
         let f = &state.globals[i];
 
         match &f.nodetype {
-            NodeType::FunDef(name, _) => {
-                if looktable.contains_key(name) {
-                    // As dart.
-                    dart_evalerror(
-                        format!("'{}' is already declared in this scope.", name),
-                        state
-                    )
-                }
-                looktable.insert(name.clone(), i);
-            }
-            NodeType::Constructor(name, _) => {
-                if looktable.contains_key(name) {
-                    // As dart.
-                    dart_evalerror(
-                        format!("'{}' is already declared in this scope.", name),
-                        state
-                    )
-                }
-                looktable.insert(name.clone(), i);
-            }
-            NodeType::TopVarLazy(_, name) => {
+            NodeType::FunDef(name, _) |
+            NodeType::Constructor(name, _) |
+            NodeType::TopVarLazy(_, name) |
+            NodeType::ConstLazy(_, name) => {
                 if looktable.contains_key(name) {
                     // As dart.
                     dart_evalerror(
@@ -258,19 +241,10 @@ fn filecurse(
 
             let f = &state.globals[i];
             match &f.nodetype {
-                NodeType::FunDef(name, _) => {
-                    if !looktable.contains_key(name) {
-                        looktable.insert(name.clone(), i);
-                    }
-                    // else it is shadowed
-                }
-                NodeType::Constructor(name, _) => {
-                    if !looktable.contains_key(name) {
-                        looktable.insert(name.clone(), i);
-                    }
-                    // else it is shadowed
-                }
-                NodeType::TopVarLazy(_, name) => {
+                NodeType::FunDef(name, _) |
+                NodeType::Constructor(name, _) |
+                NodeType::TopVarLazy(_, name) |
+                NodeType::ConstLazy(_, name) => {
                     if !looktable.contains_key(name) {
                         looktable.insert(name.clone(), i);
                     }
@@ -287,6 +261,7 @@ fn filecurse(
 
 
 fn evaluate(filepath: String, state: &mut State, dirs: &Dirs) {
+    println!("evaluate");
 
     let mut memo: HashMap<String, (usize, usize)> = HashMap::new();
 
@@ -322,6 +297,7 @@ fn evaluate(filepath: String, state: &mut State, dirs: &Dirs) {
 
 
 fn read_file(filepath: &str) -> String {
+    println!("read_file: {}", filepath);
     let mut input = String::new();
     let mut f = File::open(filepath).expect(format!("File not found: {}.", filepath).as_str());
     f.read_to_string(&mut input).expect("Error when reading input file.");

@@ -32,6 +32,10 @@ pub enum NodeType {
     Bool(bool),
     Name(String),
     TypedVar(String, String),  // type, name
+    TopVar(String, String, Box<Object>), // type, name
+    TopVarLazy(String, String),
+    ConstLazy(String, String),     // type, name
+    ConstVar(String, String, Box<Object>),
     Conditional,
     If,
     ElseIf,
@@ -51,8 +55,6 @@ pub enum NodeType {
     Return,
     Constructor(String, String), // consname, filename
     Null,
-    TopVar(String, String, Box<Object>), // type, name
-    TopVarLazy(String, String)
 }
 
 
@@ -85,7 +87,11 @@ impl fmt::Display for NodeType {
             NodeType::Str(s)  => write!(f, "\"{}\"", s),
             NodeType::Bool(v)   => write!(f, "{}", v),
             NodeType::Name(s) => write!(f, "{}", s),
-            NodeType::TypedVar(tp, name)   => write!(f, "{}:{}", name, tp),
+            NodeType::TypedVar(typ, name)   => write!(f, "{}:{}", name, typ),
+            NodeType::TopVar(typ, name, val) => write!(f, "TopVar({}, {}, {})", typ, name, val),
+            NodeType::TopVarLazy(typ, name)                => write!(f, "TopVarLazy({}, {})", typ, name),
+            NodeType::ConstVar(typ, name, val) => write!(f, "ConstVar({}, {}, {})", name, typ, val),
+            NodeType::ConstLazy(typ, name) => write!(f, "ConstLazy({}, {})", name, typ),
             NodeType::This                                   => write!(f, "this"),
             NodeType::FunDef(s, _filename) => write!(f, "{}() {{}}", s),
             NodeType::FunCall(s)                    => write!(f, "{}()", s),
@@ -105,8 +111,6 @@ impl fmt::Display for NodeType {
             NodeType::Return                    => write!(f, "Return"),
             NodeType::Constructor(name, _filename) => write!(f, "Constructor({})", name),
             NodeType::Null => write!(f, "null"),
-            NodeType::TopVar(typ, name, val) => write!(f, "TopVar({}, {}, {})", typ, name, val),
-            NodeType::TopVarLazy(typ, name)                => write!(f, "TopVarLazy({}, {})", typ, name)
         }
     }
 }

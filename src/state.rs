@@ -6,10 +6,21 @@ use objsys::RefKey;
 use node::Node;
 
 
-// globals is where all the top level nodes (functions, constructors)
-// are actually stored. looktables allows, given a filename, to look
-// up the top level nodes that are accessible by the file. It gives
-// an index into globals.
+// filepath:     Name of the file we are currently executing in.
+// globals:      Where all the top level nodes (functions, constructors, ...)
+//               are actually stored.
+// looktables:   Allows, given a filename, to look up the top level nodes that
+//               are accessible by the file. It gives an index into globals.
+// stack:        Combined call-stack and lexical stack.
+// constructing: Tracks references to objects currently being constructed, so
+//               we can tell the garbage collector to not delete them.
+// eval_var:     When evaluating a top level variable, we must store the name
+//               in order to detect cycles.
+// in_const:     True when we are evaluating the value of a const variable,
+//               so we can avoid stuff that are not allowed.
+// start_time:   Timestamp when we started the program, so we can measure time.
+// last_gc:      Timestamp when the garbage collector last ran.
+// debug:        Enable debug messages.
 pub struct State {
     pub filepath: String,
     pub globals: Vec<Node>,
@@ -18,6 +29,7 @@ pub struct State {
     pub objsys: ObjSys,
     pub constructing: Vec<RefKey>,
     pub eval_var: String,
+    pub in_const: bool,
     pub start_time: Instant,
     pub last_gc: Instant,
     pub debug: bool
@@ -35,6 +47,7 @@ impl  State {
             objsys: ObjSys::new(),
             constructing: Vec::new(),
             eval_var: String::from(""),
+            in_const: false,
             start_time: Instant::now(),
             last_gc: Instant::now(),
             debug: false

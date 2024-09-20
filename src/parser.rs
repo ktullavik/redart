@@ -65,12 +65,12 @@ fn decl(reader: &mut Reader, state: &mut State) {
 
     match reader.sym() {
 
-        // The return type of a top level function definition.
+        // The type of a top level declaration.
         Token::Name(typ, _, _) => {
 
             match reader.next() {
 
-                // Name of top level function.
+                // Name of top level declaration.
                 Token::Name(name, _, _) => {
 
                     match reader.next() {
@@ -115,6 +115,58 @@ fn decl(reader: &mut Reader, state: &mut State) {
                 _ => {
                     panic!("Expected function name.")
                 }
+            }
+        }
+
+        Token::Const(_, _) => {
+
+            println!("Found const");
+
+            match reader.next() {
+
+                Token::Name(type_or_name, _, _) => {
+
+                    match reader.next() {
+
+                        Token::Name(name, _, _) => {
+                            reader.next();
+                            reader.skip("=", state);
+                            let val = expression(reader, state);
+                            reader.skip(";", state);
+                            let mut node = Node::new(
+                                NodeType::ConstLazy(type_or_name, name));
+                            node.children.push(val);
+                            state.globals.push(node);
+                            return;
+                        }
+
+                        Token::Assign(_, _) => {
+                            reader.next();
+                            let val = expression(reader, state);
+                            reader.skip(";", state);
+                            let mut node = Node::new(
+                                NodeType::ConstLazy(String::from("dynamic"), type_or_name.clone()));
+                            node.children.push(val);
+                            state.globals.push(node);
+                            println!("Inserted const: {}", type_or_name);
+                            return;
+                        }
+
+                        x => dart_parseerror(
+                            format!("Unexpected token: {}", x),
+                            state,
+                            reader.tokens(),
+                            reader.pos()
+                        )
+                    }
+                }
+
+                _ => dart_parseerror(
+                        "Expected name after 'const'.",
+                        state,
+                        reader.tokens(),
+                        reader.pos()
+                    )
             }
         }
 
