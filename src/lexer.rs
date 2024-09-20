@@ -25,44 +25,20 @@ fn read_word(tokens: &mut Vec<Token>, chars: &[char], start: usize, linenum: usi
         break;
     }
 
-    if &sym == "import" {
-        tokens.push(Token::Import(linenum, symnum));
-    }
-    else if &sym == "true" {
-        tokens.push(Token::Bool(true, linenum, symnum));
-    }
-    else if &sym == "false" {
-        tokens.push(Token::Bool(false, linenum, symnum));
-    }
-    else if &sym == "if" {
-        tokens.push(Token::If(linenum, symnum));
-    }
-    else if &sym == "else" {
-        tokens.push(Token::Else(linenum, symnum));
-    }
-    else if &sym == "while" {
-        tokens.push(Token::While(linenum, symnum));
-    }
-    else if &sym == "do" {
-        tokens.push(Token::Do(linenum, symnum));
-    }
-    else if &sym == "for" {
-        tokens.push(Token::For(linenum, symnum));
-    }
-    else if &sym == "in" {
-        tokens.push(Token::In(linenum, symnum));
-    }
-    else if &sym == "return" {
-        tokens.push(Token::Return(linenum, symnum));
-    }
-    else if &sym == "class" {
-        tokens.push(Token::Class(linenum, symnum));
-    }
-    else if &sym == "this" {
-        tokens.push(Token::This(linenum, symnum));
-    }
-    else {
-        tokens.push(Token::Name(sym, linenum, symnum));
+    match sym.as_str() {
+        "import" => tokens.push(Token::Import(linenum, symnum)),
+        "true"   => tokens.push(Token::Bool(true, linenum, symnum)),
+        "false"  => tokens.push(Token::Bool(false, linenum, symnum)),
+        "if"     => tokens.push(Token::If(linenum, symnum)),
+        "else"   => tokens.push(Token::Else(linenum, symnum)),
+        "while"  => tokens.push(Token::While(linenum, symnum)),
+        "do"     => tokens.push(Token::Do(linenum, symnum)),
+        "for"    => tokens.push(Token::For(linenum, symnum)),
+        "in"     => tokens.push(Token::In(linenum, symnum)),
+        "return" => tokens.push(Token::Return(linenum, symnum)),
+        "class"  => tokens.push(Token::Class(linenum, symnum)),
+        "this"   => tokens.push(Token::This(linenum, symnum)),
+        _        => tokens.push(Token::Name(sym, linenum, symnum)),
     }
     return len;
 }
