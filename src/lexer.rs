@@ -2,6 +2,8 @@ use token::Token;
 use reader::Reader;
 use utils::dprint;
 
+use crate::utils::dart_lexerror;
+
 
 /// Not applicable for first char in name, where only letters are allowed
 fn is_legal_namechar(c: char) -> bool {
@@ -66,15 +68,15 @@ fn read_word(tokens: &mut Vec<Token>, chars: &[char], start: usize, linenum: usi
 }
 
 
-pub fn lex(input: &str) -> Reader {
-    let (tokens, pos) = lex_real(input, 0, 0, 1, 1);
+pub fn lex(input: &str, filepath: &str) -> Reader {
+    let (tokens, pos) = lex_real(input, 0, 0, 1, 1, filepath);
     let reader = Reader::new(tokens);
     assert_eq!(pos, input.chars().count(), "Lexer with leftover input.");
     return reader;
 }
 
 
-fn lex_real(input: &str, startpos: usize, interpol: usize, mut linenum: usize, mut symnum: usize) -> (Vec<Token>, usize) {
+fn lex_real(input: &str, startpos: usize, interpol: usize, mut linenum: usize, mut symnum: usize, filepath: &str) -> (Vec<Token>, usize) {
 
     dprint(" ");
     dprint("LEX");
@@ -125,7 +127,7 @@ fn lex_real(input: &str, startpos: usize, interpol: usize, mut linenum: usize, m
                     symnum += 1;
 
                     if nc == '$' && chars[i] == '{' {
-                        let (sublex, new_pos) = lex_real(input, i + 1, interpol + 1, linenum, symnum);
+                        let (sublex, new_pos) = lex_real(input, i + 1, interpol + 1, linenum, symnum, filepath);
                         subs.push(sublex);
                         // Assuming string interpol does not cross lines.
                         symnum += new_pos - i;
@@ -133,7 +135,7 @@ fn lex_real(input: &str, startpos: usize, interpol: usize, mut linenum: usize, m
                     }
                 }
                 if !closed {
-                    panic!("Unclosed quote!");
+                    dart_lexerror("Unclosed quote.", linenum, symnum, filepath)
                 }
                 tokens.push(Token::Str(s, subs, linenum, symnum));
                 continue;
@@ -162,7 +164,7 @@ fn lex_real(input: &str, startpos: usize, interpol: usize, mut linenum: usize, m
                     symnum += 1;
 
                     if nc == '$' && chars[i] == '{' {
-                        let (sublex, new_pos) = lex_real(input, i + 1, interpol + 1, linenum, symnum);
+                        let (sublex, new_pos) = lex_real(input, i + 1, interpol + 1, linenum, symnum, filepath);
                         subs.push(sublex);
                         // Assuming string interpol does not cross lines.
                         symnum += new_pos - i;
@@ -170,7 +172,7 @@ fn lex_real(input: &str, startpos: usize, interpol: usize, mut linenum: usize, m
                     }
                 }
                 if !closed {
-                    panic!("Unclosed quote!");
+                    dart_lexerror("Unclosed quote.", linenum, symnum, filepath)
                 }
                 tokens.push(Token::Str(s, subs, linenum, symnum));
                 continue;
@@ -199,7 +201,7 @@ fn lex_real(input: &str, startpos: usize, interpol: usize, mut linenum: usize, m
                     }
                 }
                 else {
-                    panic!("Unexpected end of input: '/'");
+                    dart_lexerror("Unexpected end of input: '/'", linenum, symnum, filepath)
                 }
                 continue;
             }
@@ -339,7 +341,7 @@ fn lex_real(input: &str, startpos: usize, interpol: usize, mut linenum: usize, m
                     }
                     else if nc == '.' {
                         if input.get(i+nl-1 .. i+nl) == Some(".") {
-                            panic!("Unexpected symbol: \".\"");
+                            dart_lexerror("Unexpected symbol: \".\"", linenum, symnum, filepath)
                         }
                         is_int = false;
                         nl += 1;
@@ -371,8 +373,8 @@ fn lex_real(input: &str, startpos: usize, interpol: usize, mut linenum: usize, m
                 }
             }
 
-            _ => {
-                panic!("Unrecognized symbol: {}", c);
+            z => {
+                dart_lexerror(format!("Unrecognized symbol: {}", z), linenum, symnum, filepath)
             }
         }
 

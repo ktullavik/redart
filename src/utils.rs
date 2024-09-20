@@ -11,6 +11,12 @@ pub fn dprint<S: Into<String>>(s: S) {
 }
 
 
+pub fn dart_lexerror<S: Into<String>>(msg: S, line: usize, column: usize, filepath: &str) -> ! {
+    println!("{}:{}:{}: Error: {}", filepath, line, column, msg.into());
+    process::exit(1);
+}
+
+
 pub fn dart_parseerror<S: Into<String>>(msg: S, state: &State, tokens: &Vec<Token>, index: usize) -> ! {
 
     let (linenum, symnum) = &tokens[index].find_token_position();

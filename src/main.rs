@@ -143,7 +143,7 @@ fn do_task(action: &str, filepath: String, dirs: &Dirs) {
     match action {
         "lex" => {
             let input = read_file(filepath.as_str());
-            let reader = lexer::lex(&input);
+            let reader = lexer::lex(&input, filepath.as_str());
             for t in reader.tokens() {
                 print!("{} ", t);
             }
@@ -151,7 +151,7 @@ fn do_task(action: &str, filepath: String, dirs: &Dirs) {
         }
         "parse" => {
             let input = read_file(filepath.as_str());
-            let mut tokens = lexer::lex(&input);
+            let mut tokens = lexer::lex(&input, filepath.as_str());
             parser::parse(&mut tokens, &mut state);
 
             for f in &state.globals {
@@ -193,7 +193,7 @@ fn filecurse(
 
     state.filepath = filepath.clone();
     let input = read_file(fullpath.as_str());
-    let mut tokens = lexer::lex(&input);
+    let mut tokens = lexer::lex(&input, filepath.as_str());
 
     let oldlen = state.globals.len();
 
