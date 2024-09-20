@@ -115,6 +115,7 @@ pub const FAILTESTS: &'static [&'static str] = &[
     "10.non_transitive_imports/main.dart",
     "11.topvar_cycle/main.dart",
     "12.const_topvar_set.dart",
+    "13.const_calls_func.dart",
 ];
 
 
