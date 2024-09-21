@@ -116,6 +116,7 @@ pub const FAILTESTS: &'static [&'static str] = &[
     "11.topvar_cycle/main.dart",
     "12.const_topvar_set.dart",
     "13.const_calls_func.dart",
+    "14.topvar_stack_leak.dart",
 ];
 
 

@@ -261,7 +261,6 @@ fn filecurse(
 
 
 fn evaluate(filepath: String, state: &mut State, dirs: &Dirs) {
-    println!("evaluate");
 
     let mut memo: HashMap<String, (usize, usize)> = HashMap::new();
 
@@ -297,7 +296,6 @@ fn evaluate(filepath: String, state: &mut State, dirs: &Dirs) {
 
 
 fn read_file(filepath: &str) -> String {
-    println!("read_file: {}", filepath);
     let mut input = String::new();
     let mut f = File::open(filepath).expect(format!("File not found: {}.", filepath).as_str());
     f.read_to_string(&mut input).expect("Error when reading input file.");

@@ -777,15 +777,18 @@ pub fn eval(
                 panic!("Unexpected owner for {}: {}", s, owner);
             }
 
-            if state.stack.has(s) {
-                return state.stack.get(s).clone();
-            }
-            else if state.objsys.has_this() {
-                let this = state.objsys.get_this_instance_mut();
-                if !resolve {
-                    return Object::Reference(this.id.clone());
+            // Don't access stack or this if we are lazy evaling a topvar.
+            if state.eval_var == "" {
+                if state.stack.has(s) {
+                    return state.stack.get(s).clone();
                 }
-                return this.get_field(s.clone()).clone();
+                else if state.objsys.has_this() {
+                    let this = state.objsys.get_this_instance_mut();
+                    if !resolve {
+                        return Object::Reference(this.id.clone());
+                    }
+                    return this.get_field(s.clone()).clone();
+                }
             }
 
             let ltable = &state.looktables[&state.filepath];
@@ -834,15 +837,15 @@ pub fn eval(
                     }
 
                     NodeType::ConstVar(_, _, val) => {
-                        println!("Found ConstVar");
-
                         return *val.clone();
                     }
 
                     _ => panic!("Unexpected node type in globals: {}", n)
                 }
             }
-            state.stack.printstack();
+            if state.debug {
+                state.stack.printstack();
+            }
             // As dart.
             dart_evalerror(format!("Undefined name: '{}'.", s), state);
         }
