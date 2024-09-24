@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 use object::Object;
 use objsys::{ObjSys, RefKey, trashman};
+use crate::node::{Node, NodeType};
 
 
 pub struct Stack {
@@ -152,15 +153,35 @@ impl Stack {
     }
 
 
-    pub fn garbagecollect(&self, objsys: &mut ObjSys, constructing: &Vec<RefKey>) {
+    pub fn garbagecollect(&self, objsys: &mut ObjSys, constructing: &Vec<RefKey>, globals: &Vec<Node>) {
 
         for rk in constructing {
             trashman::mark(objsys, rk);
         }
+        self.mark_globals(objsys, globals);
         self.markroots(objsys);
         trashman::sweep(objsys);
         trashman::clearmark(objsys);
         println!("GARBAGE COLLECTED");
+    }
+
+
+    fn mark_globals(&self, objsys: &mut ObjSys, globals: &Vec<Node>) {
+
+        for node in globals {
+            match node.nodetype.clone() {
+                NodeType::TopVar(_, _, val) => {
+                    match *val {
+                        Object::Reference(rk) => {
+                            trashman::mark(objsys, &rk);
+                        }
+                        _ => {}
+                    }
+                }
+                // ConstTopVar?
+                _ => {}
+            }
+        }
     }
 
 

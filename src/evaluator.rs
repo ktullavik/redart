@@ -66,9 +66,7 @@ pub fn eval(
                                 state.globals[index] = newval;
                                 return Object::Null;
                             }
-                            NodeType::ConstLazy(_, name) => {
-                                dart_evalerror(format!("Cannot change const: {}", name), state)
-                            }
+                            NodeType::ConstLazy(_, name) |
                             NodeType::ConstVar(_, name, _) => {
                                 dart_evalerror(format!("Cannot change const: {}", name), state)
                             }
@@ -1145,7 +1143,7 @@ pub fn eval(
 
                 if Instant::now() - state.last_gc > GC_TIME {
                     let gc_start = state.start_time.elapsed();
-                    state.stack.garbagecollect(&mut state.objsys, &state.constructing);
+                    state.stack.garbagecollect(&mut state.objsys, &state.constructing, &state.globals);
                     let gc_end = state.start_time.elapsed();
                     state.last_gc = Instant::now();
                     println!("Garbage collected in {}μs", (gc_end - gc_start).as_micros());
