@@ -134,7 +134,7 @@ fn decl(reader: &mut Reader, state: &mut State) {
                             let val = expression(reader, state);
                             reader.skip(";", state);
                             let mut node = Node::new(
-                                NodeType::ConstLazy(type_or_name, name));
+                                NodeType::ConstTopLazy(type_or_name, name));
                             node.children.push(val);
                             state.globals.push(node);
                             return;
@@ -145,7 +145,7 @@ fn decl(reader: &mut Reader, state: &mut State) {
                             let val = expression(reader, state);
                             reader.skip(";", state);
                             let mut node = Node::new(
-                                NodeType::ConstLazy(String::from("dynamic"), type_or_name.clone()));
+                                NodeType::ConstTopLazy(String::from("dynamic"), type_or_name.clone()));
                             node.children.push(val);
                             state.globals.push(node);
                             println!("Inserted const: {}", type_or_name);

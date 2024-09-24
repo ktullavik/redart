@@ -66,8 +66,8 @@ pub fn eval(
                                 state.globals[index] = newval;
                                 return Object::Null;
                             }
-                            NodeType::ConstLazy(_, name) |
-                            NodeType::ConstVar(_, name, _) => {
+                            NodeType::ConstTopLazy(_, name) |
+                            NodeType::ConstTopVar(_, name, _) => {
                                 dart_evalerror(format!("Cannot change const: {}", name), state)
                             }
                             _ => panic!("Unexpected node type in globals: {}", n)
@@ -816,7 +816,7 @@ pub fn eval(
                         return *val.clone();
                     }
 
-                    NodeType::ConstLazy(typ, name) => {
+                    NodeType::ConstTopLazy(typ, name) => {
 
                         if *name == state.eval_var {
                             dart_evalerror(format!("Top level const '{}' depends on itself.", name), state);
@@ -829,12 +829,12 @@ pub fn eval(
                         let res = eval(&n.children[0], state, true);
                         state.in_const = false;
                         state.eval_var = String::from("");
-                        let resolved_node = Node::new(NodeType::ConstVar(typ.clone(), name.clone(), Box::new(res.clone())));
+                        let resolved_node = Node::new(NodeType::ConstTopVar(typ.clone(), name.clone(), Box::new(res.clone())));
                         state.globals[index] = resolved_node;
                         return res;
                     }
 
-                    NodeType::ConstVar(_, _, val) => {
+                    NodeType::ConstTopVar(_, _, val) => {
                         return *val.clone();
                     }
 

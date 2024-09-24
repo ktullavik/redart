@@ -34,8 +34,8 @@ pub enum NodeType {
     TypedVar(String, String),  // type, name
     TopVar(String, String, Box<Object>), // type, name
     TopVarLazy(String, String),
-    ConstLazy(String, String),     // type, name
-    ConstVar(String, String, Box<Object>),
+    ConstTopLazy(String, String),     // type, name
+    ConstTopVar(String, String, Box<Object>),
     Conditional,
     If,
     ElseIf,
@@ -91,8 +91,8 @@ impl fmt::Display for NodeType {
             NodeType::TypedVar(typ, name)   => write!(f, "{}:{}", name, typ),
             NodeType::TopVar(typ, name, val) => write!(f, "TopVar({}, {}, {})", typ, name, val),
             NodeType::TopVarLazy(typ, name)                => write!(f, "TopVarLazy({}, {})", typ, name),
-            NodeType::ConstVar(typ, name, val) => write!(f, "ConstVar({}, {}, {})", name, typ, val),
-            NodeType::ConstLazy(typ, name) => write!(f, "ConstLazy({}, {})", name, typ),
+            NodeType::ConstTopVar(typ, name, val) => write!(f, "ConstVar({}, {}, {})", name, typ, val),
+            NodeType::ConstTopLazy(typ, name) => write!(f, "ConstLazy({}, {})", name, typ),
             NodeType::This                                   => write!(f, "this"),
             NodeType::FunDef(s, _filename) => write!(f, "{}() {{}}", s),
             NodeType::FunCall(s)                    => write!(f, "{}()", s),

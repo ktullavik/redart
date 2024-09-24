@@ -210,7 +210,7 @@ fn filecurse(
             NodeType::FunDef(name, _) |
             NodeType::Constructor(name, _) |
             NodeType::TopVarLazy(_, name) |
-            NodeType::ConstLazy(_, name) => {
+            NodeType::ConstTopLazy(_, name) => {
                 if looktable.contains_key(name) {
                     // As dart.
                     dart_evalerror(
@@ -244,7 +244,7 @@ fn filecurse(
                 NodeType::FunDef(name, _) |
                 NodeType::Constructor(name, _) |
                 NodeType::TopVarLazy(_, name) |
-                NodeType::ConstLazy(_, name) => {
+                NodeType::ConstTopLazy(_, name) => {
                     if !looktable.contains_key(name) {
                         looktable.insert(name.clone(), i);
                     }
