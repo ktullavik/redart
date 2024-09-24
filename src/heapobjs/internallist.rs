@@ -17,14 +17,15 @@ impl InternalList {
         }
     }
 
+
     pub fn set_elements(&mut self, new_els: Vec<Object>) {
         self.els = new_els;
     }
 
 
-     pub fn get_el(&self, index: usize) -> Object {
+    pub fn get_el(&self, index: usize) -> Object {
         self.els[index].clone()
-     }
+    }
 
 
     pub fn add(&mut self, el: Object) {
