@@ -437,6 +437,28 @@ fn access_help(reader: &mut Reader, owner: Node, ctx: &State) -> Node {
 }
 
 
+fn collaccess_help(reader: &mut Reader, owner: Node, state: &State) -> Node {
+
+    match reader.sym() {
+
+        Token::Brack1(_, _) => {
+            reader.next();
+            let index_node = expression(reader, state);
+            reader.skip("]", state);
+            let mut collaccess = Node::new(NodeType::CollAccess);
+            collaccess.children.push(owner);
+            collaccess.children.push(index_node);
+            if let Token::Brack1(_, _) = reader.sym() {
+                return collaccess_help(reader, collaccess, state);
+            }
+            return collaccess;
+        },
+
+        _ => owner
+    }
+}
+
+
 fn term(reader: &mut Reader, state: &State) -> Node {
 
     match reader.sym() {
@@ -537,6 +559,10 @@ fn term(reader: &mut Reader, state: &State) -> Node {
                     funcall_node.nodetype = NodeType::FunCall(s.to_string());
                     funcall_node.children.push(args_node);
                     return funcall_node;
+                }
+                if let Token::Brack1(_, _) = reader.sym() {
+                    let node = Node::new(NodeType::Name(s.clone()));
+                    return collaccess_help(reader, node, state)
                 }
             }
 

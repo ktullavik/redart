@@ -98,6 +98,8 @@ pub const TESTS: &'static [&'static str] = &[
     "93.external_constructor/main.dart",
     "94.shaded_topvar/main.dart",
     "95.const_topvar.dart",
+    "96.list_access_index.dart",
+    "97.list_access_index2.dart",
 ];
 
 

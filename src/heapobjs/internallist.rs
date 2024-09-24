@@ -22,6 +22,11 @@ impl InternalList {
     }
 
 
+     pub fn get_el(&self, index: usize) -> Object {
+        self.els[index].clone()
+     }
+
+
     pub fn add(&mut self, el: Object) {
         self.els.push(el);
     }

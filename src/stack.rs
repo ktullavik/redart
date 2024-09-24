@@ -152,10 +152,10 @@ impl Stack {
     }
 
 
-    pub fn garbagecollect(&self, objsys: &mut ObjSys, building: &Vec<RefKey>) {
+    pub fn garbagecollect(&self, objsys: &mut ObjSys, constructing: &Vec<RefKey>) {
 
-        for b in building {
-            trashman::mark(objsys, b);
+        for rk in constructing {
+            trashman::mark(objsys, rk);
         }
         self.markroots(objsys);
         trashman::sweep(objsys);

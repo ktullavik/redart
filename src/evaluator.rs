@@ -855,6 +855,29 @@ pub fn eval(
             return Object::Return(Box::new(retval));
         }
 
+        NodeType::CollAccess => {
+
+            let owner = eval(&node.children[0], state, false);
+
+            let index_node = eval(&node.children[1], state, true);
+
+            if let Object::Reference(rk) = owner {
+                let ulist = state.objsys.get_instance(&rk);
+                let ilist_ref = ulist.get_field(String::from("__list"));
+
+                if let Object::Reference(ilist_rk) = ilist_ref {
+                    let ilist = state.objsys.get_list(&ilist_rk);
+
+                    if let Object::Int(n) = index_node {
+                        return ilist.get_el(n as usize)
+                    }
+                    dart_evalerror(format!("Illegal index: {}", index_node), state)
+                }
+                dart_evalerror(format!("Expected reference, got: {}", ilist_ref), state)
+            }
+            dart_evalerror(format!("Cannot index into object: {}", owner), state)
+        }
+
         NodeType::MethodCall(name, owner, _filename) => {
 
             if state.in_const {

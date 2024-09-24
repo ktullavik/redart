@@ -100,7 +100,6 @@ impl ObjSys {
 
 
     pub fn get_class(&self, name: &str) -> &Class {
-        println!("Get class: {}", name);
         self.classmap.get(name).unwrap()
     }
 
@@ -108,6 +107,7 @@ impl ObjSys {
     pub fn register_instance(&mut self, instance: Instance) -> Object {
         let inst = Box::new(instance);
         let rk = inst.id.clone();
+        println!("Register instance: {}", rk);
         self.instancemap.insert(rk.clone(), inst);
         return Object::Reference(rk);
     }
@@ -116,6 +116,7 @@ impl ObjSys {
     pub fn register_list(&mut self, list: InternalList) -> Object {
         let inst = Box::new(list);
         let rk = inst.id.clone();
+        println!("Register list: {}", rk);
         self.listmap.insert(rk.clone(), inst);
         return Object::Reference(rk);
     }

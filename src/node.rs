@@ -45,6 +45,7 @@ pub enum NodeType {
     For,
     Block,
     List,
+    CollAccess,
     This,
     FunDef(String, String), // funcname, filename
     FunCall(String),
@@ -97,6 +98,7 @@ impl fmt::Display for NodeType {
             NodeType::FunCall(s)                    => write!(f, "{}()", s),
             NodeType::MethodCall(name, owner, _) => write!(f, "{}.{}()", name, owner),
             NodeType::List        => write!(f, "[]"),
+            NodeType::CollAccess  => write!(f, "T[n]"),
             NodeType::ParamList   => write!(f, "ParamList"),
             NodeType::ArgList     => write!(f, "ArgList"),
             NodeType::Conditional => write!(f, "Conditional"),
