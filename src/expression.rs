@@ -170,7 +170,7 @@ fn bit_xor(reader: &mut Reader, state: &State) -> Node {
 
     let left = bit_and(reader, state);
 
-    if reader.len() <= reader.pos() {
+    if !reader.more() {
         return left;
     }
 
@@ -193,13 +193,11 @@ fn bit_and(reader: &mut Reader, state: &State) -> Node {
 
     let left= sum(reader, state);
 
-    if reader.len() <= reader.pos() {
+    if !reader.more() {
         return left;
     }
 
-    let c = reader.sym();
-
-    match c {
+    match reader.sym() {
         Token::BitAnd(_, _) => {
 
             let mut node = Node::new(NodeType::BitAnd);
@@ -377,7 +375,6 @@ pub fn access_help(reader: &mut Reader, owner: Node, ctx: &State) -> Node {
                             let mut funcall_node = Node::new(NodeType::MethodCall(name.to_string(), Box::new(owner), ctx.filepath.clone()));
                             funcall_node.children.push(node);
                             access_help(reader, funcall_node, ctx)
-
                         }
 
                         Token::Brack1(_, _) => {
