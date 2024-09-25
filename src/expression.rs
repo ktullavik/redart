@@ -406,6 +406,9 @@ fn access_chain(reader: &mut Reader, ctx: &State) -> Node {
         Token::Access(_, _) => {
             access_help(reader, n, ctx)
         }
+        Token::Brack1(_, _) => {
+            access_help(reader, n, ctx)
+        }
         _ => { n }
     }
 }
@@ -436,12 +439,13 @@ pub fn access_help(reader: &mut Reader, owner: Node, ctx: &State) -> Node {
                             let mut funcall_node = Node::new(NodeType::MethodCall(name.to_string(), Box::new(owner), ctx.filepath.clone()));
                             funcall_node.children.push(node);
                             access_help(reader, funcall_node, ctx)
+
                         }
 
                         Token::Brack1(_, _) => {
                             let mut node = Node::new(NodeType::Name(name.clone()));
                             node.children.push(owner);
-                            collaccess_help(reader, node, ctx)
+                            access_help(reader, node, ctx)
                         }
 
                         Token::Access(_, _) => {
@@ -463,28 +467,18 @@ pub fn access_help(reader: &mut Reader, owner: Node, ctx: &State) -> Node {
                 }
             }
         }
-        _ => owner
-    }
-}
-
-
-fn collaccess_help(reader: &mut Reader, owner: Node, state: &State) -> Node {
-
-    match reader.sym() {
-
         Token::Brack1(_, _) => {
             reader.next();
-            let index_node = expression(reader, state);
-            reader.skip("]", state);
+            let index_node = expression(reader, ctx);
+            reader.skip("]", ctx);
             let mut collaccess = Node::new(NodeType::CollAccess);
             collaccess.children.push(owner);
             collaccess.children.push(index_node);
             if let Token::Brack1(_, _) = reader.sym() {
-                return collaccess_help(reader, collaccess, state);
+                return access_help(reader, collaccess, ctx);
             }
             return collaccess;
-        },
-
+        }
         _ => owner
     }
 }
@@ -561,9 +555,6 @@ fn term(reader: &mut Reader, state: &State) -> Node {
 
         Token::Name(ref s, _, _) => {
 
-            // Postfixed inc/dec should be bound tightly, so handle
-            // it here rather than in expression.
-
             if reader.len() > reader.pos() + 1 {
 
                 reader.next();
@@ -577,7 +568,7 @@ fn term(reader: &mut Reader, state: &State) -> Node {
                 }
                 if let Token::Brack1(_, _) = reader.sym() {
                     let node = Node::new(NodeType::Name(s.clone()));
-                    return collaccess_help(reader, node, state)
+                    return access_help(reader, node, state)
                 }
             }
 
