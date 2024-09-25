@@ -364,7 +364,7 @@ fn access(reader: &mut Reader, ctx: &State) -> Node {
 }
 
 
-fn access_help(reader: &mut Reader, owner: Node, ctx: &State) -> Node {
+pub fn access_help(reader: &mut Reader, owner: Node, ctx: &State) -> Node {
 
     match reader.sym() {
 
@@ -391,20 +391,6 @@ fn access_help(reader: &mut Reader, owner: Node, ctx: &State) -> Node {
                             access_help(reader, funcall_node, ctx)
                         }
 
-                        // Yuck, repeat this logic here, were it does not belong. For now.
-                        Token::Assign(_, _) => {
-                            reader.next();
-                            let right_node = expression(reader, ctx);
-
-                            let mut node = Node::new(NodeType::Name(name.clone()));
-                            node.children.push(owner);
-
-                            let mut ass_node = Node::new(NodeType::Assign);
-                            ass_node.children.push(node);
-                            ass_node.children.push(right_node);
-                            ass_node
-                        }
-
                         Token::Decrement(_, _) => {
                             let mut decnode = Node::new(NodeType::PostDecrement);
                             let node = Node::new(NodeType::Name(name.clone()));
@@ -425,10 +411,16 @@ fn access_help(reader: &mut Reader, owner: Node, ctx: &State) -> Node {
                             collaccess_help(reader, node, ctx)
                         }
 
-                        _ => {
+                        Token::Access(_, _) => {
                             let mut node = Node::new(NodeType::Name(name.clone()));
                             node.children.push(owner);
                             access_help(reader, node, ctx)
+                        }
+
+                        _ => {
+                            let mut node = Node::new(NodeType::Name(name.clone()));
+                            node.children.push(owner);
+                            node
                         }
                     }
                 }
@@ -561,8 +553,6 @@ fn term(reader: &mut Reader, state: &State) -> Node {
                     // Function call.
                     let args_node = arglist(reader, state);
                     let mut funcall_node = Node::new(NodeType::FunCall(s.to_string()));
-                    // FIXME, already set above
-                    funcall_node.nodetype = NodeType::FunCall(s.to_string());
                     funcall_node.children.push(args_node);
                     return funcall_node;
                 }

@@ -6,6 +6,7 @@ use expression::expression;
 use utils::{dprint, dart_parseerror};
 use object::{ParamObj, Object};
 use objsys::Class;
+use crate::expression::access_help;
 
 
 fn autoincludes() -> Vec<String> {
@@ -597,6 +598,16 @@ fn block(reader: &mut Reader, state: &State) -> Node {
 }
 
 
+fn assign_help(left_node: Node, reader: &mut Reader, state: &State) -> Node {
+    reader.next();
+    let right_node = expression(reader, state);
+    let mut ass_node = Node::new(NodeType::Assign);
+    ass_node.children.push(left_node);
+    ass_node.children.push(right_node);
+    return ass_node;
+}
+
+
 fn statement(reader: &mut Reader, state: &State) -> Node {
     dprint(format!("Parse: statement: {}", reader.sym()));
 
@@ -604,29 +615,19 @@ fn statement(reader: &mut Reader, state: &State) -> Node {
 
         Token::Name(s, _, _) => {
 
-            let t2 = reader.peek();
-
-            match t2 {
+            match reader.peek() {
 
                 Token::Name(name, _, _) => {
                     // Two names in a row here indicates a typed variable or nested function declaration.
 
                     let typed_var = Node::new(NodeType::TypedVar(s.to_string(), name.to_string()));
-
                     reader.next();
                     reader.next();
 
                     match reader.sym() {
 
                         Token::Assign(_, _) => {
-
-                            reader.next();
-                            let right_node = expression(reader, state);
-
-                            let mut ass_node = Node::new(NodeType::Assign);
-                            ass_node.children.push(typed_var);
-                            ass_node.children.push(right_node);
-                            return ass_node;
+                            assign_help(typed_var, reader, state)
                         }
 
                         Token::Paren1(_, _) => {
@@ -639,7 +640,7 @@ fn statement(reader: &mut Reader, state: &State) -> Node {
                             let mut funcnode = Node::new(NodeType::FunDef(name.clone(), state.filepath.clone()));
                             funcnode.children.push(params);
                             funcnode.children.push(body);
-                            return funcnode;
+                            funcnode
                         }
 
                         x => {
@@ -648,21 +649,27 @@ fn statement(reader: &mut Reader, state: &State) -> Node {
                     }
                 }
 
+                Token::Access(_, _) => {
+                    reader.next();
+                    let owner = Node::new(NodeType::Name(s));
+                    let left_node = access_help(reader, owner, state);
+
+                    match reader.sym() {
+                        Token::Assign(_, _) => {
+                            assign_help(left_node, reader, state)
+                        }
+                        _ => left_node
+                    }
+                }
+
                 Token::Assign(_, _) => {
                     reader.next();
-                    reader.next();
-
-                    let right_node = expression(reader, state);
-
-                    let var = Node::new(NodeType::Name(s.to_string()));
-                    let mut ass_node = Node::new(NodeType::Assign);
-                    ass_node.children.push(var);
-                    ass_node.children.push(right_node);
-                    return ass_node;
+                    let left_node = Node::new(NodeType::Name(s.to_string()));
+                    assign_help(left_node, reader, state)
                 }
 
                 _ => {
-                    return expression(reader, state)
+                    expression(reader, state)
                 }
             }
         }
