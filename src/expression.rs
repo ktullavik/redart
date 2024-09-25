@@ -306,7 +306,9 @@ fn product(reader: &mut Reader, ctx: &State) -> Node {
 
 fn product_help(reader: &mut Reader, righties: &mut Queue<Node>, ops: &mut Queue<Node>, ctx: &State) -> Node {
 
-    let n = access(reader, ctx);
+    // let n = access_chain(reader, ctx);
+    let n = postop(reader, ctx);
+
     righties.add(n).ok();
 
     if reader.len() <= reader.pos() {
@@ -351,7 +353,52 @@ fn product_help(reader: &mut Reader, righties: &mut Queue<Node>, ops: &mut Queue
 }
 
 
-fn access(reader: &mut Reader, ctx: &State) -> Node {
+fn postop(reader: &mut Reader, ctx: &State) -> Node {
+
+    let node = access_chain(reader, ctx);
+
+    match reader.sym() {
+
+        Token::Decrement(_, _) => {
+
+            reader.next();
+
+            match node.nodetype {
+
+                NodeType::Name(s) => {
+                    let mut decnode = Node::new(NodeType::PostDecrement);
+                    let n = Node::new(NodeType::Name(s.clone()));
+                    decnode.children.push(n);
+                    decnode
+                }
+                x => dart_parseerror(format!("Invalid node for decrement: {}", x), ctx, reader.tokens(), reader.pos())
+            }
+        }
+
+        Token::Increment(_, _) => {
+
+            reader.next();
+
+            match node.nodetype {
+
+                NodeType::Name(s) => {
+                    let mut decnode = Node::new(NodeType::PostIncrement);
+                    let n = Node::new(NodeType::Name(s.clone()));
+                    decnode.children.push(n);
+                    decnode
+                }
+                x => dart_parseerror(format!("Invalid node for increment: {}", x), ctx, reader.tokens(), reader.pos())
+            }
+
+            
+        }
+
+        _ => node
+    }
+}
+
+
+fn access_chain(reader: &mut Reader, ctx: &State) -> Node {
 
     let n = term(reader, ctx);
 
@@ -385,24 +432,10 @@ pub fn access_help(reader: &mut Reader, owner: Node, ctx: &State) -> Node {
                     return match reader.next() {
 
                         Token::Paren1(_, _) => {
-                            let args_node = arglist(reader, ctx);
+                            let node = arglist(reader, ctx);
                             let mut funcall_node = Node::new(NodeType::MethodCall(name.to_string(), Box::new(owner), ctx.filepath.clone()));
-                            funcall_node.children.push(args_node);
+                            funcall_node.children.push(node);
                             access_help(reader, funcall_node, ctx)
-                        }
-
-                        Token::Decrement(_, _) => {
-                            let mut decnode = Node::new(NodeType::PostDecrement);
-                            let node = Node::new(NodeType::Name(name.clone()));
-                            decnode.children.push(node);
-                            decnode
-                        }
-
-                        Token::Increment(_, _) => {
-                            let mut incnode = Node::new(NodeType::PostIncrement);
-                            let node = Node::new(NodeType::Name(name.clone()));
-                            incnode.children.push(node);
-                            incnode
                         }
 
                         Token::Brack1(_, _) => {
@@ -535,20 +568,6 @@ fn term(reader: &mut Reader, state: &State) -> Node {
 
                 reader.next();
 
-                if let Token::Increment(_, _) = reader.sym() {
-                    let mut incnode = Node::new(NodeType::PostIncrement);
-                    let node = Node::new(NodeType::Name(s.clone()));
-                    incnode.children.push(node);
-                    reader.next();
-                    return incnode;
-                }
-                if let Token::Decrement(_, _) = reader.sym() {
-                    let mut decnode = Node::new(NodeType::PostDecrement);
-                    let node = Node::new(NodeType::Name(s.clone()));
-                    decnode.children.push(node);
-                    reader.next();
-                    return decnode;
-                }
                 if let Token::Paren1(_, _) = reader.sym() {
                     // Function call.
                     let args_node = arglist(reader, state);
