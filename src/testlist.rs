@@ -101,6 +101,7 @@ pub const TESTS: &'static [&'static str] = &[
     "96.list_access_index.dart",
     "97.list_access_index2.dart",
     "98.chained_index.dart",
+    "99.lookup.dart",
 ];
 
 

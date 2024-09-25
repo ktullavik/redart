@@ -855,7 +855,7 @@ pub fn eval(
 
         NodeType::CollAccess => {
 
-            let owner = eval(&node.children[0], state, false);
+            let owner = eval(&node.children[0], state, true);
 
             let index_node = eval(&node.children[1], state, true);
 

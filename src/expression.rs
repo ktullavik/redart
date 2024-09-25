@@ -419,6 +419,12 @@ fn access_help(reader: &mut Reader, owner: Node, ctx: &State) -> Node {
                             incnode
                         }
 
+                        Token::Brack1(_, _) => {
+                            let mut node = Node::new(NodeType::Name(name.clone()));
+                            node.children.push(owner);
+                            collaccess_help(reader, node, ctx)
+                        }
+
                         _ => {
                             let mut node = Node::new(NodeType::Name(name.clone()));
                             node.children.push(owner);
