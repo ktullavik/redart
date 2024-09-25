@@ -28,22 +28,18 @@ fn disjunction(reader: &mut Reader, state: &State) -> Node {
 
     let left = conjunction(reader, state);
 
-    if reader.len() <= reader.pos() {
+    if !reader.more() {
         return left;
     }
 
-    let t = reader.sym();
-
-    return match t {
+    match reader.sym() {
         Token::LogOr(_, _) => {
 
             reader.next();
             let right = disjunction(reader, state);
-
             let mut disnode = Node::new(NodeType::LogOr);
             disnode.children.push(left);
             disnode.children.push(right);
-
             disnode
         }
 
@@ -56,22 +52,18 @@ fn conjunction(reader: &mut Reader, state: &State) -> Node {
 
     let left = equality(reader, state);
 
-    if reader.len() <= reader.pos() {
+    if !reader.more() {
         return left;
     }
 
-    let t = reader.sym();
-
-    return match t {
+    match reader.sym() {
         Token::LogAnd(_, _) => {
 
             reader.next();
             let right = conjunction(reader, state);
-
             let mut connode = Node::new(NodeType::LogAnd);
             connode.children.push(left);
             connode.children.push(right);
-
             connode
         }
 
@@ -84,22 +76,18 @@ fn equality(reader: &mut Reader, state: &State) -> Node {
 
     let left = comparison(reader, state);
 
-    if reader.len() <= reader.pos() {
+    if !reader.more() {
         return left;
     }
 
-    let t = reader.sym();
-
-    return match t {
+    match reader.sym() {
         Token::Equal(_, _) => {
 
             reader.next();
             let right = comparison(reader, state);
-
             let mut eqnode = Node::new(NodeType::Equal);
             eqnode.children.push(left);
             eqnode.children.push(right);
-
             eqnode
         }
 
@@ -112,22 +100,18 @@ fn comparison(reader: &mut Reader, state: &State) -> Node {
 
     let left = bit_or(reader, state);
 
-    if reader.len() <= reader.pos() {
+    if !reader.more() {
         return left;
     }
 
-    let t = reader.sym();
-
-    return match t {
+    match reader.sym() {
         Token::LessThan(_, _) => {
 
             reader.next();
             let right = bit_or(reader, state);
-
             let mut connode = Node::new(NodeType::LessThan);
             connode.children.push(left);
             connode.children.push(right);
-
             connode
         }
         Token::GreaterThan(_, _) => {
@@ -138,29 +122,24 @@ fn comparison(reader: &mut Reader, state: &State) -> Node {
             let mut connode = Node::new(NodeType::GreaterThan);
             connode.children.push(left);
             connode.children.push(right);
-
             connode
         }
         Token::LessOrEq(_, _) => {
 
             reader.next();
             let right = bit_or(reader, state);
-
             let mut connode = Node::new(NodeType::LessOrEq);
             connode.children.push(left);
             connode.children.push(right);
-
             connode
         }
         Token::GreaterOrEq(_, _) => {
 
             reader.next();
             let right= bit_or(reader, state);
-
             let mut connode = Node::new(NodeType::GreaterOrEq);
             connode.children.push(left);
             connode.children.push(right);
-
             connode
         }
 
@@ -177,17 +156,14 @@ fn bit_or(reader: &mut Reader, state: &State) -> Node {
         return left;
     }
 
-    let c = reader.sym();
-
-    return match c {
+    match reader.sym() {
         Token::BitOr(_, _) => {
+
             let mut node = Node::new(NodeType::BitOr);
             node.children.push(left);
-
             reader.next();
             let right = bit_or(reader, state);
             node.children.push(right);
-
             node
         }
         _ => left
@@ -203,17 +179,14 @@ fn bit_xor(reader: &mut Reader, state: &State) -> Node {
         return left;
     }
 
-    let c = reader.sym();
-
-    return match c {
+    match reader.sym() {
         Token::BitXor(_, _) => {
+
             let mut node = Node::new(NodeType::BitXor);
             node.children.push(left);
-
             reader.next();
             let right = bit_xor(reader, state);
             node.children.push(right);
-
             node
         }
         _ => left
@@ -231,15 +204,14 @@ fn bit_and(reader: &mut Reader, state: &State) -> Node {
 
     let c = reader.sym();
 
-    return match c {
+    match c {
         Token::BitAnd(_, _) => {
+
             let mut node = Node::new(NodeType::BitAnd);
             node.children.push(left);
-
             reader.next();
             let right = bit_and(reader, state);
             node.children.push(right);
-
             node
         }
         _ => left
@@ -257,40 +229,30 @@ fn sum_help(reader: &mut Reader, righties: &mut Queue<Node>, ops: &mut Queue<Nod
     let n = product(reader, state);
     righties.add(n).ok();
 
-    if reader.len() <= reader.pos() {
+    if !reader.more() {
         return righties.remove().unwrap();
     }
 
-    let c = reader.sym();
-
-    return match c {
+    match reader.sym() {
 
         Token::Add(_, _) => {
-
             ops.add(Node::new(NodeType::Add)).ok();
-
             reader.next();
             let deeper = sum_help(reader, righties, ops, state);
-
             let mut node = ops.remove().unwrap();
             node.children.push(deeper);
             node.children.push(righties.remove().unwrap());
             node
         }
         Token::Sub(_, _) => {
-
             ops.add(Node::new(NodeType::Sub)).ok();
-
             reader.next();
             let deeper = sum_help(reader, righties, ops, state);
-
             let mut node = ops.remove().unwrap();
             node.children.push(deeper);
             node.children.push(righties.remove().unwrap());
-
             node
         }
-
         _ => {
             righties.remove().unwrap()
         }
@@ -309,41 +271,30 @@ fn product_help(reader: &mut Reader, righties: &mut Queue<Node>, ops: &mut Queue
 
     righties.add(n).ok();
 
-    if reader.len() <= reader.pos() {
+    if !reader.more() {
         return righties.remove().unwrap();
     }
 
-    let c = reader.sym();
-
-    return match c {
+    match reader.sym() {
 
         Token::Mul(_, _) => {
-
             ops.add(Node::new(NodeType::Mul)).ok();
-
             reader.next();
             let deeper = product_help(reader, righties, ops, ctx);
-
             let mut node = ops.remove().unwrap();
             node.children.push(deeper);
             node.children.push(righties.remove().unwrap());
-
             node
         }
         Token::Div(_, _) => {
-
             ops.add(Node::new(NodeType::Div)).ok();
-
             reader.next();
             let deeper = product_help(reader, righties, ops, ctx);
-
             let mut node = ops.remove().unwrap();
             node.children.push(deeper);
             node.children.push(righties.remove().unwrap());
-
             node
         }
-
         _ => {
             righties.remove().unwrap()
         }
@@ -362,7 +313,6 @@ fn postop(reader: &mut Reader, ctx: &State) -> Node {
             reader.next();
 
             match node.nodetype {
-
                 NodeType::Name(s) => {
                     let mut decnode = Node::new(NodeType::PostDecrement);
                     let n = Node::new(NodeType::Name(s.clone()));
@@ -378,7 +328,6 @@ fn postop(reader: &mut Reader, ctx: &State) -> Node {
             reader.next();
 
             match node.nodetype {
-
                 NodeType::Name(s) => {
                     let mut decnode = Node::new(NodeType::PostIncrement);
                     let n = Node::new(NodeType::Name(s.clone()));
@@ -386,9 +335,7 @@ fn postop(reader: &mut Reader, ctx: &State) -> Node {
                     decnode
                 }
                 x => dart_parseerror(format!("Invalid node for increment: {}", x), ctx, reader.tokens(), reader.pos())
-            }
-
-            
+            }        
         }
 
         _ => node
@@ -400,14 +347,12 @@ fn access_chain(reader: &mut Reader, ctx: &State) -> Node {
 
     let n = term(reader, ctx);
 
-    return match reader.sym() {
-        Token::Access(_, _) => {
-            access_help(reader, n, ctx)
-        }
+    match reader.sym() {
+        Token::Access(_, _) |
         Token::Brack1(_, _) => {
             access_help(reader, n, ctx)
         }
-        _ => { n }
+        _ => n
     }
 }
 
@@ -430,7 +375,7 @@ pub fn access_help(reader: &mut Reader, owner: Node, ctx: &State) -> Node {
                         return node;
                     }
 
-                    return match reader.next() {
+                    match reader.next() {
 
                         Token::Paren1(_, _) => {
                             let node = arglist(reader, ctx);
@@ -475,7 +420,7 @@ pub fn access_help(reader: &mut Reader, owner: Node, ctx: &State) -> Node {
             if let Token::Brack1(_, _) = reader.sym() {
                 return access_help(reader, collaccess, ctx);
             }
-            return collaccess;
+            collaccess
         }
         _ => owner
     }
@@ -524,26 +469,22 @@ fn term(reader: &mut Reader, state: &State) -> Node {
         }
 
         Token::Str(ref s, interpols, _, _) => {
-            return if interpols.is_empty() {
+            if interpols.is_empty() {
                 reader.next();
-                let node = Node::new(NodeType::Str(s.clone()));
-                node
-            } else {
-                let mut node = Node::new(NodeType::Str(s.clone()));
-
-                for itp in interpols {
-
-                    let mut r = Reader::new(itp);
-
-                    let itpn = expression(&mut r, state);
-                    node.children.push(itpn);
-                }
-                // May be empty when inside interpol recursion.
-                if reader.len() > reader.pos() + 1 {
-                    reader.next();
-                }
-                node
+                return Node::new(NodeType::Str(s.clone()))
             }
+            let mut node = Node::new(NodeType::Str(s.clone()));
+
+            for itp in interpols {
+                let mut r = Reader::new(itp);
+                let itpn = expression(&mut r, state);
+                node.children.push(itpn);
+            }
+            // May be empty when inside interpol recursion.
+            if reader.more() {
+                reader.next();
+            }
+            node
         }
 
         Token::Bool(v, _, _) => {
@@ -553,8 +494,7 @@ fn term(reader: &mut Reader, state: &State) -> Node {
 
         Token::Name(ref s, _, _) => {
 
-            if reader.len() > reader.pos() + 1 {
-
+            if reader.more() {
                 reader.next();
 
                 if let Token::Paren1(_, _) = reader.sym() {
@@ -569,13 +509,12 @@ fn term(reader: &mut Reader, state: &State) -> Node {
                     return access_help(reader, node, state)
                 }
             }
-
             Node::new(NodeType::Name(s.clone()))
         }
 
         Token::Increment(_, _) => {
 
-            return match reader.next() {
+            match reader.next() {
                 Token::Name(name, _, _) => {
                     reader.next();
                     let mut node = Node::new(NodeType::PreIncrement);
@@ -588,7 +527,7 @@ fn term(reader: &mut Reader, state: &State) -> Node {
 
         Token::Decrement(_, _) => {
 
-            return match reader.next() {
+            match reader.next() {
                 Token::Name(name, _, _) => {
                     reader.next();
                     let mut node = Node::new(NodeType::PreDecrement);
@@ -612,7 +551,7 @@ fn term(reader: &mut Reader, state: &State) -> Node {
             let mut list_node = Node::new(NodeType::List);
             let mut expect_sep = false;
 
-            return match reader.sym() {
+            match reader.sym() {
 
                 Token::Brack2(_, _) => {
                     reader.next();
