@@ -33,8 +33,8 @@ fn disjunction(reader: &mut Reader, state: &State) -> Node {
     }
 
     match reader.sym() {
-        Token::LogOr(_, _) => {
 
+        Token::LogOr(_, _) => {
             reader.next();
             let right = disjunction(reader, state);
             let mut disnode = Node::new(NodeType::LogOr);
@@ -57,8 +57,8 @@ fn conjunction(reader: &mut Reader, state: &State) -> Node {
     }
 
     match reader.sym() {
-        Token::LogAnd(_, _) => {
 
+        Token::LogAnd(_, _) => {
             reader.next();
             let right = conjunction(reader, state);
             let mut connode = Node::new(NodeType::LogAnd);
@@ -81,8 +81,8 @@ fn equality(reader: &mut Reader, state: &State) -> Node {
     }
 
     match reader.sym() {
-        Token::Equal(_, _) => {
 
+        Token::Equal(_, _) => {
             reader.next();
             let right = comparison(reader, state);
             let mut eqnode = Node::new(NodeType::Equal);
@@ -105,8 +105,8 @@ fn comparison(reader: &mut Reader, state: &State) -> Node {
     }
 
     match reader.sym() {
-        Token::LessThan(_, _) => {
 
+        Token::LessThan(_, _) => {
             reader.next();
             let right = bit_or(reader, state);
             let mut connode = Node::new(NodeType::LessThan);
@@ -115,17 +115,14 @@ fn comparison(reader: &mut Reader, state: &State) -> Node {
             connode
         }
         Token::GreaterThan(_, _) => {
-
             reader.next();
             let right = bit_or(reader, state);
-
             let mut connode = Node::new(NodeType::GreaterThan);
             connode.children.push(left);
             connode.children.push(right);
             connode
         }
         Token::LessOrEq(_, _) => {
-
             reader.next();
             let right = bit_or(reader, state);
             let mut connode = Node::new(NodeType::LessOrEq);
@@ -134,7 +131,6 @@ fn comparison(reader: &mut Reader, state: &State) -> Node {
             connode
         }
         Token::GreaterOrEq(_, _) => {
-
             reader.next();
             let right= bit_or(reader, state);
             let mut connode = Node::new(NodeType::GreaterOrEq);
@@ -142,7 +138,6 @@ fn comparison(reader: &mut Reader, state: &State) -> Node {
             connode.children.push(right);
             connode
         }
-
         _ => left
     }
 }
