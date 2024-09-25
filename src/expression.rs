@@ -195,7 +195,6 @@ fn bit_or(reader: &mut Reader, state: &State) -> Node {
 }
 
 
-// fn bit_xor(reader: &mut Reader, ctx: &Ctx) -> (Node, usize) {
 fn bit_xor(reader: &mut Reader, state: &State) -> Node {
 
     let left = bit_and(reader, state);
@@ -306,7 +305,6 @@ fn product(reader: &mut Reader, ctx: &State) -> Node {
 
 fn product_help(reader: &mut Reader, righties: &mut Queue<Node>, ops: &mut Queue<Node>, ctx: &State) -> Node {
 
-    // let n = access_chain(reader, ctx);
     let n = postop(reader, ctx);
 
     righties.add(n).ok();
