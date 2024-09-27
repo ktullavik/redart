@@ -102,6 +102,8 @@ pub const TESTS: &'static [&'static str] = &[
     "97.list_access_index2.dart",
     "98.chained_index.dart",
     "99.lookup.dart",
+    "100.this_params_overrides_fields.dart",
+    "101.inherit_methods.dart"
 ];
 
 
