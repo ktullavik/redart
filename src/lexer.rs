@@ -25,23 +25,23 @@ fn read_word(tokens: &mut Vec<Token>, chars: &[char], start: usize, linenum: usi
         break;
     }
 
-    match sym.as_str() {
-        "import" => tokens.push(Token::Import(linenum, symnum)),
-        "true"   => tokens.push(Token::Bool(true, linenum, symnum)),
-        "false"  => tokens.push(Token::Bool(false, linenum, symnum)),
-        "if"     => tokens.push(Token::If(linenum, symnum)),
-        "else"   => tokens.push(Token::Else(linenum, symnum)),
-        "while"  => tokens.push(Token::While(linenum, symnum)),
-        "do"     => tokens.push(Token::Do(linenum, symnum)),
-        "for"    => tokens.push(Token::For(linenum, symnum)),
-        "in"     => tokens.push(Token::In(linenum, symnum)),
-        "const"  => tokens.push(Token::Const(linenum, symnum)),
-        "return" => tokens.push(Token::Return(linenum, symnum)),
-        "class"  => tokens.push(Token::Class(linenum, symnum)),
-        "this"   => tokens.push(Token::This(linenum, symnum)),
-        "extends" => tokens.push(Token::Extends(linenum, symnum)),
-        _        => tokens.push(Token::Name(sym, linenum, symnum)),
-    }
+    tokens.push(match sym.as_str() {
+        "import"  => Token::Import(linenum, symnum),
+        "true"    => Token::Bool(true, linenum, symnum),
+        "false"   => Token::Bool(false, linenum, symnum),
+        "if"      => Token::If(linenum, symnum),
+        "else"    => Token::Else(linenum, symnum),
+        "while"   => Token::While(linenum, symnum),
+        "do"      => Token::Do(linenum, symnum),
+        "for"     => Token::For(linenum, symnum),
+        "in"      => Token::In(linenum, symnum),
+        "const"   => Token::Const(linenum, symnum),
+        "return"  => Token::Return(linenum, symnum),
+        "class"   => Token::Class(linenum, symnum),
+        "this"    => Token::This(linenum, symnum),
+        "extends" => Token::Extends(linenum, symnum),
+        _         => Token::Name(sym, linenum, symnum),
+    });
     return len;
 }
 
