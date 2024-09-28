@@ -159,7 +159,7 @@ fn lex_real(input: &str, startpos: usize, interpol: usize, mut linenum: usize, m
             '/' => {
                 i += 1;
                 symnum += 1;
-                if inp_length > i {
+                if i < inp_length {
                     if chars[i] == '/' {
                         i += 1;
                         symnum += 1;
