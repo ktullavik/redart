@@ -1,38 +1,38 @@
 
 WIP toy interpreter for the Dart language.
 
-The ambition is to create a simpler and more portable
-implementation of Dart. It should run anywhere Rust can run.
+The ambition is to create a simple and portable implementation of Dart. It should run anywhere Rust can run.
 
-## Top missing features:
-* ~~Garbage collector~~.
-* Type system.
-* Standard library. (In progress)
-* Inheritance.
-* Private members.
-* Getters/setters.
-* Abstract classes.
-* Isolates.
-* Async/await.
-* Static members.
-* Exceptions.
-* ~~Lists~~.
-* Maps.
-* Tuples.
-* Static members.
-* const.
-* final.
-* Factory constructors.
-* Operator overloading.
-* Mixins.
-* Packages.
+|       Feature          |    Status                                                                                          |
+| ---------------------- | -------------------------------------------------------------------------------------------------- |
+| Garbage collector      | Simple mark-sweep collector implemented                                                            |
+| Type system            | Not much                                                                                           |
+| Standard library       | In progress                                                                                        |
+| Inheritance            | Limited to inheriting methods of classes without constructor arguments. Awaiting initilizer lists  |
+| Initializer lists      | TODO                                                                                               |
+| Private members        | TODO                                                                                               |
+| Static members         | TODO                                                                                               |
+| Getters/setters        | TODO                                                                                               |
+| Abstract classes       | TODO                                                                                               |
+| Isolates               | TODO                                                                                               |
+| Async/await            | TODO                                                                                               |
+| Exceptions             | TODO                                                                                               |
+| Lists                  | Limited support                                                                                    |
+| Maps                   | TODO                                                                                               |
+| Tuples                 | TODO                                                                                               |
+| const                  | Supported for top-level variables only                                                             |
+| final                  | TODO                                                                                               |
+| Factory constructors   | TODO                                                                                               |
+| Operator overloading   | TODO                                                                                               |
+| Mixins                 | TODO                                                                                               |
+| Packages               | TODO                                                                                               |
+
 
 ## Installation
 * Install rust/cargo.
 * `git clone https://github.com/ktullavik/redart.git`
 * `cd redart`
 * `cargo build`
-
 
 You will find the redart executable in the target/debug dir.
 
