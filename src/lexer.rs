@@ -39,6 +39,7 @@ fn read_word(tokens: &mut Vec<Token>, chars: &[char], start: usize, linenum: usi
         "return" => tokens.push(Token::Return(linenum, symnum)),
         "class"  => tokens.push(Token::Class(linenum, symnum)),
         "this"   => tokens.push(Token::This(linenum, symnum)),
+        "extends" => tokens.push(Token::Extends(linenum, symnum)),
         _        => tokens.push(Token::Name(sym, linenum, symnum)),
     }
     return len;

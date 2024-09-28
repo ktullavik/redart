@@ -3,9 +3,16 @@ use std::collections::HashMap;
 use crate::{object::Object, objsys::RefKey};
 
 
+pub enum MaybeObject {
+    Some(Object),
+    None
+}
+
+
 pub struct Instance {
     pub id: RefKey,
     pub classname: String,
+    pub parent: MaybeObject,
     pub fields: HashMap<String, Object>,
     pub marked: bool
 }
@@ -13,10 +20,11 @@ pub struct Instance {
 
 impl Instance {
 
-    pub fn new(classname: String) -> Instance {
+    pub fn new(classname: String, parent: MaybeObject) -> Instance {
         Instance {
             id: RefKey(nuid::next()),
             classname,
+            parent,
             fields: HashMap::new(),
             marked: false
         }

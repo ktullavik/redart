@@ -6,7 +6,7 @@ use expression::expression;
 use utils::{dprint, dart_parseerror};
 use object::{ParamObj, Object};
 use objsys::Class;
-use crate::expression::access_help;
+use crate::{expression::access_help, utils::dart_evalerror};
 
 
 fn autoincludes() -> Vec<String> {
@@ -200,10 +200,58 @@ fn class(reader: &mut Reader, state: &mut State) {
 
             let mut class = Class::new(classname.clone());
 
-            reader.next();
-            reader.skip("{", state);
-            readmembers(&mut class, reader, state);
-            reader.skip("}", state);
+            match reader.next() {
+
+                Token::Extends(_, _) => {
+
+                    match reader.next() {
+                        
+                        Token::Name(parentname, _, _) => {
+                            class.parent = parentname;
+
+                            match reader.next() {
+
+                                Token::Block1(_, _) => {
+                                    reader.next();
+                                    readmembers(&mut class, reader, state);
+                                    reader.skip("}", state);
+                                }
+                
+                                x => dart_parseerror(
+                                    format!("Unexpected token: {}", x),
+                                    state,
+                                    reader.tokens(),
+                                    reader.pos()
+                                )
+                            }
+                        }
+                        
+                        x => dart_evalerror(
+                            format!("Expected parent class name. Got: {}", x),
+                            state
+                        )
+                    }
+                }
+
+                Token::Block1(_, _) => {
+                    reader.next();
+                    readmembers(&mut class, reader, state);
+                    reader.skip("}", state);
+                }
+
+                x => dart_parseerror(
+                    format!("Unexpected token: {}", x),
+                    state,
+                    reader.tokens(),
+                    reader.pos()
+                )
+            }
+
+
+
+            // reader.skip("{", state);
+            // readmembers(&mut class, reader, state);
+            // reader.skip("}", state);
             state.objsys.register_class(class);
         }
 

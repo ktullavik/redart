@@ -104,7 +104,7 @@ pub fn call(name: &str, args: &mut Vec<Object>, state: &mut State) -> Object {
 
                 let inst = state.objsys.get_instance(k);
                 let c = state.objsys.get_class(inst.classname.as_str());
-                let m = c.get_method("toString");
+                let m = c.get_method("toString", state);
 
                 match &m {
                     Object::Function(_, _, _, _) => {

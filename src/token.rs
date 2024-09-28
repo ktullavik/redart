@@ -35,6 +35,7 @@ pub enum Token {
   Name(String, usize, usize),
   // Structure
   Class(usize, usize),
+  Extends(usize, usize),
   If(usize, usize),
   Else(usize, usize),
   While(usize, usize),
@@ -107,6 +108,7 @@ impl fmt::Display for Token {
       Token::Name(s, _, _)    => write!(f, "{}", s),
       // Structure
       Token::Class(_, _) => write!(f, "class"),
+      Token::Extends(_, _) => write!(f, "extends"),
       Token::If(_, _) => write!(f, "if"),
       Token::Else(_, _) => write!(f, "else"),
       Token::While(_, _) => write!(f, "while"),
@@ -167,6 +169,7 @@ impl Token {
       Token::Name(_, l, i) |
       // Structure
       Token::Class(l, i) |
+      Token::Extends(l, i) |
       Token::If(l, i) |
       Token::Else(l, i) |
       Token::While(l, i) |

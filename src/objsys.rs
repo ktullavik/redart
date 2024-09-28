@@ -3,11 +3,12 @@ use std::collections::HashMap;
 use utils::dprint;
 use object::Object;
 use node::Node;
-use crate::heapobjs::{
+use crate::{heapobjs::{
+    instance::MaybeObject,
     Instance,
     InternalFile,
     InternalList
-};
+}, state::State, utils::dart_evalerror};
 
 
 #[derive(Clone, PartialEq, Eq, Hash)]
@@ -25,6 +26,7 @@ pub struct Class {
     pub name: String,
     pub fields: Vec<(String, String, Node)>,
     pub methods: HashMap<String, Object>,
+    pub parent: String
 }
 
 
@@ -35,7 +37,8 @@ impl Class {
         Class {
             name,
             fields: Vec::new(),
-            methods: HashMap::new()
+            methods: HashMap::new(),
+            parent: String::new()
         }
     }
 
@@ -52,22 +55,24 @@ impl Class {
     }
 
 
-    pub fn has_method(&self, methname: &str) -> bool {
-        self.methods.contains_key(methname)
-    }
+    pub fn get_method(&self, name: &str, state: &State) -> Object {
 
-
-    pub fn get_method(&self, methname: &str) -> Object {
-
-        if let Object::Function(_, _, _, _) = &self.methods[methname] {
-            return self.methods[methname].clone();
+        if self.methods.contains_key(name) {
+            return self.methods[name].clone();
         }
-        panic!("No such method")
+
+        if self.parent == "" {
+            dart_evalerror(format!("No such method: '{}'.", name), state)            
+        }
+
+        let p = state.objsys.get_class(self.parent.as_str());
+        p.get_method(name, state)
     }
 
 
     pub fn instantiate(&self) -> Box<Instance> {
-        return Box::new(Instance::new(self.name.clone()));
+        let inst = Instance::new(self.name.clone(), MaybeObject::None);
+        return Box::new(inst);
     }
 }
 
@@ -201,6 +206,7 @@ impl ObjSys {
 
 
 pub mod trashman {
+    use crate::heapobjs::instance::MaybeObject;
     use crate::object::Object;
     use super::ObjSys;
     use super::RefKey;
@@ -218,6 +224,11 @@ pub mod trashman {
                 return;
             }
             p.marked = true;
+            if let MaybeObject::Some(refobj) = &p.parent {
+                if let Object::Reference(refid) = refobj {
+                    childs.push(refid.clone());
+                }
+            }
 
             for (_, obj) in p.fields.iter() {
                 if let Object::Reference(refid) = obj {

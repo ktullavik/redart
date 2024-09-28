@@ -7,6 +7,7 @@ use builtin;
 use utils::dart_evalerror;
 use object::{Object, ParamObj};
 use objsys::RefKey;
+use crate::heapobjs::instance::MaybeObject;
 use crate::heapobjs::internallist::InternalList;
 
 
@@ -887,13 +888,7 @@ pub fn eval(
             if let Object::Reference(refid) = reference {
                 let instance = state.objsys.get_instance(&refid);
                 let c = state.objsys.get_class(&instance.classname);
-
-                if !c.has_method(name) {
-                    dart_evalerror(format!("No method '{}' for object of type {}",
-                        name, &instance.classname), state);
-                }
-                let meth_obj = c.get_method(name);
-
+                let meth_obj = c.get_method(name, state);
                 return call_function(MaybeRef::Ref(refid), &meth_obj, &node.children[0], state)
             }
             panic!("Can't access {} of {}", name, owner);
@@ -1331,7 +1326,7 @@ fn call_constructor(
 
         Object::Constructor(cname, filename, body, params) => {
 
-            let mut args = argnodes_to_argobjs(
+            let args = argnodes_to_argobjs(
                 &args.children,
                 state
             );
@@ -1339,17 +1334,12 @@ fn call_constructor(
             // Argtrees must be evaluated in callers context, but stored in new context.
 
             state.stack.push_call();
-            for i in 0..params.len() {
-                // Field initializers are set directly on the instance. See below.
-                if !params[i].fieldinit {
-                    state.stack.add_new(params[i].name.as_str(), args.remove(i));
-                }
-            }
 
             // Make an instance.
 
             let class = state.objsys.get_class(cname.as_str());
             let mut inst = class.instantiate();
+            let parent_name = class.parent.clone();
 
             // Evaluate the initial field values.
 
@@ -1358,7 +1348,7 @@ fn call_constructor(
                 inst.set_field(fname.clone(), eval(initexpr, state, true));
             }
 
-            let instref = state.objsys.register_instance(*inst);
+            let instref = state.objsys.register_instance(*inst).clone();
 
             // Run the constructor body.
 
@@ -1371,14 +1361,41 @@ fn call_constructor(
                     let oldthis = state.objsys.get_this();
                     state.objsys.set_this(refid.clone());
 
-                    // Set fields from params that uses "this" to auto-init.
-                    // Ie Bike(this.gears)
                     let inst = state.objsys.get_this_instance_mut();
+
                     for i in 0..params.len() {
+                        // Set fields from params that uses "this" to auto-init.
+                        // Ie Bike(this.gears)
                         if params[i].fieldinit {
                             inst.set_field(params[i].name.clone(),args[i].clone());
                         }
+                        else {
+                            state.stack.add_new(params[i].name.as_str(), args[i].clone());
+                        }
                     }
+                     
+                    // Initialize parent if it exists.
+                    // TODO: initializer list
+
+                    if parent_name != "" {
+                        let parent_args = &Node::new(NodeType::ArgList);
+
+                        let ltable = &state.looktables[&state.filepath];
+                        if ltable.contains_key(parent_name.as_str()) {
+
+                            let parent_cons_index = ltable.get(parent_name.as_str()).unwrap();
+                            let parent_cons = &state.globals[*parent_cons_index];
+
+                            match parent_cons.nodetype {
+                                NodeType::Constructor(_, _) => {
+                                    let parent_rk = call_constructor(&create_constructor(parent_cons), parent_args, state);
+                                    let inst = state.objsys.get_this_instance_mut();
+                                    inst.parent = MaybeObject::Some(parent_rk);
+                                }
+                                _ => panic!("Not a constructor.")
+                            }
+                        }
+                    }                    
 
                     // Run body
                     eval(&body, state, true);
