@@ -147,7 +147,7 @@ fn bit_or(reader: &mut Reader, state: &State) -> Node {
 
     let left = bit_xor(reader, state);
 
-    if reader.len() <= reader.pos() {
+    if !reader.more() {
         return left;
     }
 
