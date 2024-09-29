@@ -487,18 +487,19 @@ fn term(reader: &mut Reader, state: &State) -> Node {
         Token::Name(ref s, _, _) => {
 
             if reader.more() {
-                reader.next();
-
-                if let Token::Paren1(_, _) = reader.sym() {
-                    // Function call.
-                    let args_node = arglist(reader, state);
-                    let mut funcall_node = Node::new(NodeType::FunCall(s.to_string()));
-                    funcall_node.children.push(args_node);
-                    return funcall_node;
-                }
-                if let Token::Brack1(_, _) = reader.sym() {
-                    let node = Node::new(NodeType::Name(s.clone()));
-                    return access_help(reader, node, state)
+                match reader.next() {
+                    Token::Paren1(_, _) => {
+                        // Function call.
+                        let args_node = arglist(reader, state);
+                        let mut funcall_node = Node::new(NodeType::FunCall(s.to_string()));
+                        funcall_node.children.push(args_node);
+                        return funcall_node;
+                    }
+                    Token::Brack1(_, _) => {
+                        let node = Node::new(NodeType::Name(s.clone()));
+                        return access_help(reader, node, state);
+                    }
+                    _ => {}
                 }
             }
             Node::new(NodeType::Name(s.clone()))
