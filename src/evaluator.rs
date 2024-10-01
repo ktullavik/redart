@@ -947,6 +947,9 @@ pub fn eval(
                     let ilist = state.objsys.get_list(&ilist_rk);
 
                     if let Object::Int(n) = index_node {
+                        if n < 0 {
+                            dart_evalerror(format!("Index must be positive: {}", n), state)
+                        }
                         return ilist.get_el(n as usize)
                     }
                     dart_evalerror(format!("Illegal index: {}", index_node), state)
