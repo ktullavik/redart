@@ -103,7 +103,10 @@ pub const TESTS: &'static [&'static str] = &[
     "98.chained_index.dart",
     "99.lookup.dart",
     "100.this_params_overrides_fields.dart",
-    "101.inherit_methods.dart"
+    "101.inherit_methods.dart",
+    "102.list_set_by_index.dart",
+    "103.list_set_by_index2.dart",
+    "104.list_set_by_index3.dart",
 ];
 
 
@@ -123,6 +126,8 @@ pub const FAILTESTS: &'static [&'static str] = &[
     "12.const_topvar_set.dart",
     "13.const_calls_func.dart",
     "14.topvar_stack_leak.dart",
+    "15.wrong_owner.dart",
+    "16.wrong_owner2.dart",
 ];
 
 
