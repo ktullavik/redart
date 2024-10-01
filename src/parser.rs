@@ -710,6 +710,20 @@ fn statement(reader: &mut Reader, state: &State) -> Node {
                     }
                 }
 
+                Token::Brack1(_, _) => {
+                    reader.next();
+                    let owner = Node::new(NodeType::Name(s));
+                    let left_node = access_help(reader, owner, state);
+
+                    match reader.sym() {
+                        Token::Assign(_, _) => {
+                            assign_help(left_node, reader, state)
+                        }
+                        _ => left_node
+                    }
+                }
+
+
                 Token::Assign(_, _) => {
                     reader.next();
                     let left_node = Node::new(NodeType::Name(s.to_string()));

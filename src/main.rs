@@ -18,6 +18,7 @@ mod state;
 mod reader;
 mod dirs;
 mod heapobjs;
+mod evalhelp;
 
 use std::io::prelude::*;
 use std::env;

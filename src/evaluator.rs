@@ -7,6 +7,7 @@ use builtin;
 use utils::dart_evalerror;
 use object::{Object, ParamObj};
 use objsys::RefKey;
+use crate::evalhelp::set_list_element;
 use crate::heapobjs::instance::MaybeObject;
 use crate::heapobjs::internallist::InternalList;
 
@@ -44,7 +45,7 @@ pub fn eval(
                         return Object::Null;
                     }
 
-                    // Look in the 'this' instance.
+                    // Look in 'this' instance.
                     if state.objsys.has_this() {
                         let this = state.objsys.get_this_instance_mut();
                         if this.has_field(name.to_string()) {
@@ -56,15 +57,15 @@ pub fn eval(
                     // Look for globals.
                     let ltable = &state.looktables[&state.filepath];
                     if ltable.contains_key(name) {
-                        let index = ltable.get(name).unwrap().clone();
-                        let n = state.globals[index].clone();
+                        let global_index = ltable.get(name).unwrap().clone();
+                        let n = state.globals[global_index].clone();
 
                         match &n.nodetype {
 
                             NodeType::TopVarLazy(typ, _) |
                             NodeType::TopVar(typ, _, _) => {
                                 let newval = Node::new(NodeType::TopVar(typ.clone(), name.clone(), Box::new(right_obj)));
-                                state.globals[index] = newval;
+                                state.globals[global_index] = newval;
                                 return Object::Null;
                             }
                             NodeType::ConstTopLazy(_, name) |
@@ -89,6 +90,86 @@ pub fn eval(
                     }
                     state.stack.add_new(name, right_obj);
 
+                    return Object::Null;
+                }
+
+                NodeType::CollAccess => {
+
+                    let right_obj = eval(&node.children[1], state, true);
+
+                    match &node.children[0].children[0].nodetype {
+
+                        NodeType::Name(name) => {
+
+                            // Look on the stack.
+                            if state.stack.has(name) {
+                                let ulist_ref = state.stack.get(name).clone();
+                                let index = eval(&node.children[0].children[1], state, true);
+                                set_list_element(ulist_ref, index, right_obj, state);
+                                return Object::Null;
+                            }
+
+                            // Look in 'this' instance.
+                            if state.objsys.has_this() {
+
+                                let this = state.objsys.get_this_instance_mut();
+
+                                if this.has_field(name.to_string()) { 
+                                    let ulist_ref = this.get_field(name.to_string()).clone();
+                                    let index = eval(&node.children[0].children[1], state, true);
+                                    set_list_element(ulist_ref, index, right_obj, state);
+                                    return Object::Null;
+                                }
+                                else {
+                                    println!("No field: {}", name)
+                                }
+                            }
+
+                            // Look for globals.
+                            let ltable = &state.looktables[&state.filepath];
+                            if ltable.contains_key(name) {
+                                let global_index = ltable.get(name).unwrap().clone();
+                                let n = state.globals[global_index].clone();
+
+                                match &n.nodetype {
+
+                                    NodeType::TopVarLazy(typ, name) => {
+                                        // Eval lazy and replace.
+
+                                        if *name == state.eval_var {
+                                            dart_evalerror(format!("Top level variable '{}' depends on itself.", name), state);
+                                        }
+                                        if state.eval_var.len() == 0 {
+                                            state.eval_var = name.clone();
+                                        }
+
+                                        let compval = eval(&n.children[0], state, true);
+                                        let wrapped = Node::new(NodeType::TopVar(typ.clone(), name.clone(), Box::new(compval)));
+                                        state.eval_var = String::from("");
+                                        state.globals[global_index] = wrapped;
+
+                                        let ulist_ref = eval(&node.children[0].children[0], state, false);
+                                        let index = eval(&node.children[0].children[1], state, true);
+                                        set_list_element(ulist_ref, index, right_obj, state);
+                                    }
+
+                                    NodeType::TopVar(_,  _, _) => {
+                                        let ulist_ref = eval(&node.children[0].children[0], state, false);
+                                        let index = eval(&node.children[0].children[1], state, true);
+                                        set_list_element(ulist_ref, index, right_obj, state);
+                                    }
+                                    NodeType::ConstTopLazy(_, _) |
+                                    NodeType::ConstTopVar(_, _, _) => {
+                                        // As dart.
+                                        dart_evalerror("Unsupported operation: Cannot modify an unmodifiable list", state)
+                                    }
+                                    _ => panic!("Unexpected node type in globals: {}", n)
+                                }
+                                return Object::Null;
+                            }
+                        }
+                        x => dart_evalerror(format!("Unexpected token: {}", x), state)
+                    }
                     return Object::Null;
                 }
                 _ => panic!("Illegal name for assignment: {}", &node.children[0].nodetype)

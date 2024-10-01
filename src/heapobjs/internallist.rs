@@ -28,6 +28,11 @@ impl InternalList {
     }
 
 
+    pub fn set_el(&mut self, index: usize, val: Object) {
+        self.els[index] = val;
+    }
+
+
     pub fn add(&mut self, el: Object) {
         self.els.push(el);
     }
