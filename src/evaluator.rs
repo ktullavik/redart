@@ -1271,29 +1271,3 @@ pub fn eval(
         _ => panic!("Unknown node type: {}", t)
     }
 }
-
-
-fn create_function(funcnode: &Node) -> Object {
-
-    match &funcnode.nodetype {
-
-        NodeType::FunDef(fname, filename) => {
-            let paramnodes = &funcnode.children[0];
-            let bodynode = &funcnode.children[1];
-            let mut paramobjs: Vec<ParamObj> = Vec::new();
-
-            for i in 0..paramnodes.children.len() {
-                let p = &paramnodes.children[i];
-                match &p.nodetype {
-                    NodeType::Name(s) => {
-                        paramobjs.push(ParamObj { typ: String::from("var"), name: s.clone(), fieldinit: false });
-                    }
-                    x => panic!("Invalid parameter: {}", x)
-                }
-            }
-            return Object::Function(fname.clone(), filename.clone(), bodynode.clone(), paramobjs);
-        }
-        _ => panic!("Invalid node type.")
-    }
-}
-

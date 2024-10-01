@@ -41,6 +41,31 @@ pub fn set_list_element(ulist_ref: Object, index: Object, value: Object, state: 
 }
 
 
+pub fn create_function(funcnode: &Node) -> Object {
+
+    match &funcnode.nodetype {
+
+        NodeType::FunDef(fname, filename) => {
+            let paramnodes = &funcnode.children[0];
+            let bodynode = &funcnode.children[1];
+            let mut paramobjs: Vec<ParamObj> = Vec::new();
+
+            for i in 0..paramnodes.children.len() {
+                let p = &paramnodes.children[i];
+                match &p.nodetype {
+                    NodeType::Name(s) => {
+                        paramobjs.push(ParamObj { typ: String::from("var"), name: s.clone(), fieldinit: false });
+                    }
+                    x => panic!("Invalid parameter: {}", x)
+                }
+            }
+            return Object::Function(fname.clone(), filename.clone(), bodynode.clone(), paramobjs);
+        }
+        _ => panic!("Invalid node type.")
+    }
+}
+
+
 pub fn call_function(
     instance: MaybeRef,
     func: &Object,
