@@ -1,12 +1,11 @@
 use std::process;
 use std::io::Read;
 use rand::Rng;
-use state::State;
-use object::Object;
-use evaluator::call_function;
-use evaluator::MaybeRef;
-use NodeType;
-use node::Node;
+use crate::state::State;
+use crate::object::Object;
+use crate::evalhelp::{call_function, MaybeRef};
+use crate::NodeType;
+use crate::node::Node;
 use crate::heapobjs::InternalFile;
 use crate::utils::dart_evalerror;
 
