@@ -862,7 +862,6 @@ fn statement(reader: &mut Reader, state: &State) -> Node {
                                     reader.tok()
                                 )
                             }
- 
                         }
 
                         // Without declaration
