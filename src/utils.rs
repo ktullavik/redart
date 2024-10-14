@@ -17,9 +17,9 @@ pub fn dart_lexerror<S: Into<String>>(msg: S, line: usize, column: usize, filepa
 }
 
 
-pub fn dart_parseerror<S: Into<String>>(msg: S, state: &State, token: Token) -> ! {
+pub fn dart_parseerror<S: Into<String>>(msg: S, state: &State, tok: Token) -> ! {
 
-    let (linenum, symnum) = token.find_token_position();
+    let (linenum, symnum) = tok.find_token_position();
 
     if state.debug {
         panic!("{}:{}:{}: Error: {}", state.filepath, linenum, symnum, msg.into());
