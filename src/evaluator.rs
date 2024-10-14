@@ -5,7 +5,7 @@ use state::State;
 use node::{NodeType, Node};
 use builtin;
 use utils::dart_evalerror;
-use object::{Object, ParamObj};
+use object::Object;
 use crate::evalhelp::*;
 use crate::heapobjs::internallist::InternalList;
 
@@ -15,8 +15,7 @@ static GC_TIME: Duration = Duration::from_micros(400);
 
 pub fn eval(
     node: &Node,
-    state: &mut State,
-    resolve: bool) -> Object {
+    state: &mut State) -> Object {
 
     let t: &NodeType = &node.nodetype;
 
@@ -27,19 +26,22 @@ pub fn eval(
             match &node.children[0].nodetype {
                 NodeType::Name(name) => {
 
-                    let left_obj = eval(&node.children[0], state, false);
-                    let right_obj = eval(&node.children[1], state, true);
+                    let right_obj = eval(&node.children[1], state);
+
+                    if node.children[0].children.len() > 0 {
+                        let left_obj = eval(&node.children[0].children[0], state);
+
+                        if let Object::Reference(refid) = left_obj {
+                            let left_inst = state.objsys.get_instance_mut(&refid);
+                            left_inst.set_field(name.to_string(), right_obj);
+                            return Object::Null;
+                        }
+                        panic!("Expected reference");
+                    }
 
                     // Look on the stack.
                     if state.stack.has(name) {
                         state.stack.update(name, right_obj);
-                        return Object::Null;
-                    }
-
-                    // Look in the heap.
-                    if let Object::Reference(refid) = left_obj {
-                        let left_ref = state.objsys.get_instance_mut(&refid);
-                        left_ref.set_field(name.to_string(), right_obj);
                         return Object::Null;
                     }
 
@@ -78,7 +80,7 @@ pub fn eval(
                 }
                 NodeType::TypedVar(_, name) => {
 
-                    let right_obj = eval(&node.children[1], state, true);
+                    let right_obj = eval(&node.children[1], state);
 
                     // TypedVar means we will allocate a new one on stack even if the name exists in a
                     // larger scope, like outside a loop or in a field. But fail if it's already on lex stack.
@@ -93,7 +95,7 @@ pub fn eval(
 
                 NodeType::CollAccess => {
 
-                    let right_obj = eval(&node.children[1], state, true);
+                    let right_obj = eval(&node.children[1], state);
 
                     match &node.children[0].children[0].nodetype {
 
@@ -102,7 +104,7 @@ pub fn eval(
                             // Look on the stack.
                             if state.stack.has(name) {
                                 let ulist_ref = state.stack.get(name).clone();
-                                let index = eval(&node.children[0].children[1], state, true);
+                                let index = eval(&node.children[0].children[1], state);
                                 set_list_element(ulist_ref, index, right_obj, state);
                                 return Object::Null;
                             }
@@ -112,9 +114,9 @@ pub fn eval(
 
                                 let this = state.objsys.get_this_instance_mut();
 
-                                if this.has_field(name.to_string()) { 
+                                if this.has_field(name.to_string()) {
                                     let ulist_ref = this.get_field(name.to_string()).clone();
-                                    let index = eval(&node.children[0].children[1], state, true);
+                                    let index = eval(&node.children[0].children[1], state);
                                     set_list_element(ulist_ref, index, right_obj, state);
                                     return Object::Null;
                                 }
@@ -141,19 +143,19 @@ pub fn eval(
                                             state.eval_var = name.clone();
                                         }
 
-                                        let compval = eval(&n.children[0], state, true);
+                                        let compval = eval(&n.children[0], state);
                                         let wrapped = Node::new(NodeType::TopVar(typ.clone(), name.clone(), Box::new(compval)));
                                         state.eval_var = String::from("");
                                         state.globals[global_index] = wrapped;
 
-                                        let ulist_ref = eval(&node.children[0].children[0], state, false);
-                                        let index = eval(&node.children[0].children[1], state, true);
+                                        let ulist_ref = eval(&node.children[0].children[0], state);
+                                        let index = eval(&node.children[0].children[1], state);
                                         set_list_element(ulist_ref, index, right_obj, state);
                                     }
 
                                     NodeType::TopVar(_,  _, _) => {
-                                        let ulist_ref = eval(&node.children[0].children[0], state, false);
-                                        let index = eval(&node.children[0].children[1], state, true);
+                                        let ulist_ref = eval(&node.children[0].children[0], state);
+                                        let index = eval(&node.children[0].children[1], state);
                                         set_list_element(ulist_ref, index, right_obj, state);
                                     }
                                     NodeType::ConstTopLazy(_, _) |
@@ -176,7 +178,7 @@ pub fn eval(
 
         NodeType::Not => {
 
-            let obj = eval(&node.children[0], state, true);
+            let obj = eval(&node.children[0], state);
 
             return match obj {
                 Object::Bool(b) => {
@@ -188,12 +190,12 @@ pub fn eval(
 
         NodeType::LogOr => {
 
-            let left_obj = eval(&node.children[0], state, true);
+            let left_obj = eval(&node.children[0], state);
 
             match left_obj {
 
                 Object::Bool(b1) => {
-                    let right_obj = eval(&node.children[1], state, true);
+                    let right_obj = eval(&node.children[1], state);
 
                     match right_obj {
                         Object::Bool(b2) => {
@@ -208,12 +210,12 @@ pub fn eval(
 
         NodeType::LogAnd => {
 
-            let left_obj = eval(&node.children[0], state, true);
+            let left_obj = eval(&node.children[0], state);
 
             match left_obj {
 
                 Object::Bool(b1) => {
-                    let right_obj = eval(&node.children[1], state, true);
+                    let right_obj = eval(&node.children[1], state);
 
                     match right_obj {
                         Object::Bool(b2) => {
@@ -228,12 +230,12 @@ pub fn eval(
 
         NodeType::LessThan => {
 
-            let left_obj = eval(&node.children[0], state, true);
+            let left_obj = eval(&node.children[0], state);
 
             match left_obj {
 
                 Object::Int(n1) => {
-                    let right_obj = eval(&node.children[1], state, true);
+                    let right_obj = eval(&node.children[1], state);
 
                     match right_obj {
                         Object::Int(n2) => {
@@ -247,7 +249,7 @@ pub fn eval(
                 }
 
                 Object::Double(x1) => {
-                    let right_obj = eval(&node.children[1], state, true);
+                    let right_obj = eval(&node.children[1], state);
 
                     match right_obj {
                         Object::Int(n2) => {
@@ -265,12 +267,12 @@ pub fn eval(
 
         NodeType::GreaterThan => {
 
-            let left_obj = eval(&node.children[0], state, true);
+            let left_obj = eval(&node.children[0], state);
 
             match left_obj {
 
                 Object::Int(n1) => {
-                    let right_obj = eval(&node.children[1], state, true);
+                    let right_obj = eval(&node.children[1], state);
 
                     match right_obj {
                         Object::Int(n2) => {
@@ -284,7 +286,7 @@ pub fn eval(
                 }
 
                 Object::Double(x1) => {
-                    let right_obj = eval(&node.children[1], state, true);
+                    let right_obj = eval(&node.children[1], state);
 
                     match right_obj {
                         Object::Int(n2) => {
@@ -302,12 +304,12 @@ pub fn eval(
 
         NodeType::LessOrEq => {
 
-            let left_obj = eval(&node.children[0], state, true);
+            let left_obj = eval(&node.children[0], state);
 
             match left_obj {
 
                 Object::Int(n1) => {
-                    let right_obj = eval(&node.children[1], state, true);
+                    let right_obj = eval(&node.children[1], state);
 
                     match right_obj {
                         Object::Int(n2) => {
@@ -321,7 +323,7 @@ pub fn eval(
                 }
 
                 Object::Double(x1) => {
-                    let right_obj = eval(&node.children[1], state, true);
+                    let right_obj = eval(&node.children[1], state);
 
                     match right_obj {
                         Object::Int(n2) => {
@@ -339,12 +341,12 @@ pub fn eval(
 
         NodeType::GreaterOrEq => {
 
-            let left_obj = eval(&node.children[0], state, true);
+            let left_obj = eval(&node.children[0], state);
 
             match left_obj {
 
                 Object::Int(n1) => {
-                    let right_obj = eval(&node.children[1], state, true);
+                    let right_obj = eval(&node.children[1], state);
 
                     match right_obj {
                         Object::Int(n2) => {
@@ -358,7 +360,7 @@ pub fn eval(
                 }
 
                 Object::Double(x1) => {
-                    let right_obj = eval(&node.children[1], state, true);
+                    let right_obj = eval(&node.children[1], state);
 
                     match right_obj {
                         Object::Int(n2) => {
@@ -376,8 +378,8 @@ pub fn eval(
 
         NodeType::Equal => {
 
-            let left_obj = eval(&node.children[0], state, true);
-            let right_obj = eval(&node.children[1], state, true);
+            let left_obj = eval(&node.children[0], state);
+            let right_obj = eval(&node.children[1], state);
 
             return match left_obj {
 
@@ -419,12 +421,12 @@ pub fn eval(
 
         NodeType::BitAnd => {
 
-            let left_obj = eval(&node.children[0], state, true);
+            let left_obj = eval(&node.children[0], state);
 
             match &left_obj {
 
                 Object::Int(s1) => {
-                    let right_obj = eval(&node.children[1], state, true);
+                    let right_obj = eval(&node.children[1], state);
 
                     match &right_obj {
                         Object::Int(s2) => {
@@ -439,12 +441,12 @@ pub fn eval(
 
         NodeType::BitOr => {
 
-            let left_obj = eval(&node.children[0], state, true);
+            let left_obj = eval(&node.children[0], state);
 
             match &left_obj {
 
                 Object::Int(s1) => {
-                    let right_obj = eval(&node.children[1], state, true);
+                    let right_obj = eval(&node.children[1], state);
 
                     match &right_obj {
                         Object::Int(s2) => {
@@ -459,12 +461,12 @@ pub fn eval(
 
         NodeType::BitXor => {
 
-            let left_obj = eval(&node.children[0], state, true);
+            let left_obj = eval(&node.children[0], state);
 
             match &left_obj {
 
                 Object::Int(s1) => {
-                    let right_obj = eval(&node.children[1], state, true);
+                    let right_obj = eval(&node.children[1], state);
 
                     match &right_obj {
                         Object::Int(s2) => {
@@ -479,12 +481,12 @@ pub fn eval(
 
         NodeType::Add => {
 
-            let left_obj = eval(&node.children[0], state, true);
+            let left_obj = eval(&node.children[0], state);
 
             match &left_obj {
                 Object::Int(s1) => {
 
-                    let right_obj = eval(&node.children[1], state, true);
+                    let right_obj = eval(&node.children[1], state);
 
                     match &right_obj {
                         Object::Int(s2) => {
@@ -497,7 +499,7 @@ pub fn eval(
                     }
                 },
                 Object::Double(s1) => {
-                    let right_obj = eval(&node.children[1], state, true);
+                    let right_obj = eval(&node.children[1], state);
 
                     match &right_obj {
                         Object::Int(s2) => {
@@ -510,7 +512,7 @@ pub fn eval(
                     }
                 }
                 Object::String(s1) => {
-                    let right_obj = eval(&node.children[1], state, true);
+                    let right_obj = eval(&node.children[1], state);
 
                     match &right_obj {
                         Object::String(s2) => {
@@ -527,7 +529,7 @@ pub fn eval(
 
         NodeType::Sub => {
 
-            let left_obj = eval(&node.children[0], state, true);
+            let left_obj = eval(&node.children[0], state);
 
             if node.children.len() == 1 {
                 return match &left_obj {
@@ -543,7 +545,7 @@ pub fn eval(
 
             match &left_obj {
                 Object::Int(s1) => {
-                    let right_obj = eval(&node.children[1], state, true);
+                    let right_obj = eval(&node.children[1], state);
 
                     match &right_obj {
                         Object::Int(s2) => {
@@ -556,7 +558,7 @@ pub fn eval(
                     }
                 },
                 Object::Double(s1) => {
-                    let right_obj = eval(&node.children[1], state, true);
+                    let right_obj = eval(&node.children[1], state);
 
                     match &right_obj {
                         Object::Int(s2) => {
@@ -574,11 +576,11 @@ pub fn eval(
 
         NodeType::Mul => {
 
-            let left_obj = eval(&node.children[0], state, true);
+            let left_obj = eval(&node.children[0], state);
 
             match &left_obj {
                 Object::Int(s1) => {
-                    let right_obj = eval(&node.children[1], state, true);
+                    let right_obj = eval(&node.children[1], state);
 
                     match &right_obj {
                         Object::Int(s2) => {
@@ -591,7 +593,7 @@ pub fn eval(
                     }
                 },
                 Object::Double(s1) => {
-                    let right_obj = eval(&node.children[1], state, true);
+                    let right_obj = eval(&node.children[1], state);
 
                     match &right_obj {
                         Object::Int(s2) => {
@@ -609,11 +611,11 @@ pub fn eval(
 
         NodeType::Div => {
 
-            let left_obj = eval(&node.children[0], state, true);
+            let left_obj = eval(&node.children[0], state);
 
             match &left_obj {
                 Object::Int(s1) => {
-                    let right_obj = eval(&node.children[1], state, true);
+                    let right_obj = eval(&node.children[1], state);
 
                     match &right_obj {
                         Object::Int(s2) => {
@@ -626,7 +628,7 @@ pub fn eval(
                     }
                 },
                 Object::Double(s1) => {
-                    let right_obj = eval(&node.children[1], state, true);
+                    let right_obj = eval(&node.children[1], state);
 
                     match &right_obj {
                         Object::Int(s2) => {
@@ -810,7 +812,7 @@ pub fn eval(
 
             let mut evaled_itps = Vec::new();
             for itp in &node.children {
-                evaled_itps.push(eval(itp, state, true));
+                evaled_itps.push(eval(itp, state));
             }
 
             let parts : Vec<&str> = s.as_str().split("$").collect();
@@ -835,22 +837,12 @@ pub fn eval(
             if node.children.len() > 0 {
 
                 // Run parent through the loop for lookup.
-                let owner = eval(&node.children[0], state, true);
+                let owner = eval(&node.children[0], state);
 
                 // Owner is reference
                 if let Object::Reference(refid) = owner.clone() {
-
-                    if resolve {
-                        let instance = state.objsys.get_instance(&refid);
-                        return instance.get_field(s.to_string()).clone();
-                    }
-                    else {
-                        // When evaluating left side of '=',
-                        // we don't want to lookup the value.
-                        // Return reference to the owner and then Assign will do
-                        // set_field.
-                        return owner;
-                    }
+                    let instance = state.objsys.get_instance(&refid);
+                    return instance.get_field(s.to_string()).clone();
                 }
                 panic!("Unexpected owner for {}: {}", s, owner);
             }
@@ -861,11 +853,10 @@ pub fn eval(
                     return state.stack.get(s).clone();
                 }
                 else if state.objsys.has_this() {
-                    let this = state.objsys.get_this_instance_mut();
-                    if !resolve {
-                        return Object::Reference(this.id.clone());
+                    let this = state.objsys.get_this_instance();
+                    if this.has_field(s.to_string()) {
+                        return this.get_field(s.clone()).clone();
                     }
-                    return this.get_field(s.clone()).clone();
                 }
             }
 
@@ -885,7 +876,7 @@ pub fn eval(
                             state.eval_var = name.clone();
                         }
 
-                        let res = eval(&n.children[0], state, true);
+                        let res = eval(&n.children[0], state);
                         state.eval_var = String::from("");
                         let resolved_node = Node::new(NodeType::TopVar(typ.clone(), name.clone(), Box::new(res.clone())));
                         state.globals[index] = resolved_node;
@@ -906,7 +897,7 @@ pub fn eval(
                         }
 
                         state.in_const = true;
-                        let res = eval(&n.children[0], state, true);
+                        let res = eval(&n.children[0], state);
                         state.in_const = false;
                         state.eval_var = String::from("");
                         let resolved_node = Node::new(NodeType::ConstTopVar(typ.clone(), name.clone(), Box::new(res.clone())));
@@ -929,15 +920,15 @@ pub fn eval(
         }
 
         NodeType::Return => {
-            let retval = eval(&node.children[0], state, true);
+            let retval = eval(&node.children[0], state);
             return Object::Return(Box::new(retval));
         }
 
         NodeType::CollAccess => {
 
-            let owner = eval(&node.children[0], state, true);
+            let owner = eval(&node.children[0], state);
 
-            let index_node = eval(&node.children[1], state, true);
+            let index_node = eval(&node.children[1], state);
 
             if let Object::Reference(rk) = owner {
                 let ulist = state.objsys.get_instance(&rk);
@@ -965,7 +956,7 @@ pub fn eval(
                 dart_evalerror("Not a constant expression.", state)
             }
 
-            let reference: Object = eval(owner, state, true);
+            let reference: Object = eval(owner, state);
 
             if let Object::Reference(refid) = reference {
                 let instance = state.objsys.get_instance(&refid);
@@ -1047,14 +1038,14 @@ pub fn eval(
                     NodeType::If |
                     NodeType::ElseIf => {
                         let boolnode= &condnode.children[0];
-                        let cond = eval(&boolnode, state, true);
+                        let cond = eval(&boolnode, state);
 
                         match cond {
                             Object::Bool(v) => {
                                 if v {
                                     let bodynode= &condnode.children[1];
                                     state.stack.push_lex();
-                                    let ret = eval(&bodynode, state, true);
+                                    let ret = eval(&bodynode, state);
                                     state.stack.pop_lex();
                                     return ret;
                                 }
@@ -1065,7 +1056,7 @@ pub fn eval(
                     NodeType::Else => {
                         let bodynode= &condnode.children[0];
                         state.stack.push_lex();
-                        let ret = eval(&bodynode, state, true);
+                        let ret = eval(&bodynode, state);
                         state.stack.pop_lex();
                         return ret;
                     }
@@ -1079,15 +1070,15 @@ pub fn eval(
 
             let boolnode = &node.children[0];
             let block = &node.children[1];
-            let mut cond = eval(boolnode, state, true);
+            let mut cond = eval(boolnode, state);
 
             match &cond {
 
                 Object::Bool(mut v) => {
 
                     while v {
-                        eval(block, state, true);
-                        cond = eval(boolnode, state, true);
+                        eval(block, state);
+                        cond = eval(boolnode, state);
 
                         match &cond {
                             Object::Bool(newcond) => {
@@ -1109,15 +1100,15 @@ pub fn eval(
             let block = &node.children[0];
             let boolnode = &node.children[1];
 
-            eval(block, state, true);
+            eval(block, state);
 
-            let mut cond = eval(boolnode, state, true);
+            let mut cond = eval(boolnode, state);
 
             if let Object::Bool(mut b) = cond {
 
                 while b {
-                    eval(block, state, true);
-                    cond = eval(boolnode, state, true);
+                    eval(block, state);
+                    cond = eval(boolnode, state);
 
                     match &cond {
                         Object::Bool(new_b) => {
@@ -1141,7 +1132,7 @@ pub fn eval(
                 // First child is an the variable, second the
                 // free variable, and third the body block. 
                 let typedvar = &node.children[0];
-                let iter_ref = eval(&node.children[1], state, true);
+                let iter_ref = eval(&node.children[1], state);
                 let body = &node.children[2];
 
                 match iter_ref {
@@ -1167,7 +1158,7 @@ pub fn eval(
                                     match &typedvar.nodetype {
                                         NodeType::TypedVar(_, name) => {
                                             state.stack.add_new(name, c);
-                                            eval(body, state, true);
+                                            eval(body, state);
                                         }
                                         _ => {
                                             panic!("For loop expecped typed var. Got: {}", &typedvar);
@@ -1193,10 +1184,10 @@ pub fn eval(
                 let mutexpr = &node.children[2];
                 let body = &node.children[3];
 
-                eval(assign, state, true);
+                eval(assign, state);
 
                 loop {
-                    let condobj = eval(condexpr, state, true);
+                    let condobj = eval(condexpr, state);
 
                     match condobj {
                         Object::Bool(b) => {
@@ -1204,8 +1195,8 @@ pub fn eval(
                             if !b {
                                 break;
                             }
-                            eval(body, state, true);
-                            eval(mutexpr, state, true);
+                            eval(body, state);
+                            eval(mutexpr, state);
                         }
                         x => dart_evalerror(format!("Expected bool. Got: {}", x), state)
                     }
@@ -1226,7 +1217,7 @@ pub fn eval(
                     println!("Garbage collected in {}μs", (gc_end - gc_start).as_micros());
                 }
 
-                let retval = eval(c, state, true);
+                let retval = eval(c, state);
 
                 match &retval {
                     Object::Return(_) => {
@@ -1245,7 +1236,7 @@ pub fn eval(
             
             let mut vals: Vec<Object> = Vec::new();
             for c in &node.children {
-                let v = eval(c, state, true);
+                let v = eval(c, state);
                 vals.push(v);
             }
 

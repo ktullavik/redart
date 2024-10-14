@@ -285,7 +285,7 @@ fn evaluate(filepath: String, state: &mut State, dirs: &Dirs) {
         NodeType::FunDef(_, _) => {
             let mainbody = &mainfunc.children[1];
             state.stack.push_call();
-            evaluator::eval(mainbody, state, true);
+            evaluator::eval(mainbody, state);
             state.stack.pop_call();
         }
         x => {

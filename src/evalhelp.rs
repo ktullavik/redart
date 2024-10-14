@@ -103,7 +103,7 @@ pub fn call_function(
                 state.objsys.set_this(rk);
             }
     
-            let result = eval(&body, state, true);
+            let result = eval(&body, state);
     
             if let MaybeRef::Ref(old_rk) = oldthis {
                 state.objsys.set_this(old_rk);
@@ -186,7 +186,7 @@ pub fn call_constructor(
 
             let field_nodes = class.fields.clone();
             for (_, fname, initexpr) in &field_nodes {
-                inst.set_field(fname.clone(), eval(initexpr, state, true));
+                inst.set_field(fname.clone(), eval(initexpr, state));
             }
 
             let instref = state.objsys.register_instance(*inst).clone();
@@ -239,7 +239,7 @@ pub fn call_constructor(
                     }                    
 
                     // Run body
-                    eval(&body, state, true);
+                    eval(&body, state);
 
                     state.objsys.set_this(oldthis);
                     state.filepath = oldfilename;
@@ -265,7 +265,7 @@ pub fn argnodes_to_argobjs(
     state: &mut State) -> Vec<Object> {
 
     argnodes.iter().map(
-        |argtree| eval(&argtree, state, true)
+        |argtree| eval(&argtree, state)
     ).collect()
 }
 
