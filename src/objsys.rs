@@ -187,6 +187,11 @@ impl ObjSys {
     }
 
 
+    pub fn get_this_instance(&self) -> &Instance {
+        return self.instancemap.get(&self.this).unwrap();
+    }
+
+
     pub fn get_this_instance_mut(&mut self) -> &mut Instance {
         return self.instancemap.get_mut(&self.this).unwrap();
     }
