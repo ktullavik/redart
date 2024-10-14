@@ -32,7 +32,7 @@ fn disjunction(reader: &mut Reader, state: &State) -> Node {
         return left;
     }
 
-    match reader.sym() {
+    match reader.tok() {
 
         Token::LogOr(_, _) => {
             reader.next();
@@ -56,7 +56,7 @@ fn conjunction(reader: &mut Reader, state: &State) -> Node {
         return left;
     }
 
-    match reader.sym() {
+    match reader.tok() {
 
         Token::LogAnd(_, _) => {
             reader.next();
@@ -80,7 +80,7 @@ fn equality(reader: &mut Reader, state: &State) -> Node {
         return left;
     }
 
-    match reader.sym() {
+    match reader.tok() {
 
         Token::Equal(_, _) => {
             reader.next();
@@ -104,7 +104,7 @@ fn comparison(reader: &mut Reader, state: &State) -> Node {
         return left;
     }
 
-    match reader.sym() {
+    match reader.tok() {
 
         Token::LessThan(_, _) => {
             reader.next();
@@ -151,7 +151,7 @@ fn bit_or(reader: &mut Reader, state: &State) -> Node {
         return left;
     }
 
-    match reader.sym() {
+    match reader.tok() {
         Token::BitOr(_, _) => {
 
             let mut node = Node::new(NodeType::BitOr);
@@ -174,7 +174,7 @@ fn bit_xor(reader: &mut Reader, state: &State) -> Node {
         return left;
     }
 
-    match reader.sym() {
+    match reader.tok() {
         Token::BitXor(_, _) => {
 
             let mut node = Node::new(NodeType::BitXor);
@@ -197,7 +197,7 @@ fn bit_and(reader: &mut Reader, state: &State) -> Node {
         return left;
     }
 
-    match reader.sym() {
+    match reader.tok() {
         Token::BitAnd(_, _) => {
 
             let mut node = Node::new(NodeType::BitAnd);
@@ -226,7 +226,7 @@ fn sum_help(reader: &mut Reader, righties: &mut Queue<Node>, ops: &mut Queue<Nod
         return righties.remove().unwrap();
     }
 
-    match reader.sym() {
+    match reader.tok() {
 
         Token::Add(_, _) => {
             ops.add(Node::new(NodeType::Add)).ok();
@@ -268,7 +268,7 @@ fn product_help(reader: &mut Reader, righties: &mut Queue<Node>, ops: &mut Queue
         return righties.remove().unwrap();
     }
 
-    match reader.sym() {
+    match reader.tok() {
 
         Token::Mul(_, _) => {
             ops.add(Node::new(NodeType::Mul)).ok();
@@ -299,7 +299,7 @@ fn postop(reader: &mut Reader, ctx: &State) -> Node {
 
     let node = access_chain(reader, ctx);
 
-    match reader.sym() {
+    match reader.tok() {
 
         Token::Decrement(_, _) => {
 
@@ -315,7 +315,7 @@ fn postop(reader: &mut Reader, ctx: &State) -> Node {
                 x => dart_parseerror(
                     format!("Invalid node for decrement: {}", x),
                     ctx,
-                    reader.sym())
+                    reader.tok())
             }
         }
 
@@ -333,7 +333,7 @@ fn postop(reader: &mut Reader, ctx: &State) -> Node {
                 x => dart_parseerror(
                     format!("Invalid node for increment: {}", x),
                     ctx,
-                    reader.sym())
+                    reader.tok())
             }        
         }
 
@@ -346,7 +346,7 @@ fn access_chain(reader: &mut Reader, ctx: &State) -> Node {
 
     let n = term(reader, ctx);
 
-    match reader.sym() {
+    match reader.tok() {
         Token::Access(_, _) |
         Token::Brack1(_, _) => {
             access_help(reader, n, ctx)
@@ -358,7 +358,7 @@ fn access_chain(reader: &mut Reader, ctx: &State) -> Node {
 
 pub fn access_help(reader: &mut Reader, owner: Node, ctx: &State) -> Node {
 
-    match reader.sym() {
+    match reader.tok() {
 
         Token::Access(_, _) => {
 
@@ -415,7 +415,7 @@ pub fn access_help(reader: &mut Reader, owner: Node, ctx: &State) -> Node {
             let mut collaccess = Node::new(NodeType::CollAccess);
             collaccess.children.push(owner);
             collaccess.children.push(index_node);
-            if let Token::Brack1(_, _) = reader.sym() {
+            if let Token::Brack1(_, _) = reader.tok() {
                 return access_help(reader, collaccess, ctx);
             }
             collaccess
@@ -427,7 +427,7 @@ pub fn access_help(reader: &mut Reader, owner: Node, ctx: &State) -> Node {
 
 fn term(reader: &mut Reader, state: &State) -> Node {
 
-    match reader.sym() {
+    match reader.tok() {
 
         Token::Int(val, _, _) => {
             reader.next();
@@ -444,7 +444,7 @@ fn term(reader: &mut Reader, state: &State) -> Node {
             dart_parseerror(
                 "'+' is not a prefix operator.",
                 state,
-                reader.sym(),
+                reader.tok(),
             );
         }
 
@@ -549,7 +549,7 @@ fn term(reader: &mut Reader, state: &State) -> Node {
             let mut list_node = Node::new(NodeType::List);
             let mut expect_sep = false;
 
-            match reader.sym() {
+            match reader.tok() {
 
                 Token::Brack2(_, _) => {
                     reader.next();
@@ -561,7 +561,7 @@ fn term(reader: &mut Reader, state: &State) -> Node {
                     while reader.pos() < reader.len() {
 
                         if expect_sep {
-                            match reader.sym() {
+                            match reader.tok() {
 
                                 Token::Comma(_, _) => {
                                     if !expect_sep {
@@ -576,7 +576,7 @@ fn term(reader: &mut Reader, state: &State) -> Node {
                                     reader.next();
                                     break;
                                 }
-                                _ => panic!("Unexpected token when parsing list: {}", reader.sym())
+                                _ => panic!("Unexpected token when parsing list: {}", reader.tok())
                             }
                         }
                         expect_sep = true;

@@ -25,7 +25,7 @@ impl Reader {
             dart_parseerror(
                 format!("Expected: '{}'. Got: '{}'.", sym, t),
                 state,
-                self.sym()
+                self.tok()
             );
         }
     }
@@ -35,7 +35,7 @@ impl Reader {
         self.next();
     }
 
-    pub fn sym(&self) -> Token {
+    pub fn tok(&self) -> Token {
         if self.pos >= self.tokens.len() {
 
         }

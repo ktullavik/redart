@@ -34,17 +34,17 @@ pub fn parse(reader: &mut Reader, ctx: &mut State) -> Vec<String> {
 
 
 fn directives(reader: &mut Reader, ctx: &State) -> Vec<String> {
-    dprint(format!("Parse: directives: {}", reader.sym()));
+    dprint(format!("Parse: directives: {}", reader.tok()));
 
     let mut imports = autoincludes();
 
     while reader.more() {
 
-        match reader.sym() {
+        match reader.tok() {
             Token::Import(_, _) => {
 
                 reader.next();
-                if let Token::Str(s, _, _, _) = reader.sym() {
+                if let Token::Str(s, _, _, _) = reader.tok() {
                     reader.next();
                     reader.skip(";", ctx);
 
@@ -62,9 +62,9 @@ fn directives(reader: &mut Reader, ctx: &State) -> Vec<String> {
 
 
 fn decl(reader: &mut Reader, state: &mut State) {
-    dprint(format!("Parse: decl: {}", reader.sym()));
+    dprint(format!("Parse: decl: {}", reader.tok()));
 
-    match reader.sym() {
+    match reader.tok() {
 
         // The type of a top level declaration.
         Token::Name(typ, _, _) => {
@@ -105,9 +105,9 @@ fn decl(reader: &mut Reader, state: &mut State) {
                         }
 
                         _ => dart_parseerror(
-                                format!("Unexpected token: {}", reader.sym()),
+                                format!("Unexpected token: {}", reader.tok()),
                                 state,
-                                reader.sym()
+                                reader.tok()
                             )
                     }
                 }
@@ -155,7 +155,7 @@ fn decl(reader: &mut Reader, state: &mut State) {
                         x => dart_parseerror(
                             format!("Unexpected token: {}", x),
                             state,
-                            reader.sym()
+                            reader.tok()
                         )
                     }
                 }
@@ -163,7 +163,7 @@ fn decl(reader: &mut Reader, state: &mut State) {
                 _ => dart_parseerror(
                         "Expected name after 'const'.",
                         state,
-                        reader.sym()
+                        reader.tok()
                     )
             }
         }
@@ -177,7 +177,7 @@ fn decl(reader: &mut Reader, state: &mut State) {
             dart_parseerror(
                 "Directives must appear before any declarations.",
                 state,
-                reader.sym()
+                reader.tok()
             );
         }
 
@@ -189,7 +189,7 @@ fn decl(reader: &mut Reader, state: &mut State) {
 
 
 fn class(reader: &mut Reader, state: &mut State) {
-    dprint(format!("Parse: class: {}", reader.sym()));
+    dprint(format!("Parse: class: {}", reader.tok()));
 
     match reader.next() {
         Token::Name(classname, _, _) => {
@@ -216,7 +216,7 @@ fn class(reader: &mut Reader, state: &mut State) {
                                 x => dart_parseerror(
                                     format!("Unexpected token: {}", x),
                                     state,
-                                    reader.sym()
+                                    reader.tok()
                                 )
                             }
                         }
@@ -237,7 +237,7 @@ fn class(reader: &mut Reader, state: &mut State) {
                 x => dart_parseerror(
                     format!("Unexpected token: {}", x),
                     state,
-                    reader.sym()
+                    reader.tok()
                 )
             }
 
@@ -258,13 +258,13 @@ fn class(reader: &mut Reader, state: &mut State) {
 
 // Expecting member declaration - field or method, or constructor.
 fn readmembers(class: &mut Class, reader: &mut Reader, state: &mut State) {
-    dprint(format!("Parse: readmembers: {}", reader.sym()));
+    dprint(format!("Parse: readmembers: {}", reader.tok()));
 
     let mut got_contructor = false;
 
     while reader.more() {
 
-        match reader.sym() {
+        match reader.tok() {
 
             Token::Name(mtype, _, _) => {
 
@@ -277,7 +277,7 @@ fn readmembers(class: &mut Class, reader: &mut Reader, state: &mut State) {
                     let params = constructor_paramlist(reader, state);
                     constructor_node.children.push(params);
 
-                    match reader.sym() {
+                    match reader.tok() {
 
                         Token::Block1(_, _) => {
                             reader.next();
@@ -294,7 +294,7 @@ fn readmembers(class: &mut Class, reader: &mut Reader, state: &mut State) {
                             dart_parseerror(
                                 format!("Expected constructor body, got: {}", x),
                                 state,
-                                reader.sym()
+                                reader.tok()
                             )
                         }
                     }
@@ -391,9 +391,9 @@ fn readmembers(class: &mut Class, reader: &mut Reader, state: &mut State) {
 
 
 fn constructor_paramlist(reader: &mut Reader, state: &State) -> Node {
-    dprint(format!("Parse: paramlist: {}", reader.sym()));
+    dprint(format!("Parse: paramlist: {}", reader.tok()));
 
-    if let Token::Paren1(_, _) = reader.sym() {
+    if let Token::Paren1(_, _) = reader.tok() {
 
         let mut node = Node::new(NodeType::ParamList);
         let mut expect_comma = false;
@@ -401,7 +401,7 @@ fn constructor_paramlist(reader: &mut Reader, state: &State) -> Node {
 
         while reader.more() {
 
-            match reader.sym() {
+            match reader.tok() {
 
                 Token::Paren2(_, _) => {
                     reader.next();
@@ -412,7 +412,7 @@ fn constructor_paramlist(reader: &mut Reader, state: &State) -> Node {
                     reader.next();
                     reader.skip(".", state);
 
-                    match reader.sym() {
+                    match reader.tok() {
 
                         Token::Name(s, _, _) => {
                             let this_fieldinit = Node::new(NodeType::ThisFieldInit(s));
@@ -425,7 +425,7 @@ fn constructor_paramlist(reader: &mut Reader, state: &State) -> Node {
                             dart_parseerror(
                                 format!("Expected identifier. Got {}", x),
                                 state,
-                                reader.sym()
+                                reader.tok()
                             );
                         }
                     }
@@ -437,7 +437,7 @@ fn constructor_paramlist(reader: &mut Reader, state: &State) -> Node {
                         dart_parseerror(
                             "Expected an identifier, but got ','.",
                             state,
-                            reader.sym() 
+                            reader.tok() 
                         );
                     }
                     reader.next();
@@ -452,7 +452,7 @@ fn constructor_paramlist(reader: &mut Reader, state: &State) -> Node {
                 }
 
                 _ => {
-                    panic!("Unexpected token when reading parameters: {}", reader.sym())
+                    panic!("Unexpected token when reading parameters: {}", reader.tok())
                 }
             }
         }
@@ -461,7 +461,7 @@ fn constructor_paramlist(reader: &mut Reader, state: &State) -> Node {
         dart_parseerror(
             "Expected parameter list after constructor declaration.",
             state,
-            reader.sym()
+            reader.tok()
         )
     }
     panic!("Error when reading param list.")
@@ -469,9 +469,9 @@ fn constructor_paramlist(reader: &mut Reader, state: &State) -> Node {
 
 
 fn paramlist(reader: &mut Reader, state: &State) -> Node {
-    dprint(format!("Parse: paramlist: {}", reader.sym()));
+    dprint(format!("Parse: paramlist: {}", reader.tok()));
 
-    if let Token::Paren1(_, _) = reader.sym() {
+    if let Token::Paren1(_, _) = reader.tok() {
 
         let mut node = Node::new(NodeType::ParamList);
         let mut expect_comma = false;
@@ -479,7 +479,7 @@ fn paramlist(reader: &mut Reader, state: &State) -> Node {
 
         while reader.more() {
 
-            match reader.sym() {
+            match reader.tok() {
 
                 Token::Paren2(_, _) => {
                     reader.next();
@@ -514,7 +514,7 @@ fn paramlist(reader: &mut Reader, state: &State) -> Node {
                 }
 
                 _ => {
-                    panic!("Unexpected token when reading parameters: {}", reader.sym())
+                    panic!("Unexpected token when reading parameters: {}", reader.tok())
                 }
             }
         }
@@ -523,7 +523,7 @@ fn paramlist(reader: &mut Reader, state: &State) -> Node {
         dart_parseerror(
             "Expected parameter list after function declaration.",
             state,
-            reader.sym()
+            reader.tok()
         )
     }
     panic!("Error when reading param list.")
@@ -531,9 +531,9 @@ fn paramlist(reader: &mut Reader, state: &State) -> Node {
 
 
 pub fn arglist(reader: &mut Reader, state: &State) -> Node {
-    dprint(format!("Parse: arglist: {}", reader.sym()));
+    dprint(format!("Parse: arglist: {}", reader.tok()));
 
-    if let Token::Paren1(_, _) = reader.sym() {
+    if let Token::Paren1(_, _) = reader.tok() {
 
         let mut node = Node::new(NodeType::ArgList);
         let mut expect_comma = false;
@@ -541,7 +541,7 @@ pub fn arglist(reader: &mut Reader, state: &State) -> Node {
 
         while reader.more() {
 
-            match reader.sym() {
+            match reader.tok() {
 
                 Token::Paren2(_, _) => {
                     reader.next();
@@ -568,7 +568,7 @@ pub fn arglist(reader: &mut Reader, state: &State) -> Node {
         }
     }
     else {
-        panic!("Error: Expected start of arglist: '('. Found: {}", reader.sym())
+        panic!("Error: Expected start of arglist: '('. Found: {}", reader.tok())
     }
     panic!("Error when reading arg list.")
 }
@@ -579,15 +579,15 @@ pub fn arglist(reader: &mut Reader, state: &State) -> Node {
 /// Expects first token after block started by {.
 /// Consumes the end-block token }.
 fn block(reader: &mut Reader, state: &State) -> Node {
-    dprint(format!("Parse: block: {}", reader.sym()));
+    dprint(format!("Parse: block: {}", reader.tok()));
 
     let mut node = Node::new(NodeType::Block);
 
 
     while reader.more() {
-        dprint(format!("Parse: block loop at: {}, token: {}", reader.pos(), reader.sym()));
+        dprint(format!("Parse: block loop at: {}, token: {}", reader.pos(), reader.tok()));
 
-        match reader.sym() {
+        match reader.tok() {
 
             Token::Block2(_, _) => {
                 dprint(String::from("Parse: token is end-of-block, breaking."));
@@ -613,7 +613,7 @@ fn block(reader: &mut Reader, state: &State) -> Node {
                 let snode = statement(reader, state);
                 node.children.push(snode);
 
-                match reader.sym() {
+                match reader.tok() {
 
                     Token::Block2(_, _) => {
                         reader.next();
@@ -647,9 +647,9 @@ fn assign_help(left_node: Node, reader: &mut Reader, state: &State) -> Node {
 
 
 fn statement(reader: &mut Reader, state: &State) -> Node {
-    dprint(format!("Parse: statement: {}", reader.sym()));
+    dprint(format!("Parse: statement: {}", reader.tok()));
 
-    match reader.sym() {
+    match reader.tok() {
 
         Token::Name(s, _, _) => {
 
@@ -662,7 +662,7 @@ fn statement(reader: &mut Reader, state: &State) -> Node {
                     reader.next();
                     reader.next();
 
-                    match reader.sym() {
+                    match reader.tok() {
 
                         Token::Assign(_, _) => {
                             assign_help(typed_var, reader, state)
@@ -692,7 +692,7 @@ fn statement(reader: &mut Reader, state: &State) -> Node {
                     let owner = Node::new(NodeType::Name(s));
                     let left_node = access_help(reader, owner, state);
 
-                    match reader.sym() {
+                    match reader.tok() {
                         Token::Assign(_, _) => {
                             assign_help(left_node, reader, state)
                         }
@@ -705,7 +705,7 @@ fn statement(reader: &mut Reader, state: &State) -> Node {
                     let owner = Node::new(NodeType::Name(s));
                     let left_node = access_help(reader, owner, state);
 
-                    match reader.sym() {
+                    match reader.tok() {
                         Token::Assign(_, _) => {
                             assign_help(left_node, reader, state)
                         }
@@ -737,7 +737,7 @@ fn statement(reader: &mut Reader, state: &State) -> Node {
 
             loop {
 
-                let next_token = reader.sym();
+                let next_token = reader.tok();
 
                 match next_token {
 
@@ -799,18 +799,18 @@ fn statement(reader: &mut Reader, state: &State) -> Node {
             reader.next();
             reader.skip("(", state);
 
-            match reader.sym() {
+            match reader.tok() {
 
                 Token::Name(n1, _, _) => {
                     reader.next();
 
-                    match reader.sym() {
+                    match reader.tok() {
                         Token::Name(n2, _, _) => {
                             reader.next();
 
                             let typvar = Node::new(NodeType::TypedVar(n1, n2));
 
-                            match reader.sym() {
+                            match reader.tok() {
 
                                 Token::Assign(_, _) => {
                                     reader.skip("=", state);
@@ -859,7 +859,7 @@ fn statement(reader: &mut Reader, state: &State) -> Node {
                                 x => dart_parseerror(
                                     format!("Unexpected token in for-loop: {}", x),
                                     state,
-                                    reader.sym()
+                                    reader.tok()
                                 )
                             }
  
@@ -901,7 +901,7 @@ fn statement(reader: &mut Reader, state: &State) -> Node {
                             dart_parseerror(
                                 format!("Expected identifier or assignment. Got: {}", x),
                                 state,
-                                reader.sym()
+                                reader.tok()
                             );
                         }
 
@@ -912,7 +912,7 @@ fn statement(reader: &mut Reader, state: &State) -> Node {
                     dart_parseerror(
                         "Expected identifier.",
                         state,
-                        reader.sym()
+                        reader.tok()
                     );
                 }
             }
@@ -934,9 +934,9 @@ fn statement(reader: &mut Reader, state: &State) -> Node {
 
 
 fn conditional(reader: &mut Reader, ctx: &State) -> Node {
-    dprint(format!("Parse: conditional: {}", reader.sym()));
+    dprint(format!("Parse: conditional: {}", reader.tok()));
 
-    match reader.sym() {
+    match reader.tok() {
 
         Token::If(_, _) => {
             reader.next();
@@ -958,7 +958,7 @@ fn conditional(reader: &mut Reader, ctx: &State) -> Node {
 
             reader.next();
 
-            match reader.sym() {
+            match reader.tok() {
 
                 Token::If(_, _) => {
 
