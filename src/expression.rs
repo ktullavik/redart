@@ -312,7 +312,10 @@ fn postop(reader: &mut Reader, ctx: &State) -> Node {
                     decnode.children.push(n);
                     decnode
                 }
-                x => dart_parseerror(format!("Invalid node for decrement: {}", x), ctx, reader.tokens(), reader.pos())
+                x => dart_parseerror(
+                    format!("Invalid node for decrement: {}", x),
+                    ctx,
+                    reader.sym())
             }
         }
 
@@ -327,7 +330,10 @@ fn postop(reader: &mut Reader, ctx: &State) -> Node {
                     decnode.children.push(n);
                     decnode
                 }
-                x => dart_parseerror(format!("Invalid node for increment: {}", x), ctx, reader.tokens(), reader.pos())
+                x => dart_parseerror(
+                    format!("Invalid node for increment: {}", x),
+                    ctx,
+                    reader.sym())
             }        
         }
 
@@ -438,8 +444,7 @@ fn term(reader: &mut Reader, state: &State) -> Node {
             dart_parseerror(
                 "'+' is not a prefix operator.",
                 state,
-                reader.tokens(),
-                reader.pos()
+                reader.sym(),
             );
         }
 

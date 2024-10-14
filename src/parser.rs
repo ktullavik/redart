@@ -104,11 +104,10 @@ fn decl(reader: &mut Reader, state: &mut State) {
                             return;
                         }
 
-                        _ => dart_parseerror(format!("Unexpected token: {}",
-                                reader.sym()),
+                        _ => dart_parseerror(
+                                format!("Unexpected token: {}", reader.sym()),
                                 state,
-                                reader.tokens(),
-                                reader.pos()
+                                reader.sym()
                             )
                     }
                 }
@@ -156,8 +155,7 @@ fn decl(reader: &mut Reader, state: &mut State) {
                         x => dart_parseerror(
                             format!("Unexpected token: {}", x),
                             state,
-                            reader.tokens(),
-                            reader.pos()
+                            reader.sym()
                         )
                     }
                 }
@@ -165,8 +163,7 @@ fn decl(reader: &mut Reader, state: &mut State) {
                 _ => dart_parseerror(
                         "Expected name after 'const'.",
                         state,
-                        reader.tokens(),
-                        reader.pos()
+                        reader.sym()
                     )
             }
         }
@@ -180,8 +177,7 @@ fn decl(reader: &mut Reader, state: &mut State) {
             dart_parseerror(
                 "Directives must appear before any declarations.",
                 state,
-                &reader.tokens(),
-                reader.pos()
+                reader.sym()
             );
         }
 
@@ -220,8 +216,7 @@ fn class(reader: &mut Reader, state: &mut State) {
                                 x => dart_parseerror(
                                     format!("Unexpected token: {}", x),
                                     state,
-                                    reader.tokens(),
-                                    reader.pos()
+                                    reader.sym()
                                 )
                             }
                         }
@@ -242,8 +237,7 @@ fn class(reader: &mut Reader, state: &mut State) {
                 x => dart_parseerror(
                     format!("Unexpected token: {}", x),
                     state,
-                    reader.tokens(),
-                    reader.pos()
+                    reader.sym()
                 )
             }
 
@@ -300,8 +294,7 @@ fn readmembers(class: &mut Class, reader: &mut Reader, state: &mut State) {
                             dart_parseerror(
                                 format!("Expected constructor body, got: {}", x),
                                 state,
-                                reader.tokens(),
-                                reader.pos()
+                                reader.sym()
                             )
                         }
                     }
@@ -432,8 +425,7 @@ fn constructor_paramlist(reader: &mut Reader, state: &State) -> Node {
                             dart_parseerror(
                                 format!("Expected identifier. Got {}", x),
                                 state,
-                                reader.tokens(),
-                                reader.pos()
+                                reader.sym()
                             );
                         }
                     }
@@ -444,8 +436,8 @@ fn constructor_paramlist(reader: &mut Reader, state: &State) -> Node {
                         // As dart.
                         dart_parseerror(
                             "Expected an identifier, but got ','.",
-                            state, reader.tokens(),
-                            reader.pos()
+                            state,
+                            reader.sym() 
                         );
                     }
                     reader.next();
@@ -467,10 +459,9 @@ fn constructor_paramlist(reader: &mut Reader, state: &State) -> Node {
     }
     else {
         dart_parseerror(
-            "A function declaration needs an explicit list of parameters.",
+            "Expected parameter list after constructor declaration.",
             state,
-            reader.tokens(),
-            reader.pos() - 1
+            reader.sym()
         )
     }
     panic!("Error when reading param list.")
@@ -530,10 +521,9 @@ fn paramlist(reader: &mut Reader, state: &State) -> Node {
     }
     else {
         dart_parseerror(
-            "A function declaration needs an explicit list of parameters.",
+            "Expected parameter list after function declaration.",
             state,
-            reader.tokens(),
-            reader.pos() - 1
+            reader.sym()
         )
     }
     panic!("Error when reading param list.")
@@ -869,8 +859,7 @@ fn statement(reader: &mut Reader, state: &State) -> Node {
                                 x => dart_parseerror(
                                     format!("Unexpected token in for-loop: {}", x),
                                     state,
-                                    &reader.tokens(),
-                                    reader.pos()
+                                    reader.sym()
                                 )
                             }
  
@@ -912,8 +901,7 @@ fn statement(reader: &mut Reader, state: &State) -> Node {
                             dart_parseerror(
                                 format!("Expected identifier or assignment. Got: {}", x),
                                 state,
-                                &reader.tokens(),
-                                reader.pos()
+                                reader.sym()
                             );
                         }
 
@@ -924,8 +912,7 @@ fn statement(reader: &mut Reader, state: &State) -> Node {
                     dart_parseerror(
                         "Expected identifier.",
                         state,
-                        &reader.tokens(),
-                        reader.pos()
+                        reader.sym()
                     );
                 }
             }
