@@ -6,7 +6,7 @@ use expression::expression;
 use error::parseerror;
 use object::{ParamObj, Object};
 use objsys::Class;
-use crate::{expression::access_help, error::evalerror};
+use crate::expression::access_help;
 
 
 fn autoincludes() -> Vec<String> {
@@ -861,7 +861,7 @@ fn statement(reader: &mut Reader, state: &State) -> Node {
 
                             let typvar = Node::new(
                                 NodeType::TypedVar(
-                                    n1, n2, name_linenum2, name_linenum2)
+                                    n1, n2, name_linenum2, name_symnum2)
                             );
 
                             match reader.tok() {
