@@ -107,6 +107,7 @@ pub const TESTS: &'static [&'static str] = &[
     "102.list_set_by_index.dart",
     "103.list_set_by_index2.dart",
     "104.list_set_by_index3.dart",
+    "105.calling_into_list_of_objects.dart",
 ];
 
 
