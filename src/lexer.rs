@@ -1,7 +1,5 @@
 use token::Token;
 use reader::Reader;
-use utils::dprint;
-
 use crate::utils::dart_lexerror;
 
 
@@ -56,17 +54,11 @@ pub fn lex(input: &str, filepath: &str) -> Reader {
 
 fn lex_real(input: &str, startpos: usize, interpol: usize, mut linenum: usize, mut symnum: usize, filepath: &str) -> (Vec<Token>, usize) {
 
-    dprint(" ");
-    dprint("LEX");
-    dprint(" ");
-
     let mut tokens: Vec<Token> = Vec::new();
-
     let chars: Vec<char> = input.chars().collect();
     let inp_length = chars.len();
     let mut i: usize = startpos;
     let mut c: char;
-
 
     while i < inp_length {
 

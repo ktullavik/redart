@@ -1,6 +1,5 @@
 use std::fmt;
 use std::collections::HashMap;
-use utils::dprint;
 use object::Object;
 use node::Node;
 use crate::{heapobjs::{
@@ -45,13 +44,11 @@ impl Class {
 
     pub fn add_field(&mut self, ftype: String, fname: String, initexpr: Node) {
         self.fields.push((ftype.clone(), fname.clone(), initexpr));
-        dprint(format!("Inserted to fieldtable: {}", fname));
     }
 
 
     pub fn add_method(&mut self, name: String, m: Object) {
         self.methods.insert(name.clone(), m);
-        dprint(format!("Inserted to methodtable: {}", name));
     }
 
 

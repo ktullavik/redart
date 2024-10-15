@@ -3,7 +3,7 @@ use reader::Reader;
 use token::Token;
 use node::{NodeType, Node};
 use expression::expression;
-use utils::{dprint, dart_parseerror};
+use utils::dart_parseerror;
 use object::{ParamObj, Object};
 use objsys::Class;
 use crate::{expression::access_help, utils::dart_evalerror};
@@ -18,10 +18,6 @@ fn autoincludes() -> Vec<String> {
 
 pub fn parse(reader: &mut Reader, ctx: &mut State) -> Vec<String> {
 
-    dprint(" ");
-    dprint("PARSE");
-    dprint(" ");
-
     let imports = directives(reader, ctx);
 
     while reader.more() {
@@ -34,7 +30,6 @@ pub fn parse(reader: &mut Reader, ctx: &mut State) -> Vec<String> {
 
 
 fn directives(reader: &mut Reader, ctx: &State) -> Vec<String> {
-    dprint(format!("Parse: directives: {}", reader.tok()));
 
     let mut imports = autoincludes();
 
@@ -62,7 +57,6 @@ fn directives(reader: &mut Reader, ctx: &State) -> Vec<String> {
 
 
 fn decl(reader: &mut Reader, state: &mut State) {
-    dprint(format!("Parse: decl: {}", reader.tok()));
 
     match reader.tok() {
 
@@ -131,8 +125,6 @@ fn decl(reader: &mut Reader, state: &mut State) {
         }
 
         Token::Const(_, _) => {
-
-            println!("Found const");
 
             match reader.next() {
 
@@ -211,7 +203,6 @@ fn decl(reader: &mut Reader, state: &mut State) {
 
 
 fn class(reader: &mut Reader, state: &mut State) {
-    dprint(format!("Parse: class: {}", reader.tok()));
 
     match reader.next() {
         Token::Name(classname, _, _) => {
@@ -263,12 +254,6 @@ fn class(reader: &mut Reader, state: &mut State) {
                     x
                 )
             }
-
-
-
-            // reader.skip("{", state);
-            // readmembers(&mut class, reader, state);
-            // reader.skip("}", state);
             state.objsys.register_class(class);
         }
 
@@ -281,7 +266,6 @@ fn class(reader: &mut Reader, state: &mut State) {
 
 // Expecting member declaration - field or method, or constructor.
 fn readmembers(class: &mut Class, reader: &mut Reader, state: &mut State) {
-    dprint(format!("Parse: readmembers: {}", reader.tok()));
 
     let mut got_contructor = false;
 
@@ -432,7 +416,6 @@ fn readmembers(class: &mut Class, reader: &mut Reader, state: &mut State) {
 
 
 fn constructor_paramlist(reader: &mut Reader, state: &State) -> Node {
-    dprint(format!("Parse: paramlist: {}", reader.tok()));
 
     if let Token::Paren1(linenum, symnum) = reader.tok() {
 
@@ -514,7 +497,6 @@ fn constructor_paramlist(reader: &mut Reader, state: &State) -> Node {
 
 
 fn paramlist(reader: &mut Reader, state: &State) -> Node {
-    dprint(format!("Parse: paramlist: {}", reader.tok()));
 
     if let Token::Paren1(linenum, symnum) = reader.tok() {
 
@@ -587,7 +569,6 @@ fn paramlist(reader: &mut Reader, state: &State) -> Node {
 
 
 pub fn arglist(reader: &mut Reader, state: &State) -> Node {
-    dprint(format!("Parse: arglist: {}", reader.tok()));
 
     if let Token::Paren1(linenum, symnum) = reader.tok() {
 
@@ -637,25 +618,21 @@ pub fn arglist(reader: &mut Reader, state: &State) -> Node {
 /// Expects first token after block started by {.
 /// Consumes the end-block token }.
 fn block(reader: &mut Reader, state: &State) -> Node {
-    dprint(format!("Parse: block: {}", reader.tok()));
 
     let mut node = Node::new(
         NodeType::Block(reader.linenum(), reader.symnum())
     );
 
     while reader.more() {
-        dprint(format!("Parse: block loop at: {}, token: {}", reader.pos(), reader.tok()));
 
         match reader.tok() {
 
             Token::Block2(_, _) => {
-                dprint(String::from("Parse: token is end-of-block, breaking."));
                 reader.next();
                 break;
             }
 
             Token::End => {
-                dprint(String::from("Parse: token is end, breaking."));
                 break;
             }
 
@@ -708,7 +685,6 @@ fn assign_help(left_node: Node, reader: &mut Reader, state: &State) -> Node {
 
 
 fn statement(reader: &mut Reader, state: &State) -> Node {
-    dprint(format!("Parse: statement: {}", reader.tok()));
 
     match reader.tok() {
 
@@ -805,7 +781,6 @@ fn statement(reader: &mut Reader, state: &State) -> Node {
         }
 
         Token::If(linenum, symnum) => {
-            dprint("Parse: if");
 
             let mut condnode = Node::new(
                 NodeType::Conditional(linenum, symnum)
@@ -820,8 +795,6 @@ fn statement(reader: &mut Reader, state: &State) -> Node {
                 match next_token {
 
                     Token::Else(_, _) => {
-                        dprint("Parse: if-else");
-
                         let lastcond = conditional(reader, state);
                         condnode.children.push(lastcond);
                     }
@@ -1027,7 +1000,6 @@ fn statement(reader: &mut Reader, state: &State) -> Node {
 
 
 fn conditional(reader: &mut Reader, ctx: &State) -> Node {
-    dprint(format!("Parse: conditional: {}", reader.tok()));
 
     match reader.tok() {
 

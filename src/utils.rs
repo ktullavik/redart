@@ -4,14 +4,6 @@ use State;
 use crate::node::Node;
 
 
-pub fn dprint<S: Into<String>>(s: S) {
-    let debug = false;
-    if debug {
-        println!("{}", s.into());
-    }
-}
-
-
 pub fn dart_lexerror<S: Into<String>>(msg: S, line: usize, column: usize, filepath: &str) -> ! {
     println!("{}:{}:{}: Error: {}", filepath, line, column, msg.into());
     process::exit(1);
