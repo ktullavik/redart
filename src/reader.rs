@@ -1,5 +1,5 @@
 use token::Token;
-use utils::dart_parseerror;
+use error::dart_parseerror;
 use state::State;
 
 pub struct Reader {

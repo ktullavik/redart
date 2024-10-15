@@ -1,6 +1,6 @@
 use token::Token;
 use reader::Reader;
-use crate::utils::dart_lexerror;
+use crate::error::dart_lexerror;
 
 
 /// Not applicable for first char in name, where only letters are allowed

@@ -4,7 +4,7 @@ use std::time::Instant;
 use state::State;
 use node::{NodeType, Node};
 use builtin;
-use utils::dart_evalerror;
+use error::dart_evalerror;
 use object::Object;
 use crate::evalhelp::*;
 use crate::heapobjs::internallist::InternalList;

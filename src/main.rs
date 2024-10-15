@@ -6,7 +6,7 @@ mod parser;
 mod lexer;
 mod evaluator;
 mod builtin;
-mod utils;
+mod error;
 mod stack;
 mod objsys;
 mod expression;
@@ -28,7 +28,7 @@ use std::time::Instant;
 use state::State;
 use dirs::Dirs;
 use node::NodeType;
-use utils::dart_evalerror;
+use error::dart_evalerror;
 
 
 fn main() {

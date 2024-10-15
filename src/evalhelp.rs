@@ -4,7 +4,7 @@ use crate::node::{Node, NodeType};
 use crate::object::{Object, ParamObj};
 use crate::objsys::RefKey;
 use crate::state::State;
-use crate::utils::dart_evalerror;
+use crate::error::dart_evalerror;
 
 
 pub enum MaybeRef {

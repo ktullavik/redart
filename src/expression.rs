@@ -3,7 +3,7 @@ use reader::Reader;
 use token::Token;
 use node::{NodeType, Node};
 use parser::arglist;
-use utils::dart_parseerror;
+use error::dart_parseerror;
 use queues::*;
 
 

@@ -3,10 +3,10 @@ use reader::Reader;
 use token::Token;
 use node::{NodeType, Node};
 use expression::expression;
-use utils::dart_parseerror;
+use error::dart_parseerror;
 use object::{ParamObj, Object};
 use objsys::Class;
-use crate::{expression::access_help, utils::dart_evalerror};
+use crate::{expression::access_help, error::dart_evalerror};
 
 
 fn autoincludes() -> Vec<String> {

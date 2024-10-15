@@ -7,7 +7,7 @@ use crate::evalhelp::{argnodes_to_argobjs, call_function, MaybeRef};
 use crate::NodeType;
 use crate::node::Node;
 use crate::heapobjs::InternalFile;
-use crate::utils::dart_evalerror;
+use crate::error::dart_evalerror;
 
 
 pub fn has_function(name: &str) -> bool {

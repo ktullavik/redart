@@ -7,7 +7,7 @@ use crate::{heapobjs::{
     Instance,
     InternalFile,
     InternalList
-}, state::State, utils::dart_evalerror};
+}, state::State, error::dart_evalerror};
 
 
 #[derive(Clone, PartialEq, Eq, Hash)]
