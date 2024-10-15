@@ -451,6 +451,9 @@ pub fn access_help(reader: &mut Reader, owner: Node, ctx: &State) -> Node {
             if let Token::Brack1(_, _) = reader.tok() {
                 return access_help(reader, collaccess, ctx);
             }
+            if let Token::Access(_, _) = reader.tok() {
+                return access_help(reader, collaccess, ctx);
+            }
             collaccess
         }
         _ => owner
@@ -641,7 +644,7 @@ fn term(reader: &mut Reader, state: &State) -> Node {
         }
 
         x => {
-            panic!("Unexpected token {}.", x)
+            panic!("Unexpected token: {}", x)
         }
     }
 }
