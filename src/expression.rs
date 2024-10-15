@@ -1,10 +1,10 @@
-use state::State;
-use reader::Reader;
-use token::Token;
-use node::{NodeType, Node};
-use parser::arglist;
-use error::parseerror;
 use queues::*;
+use crate::state::State;
+use crate::reader::Reader;
+use crate::token::Token;
+use crate::node::{NodeType, Node};
+use crate::parser::arglist;
+use crate::error::parseerror;
 
 
 pub fn expression(reader: &mut Reader, ctx: &State) -> Node {

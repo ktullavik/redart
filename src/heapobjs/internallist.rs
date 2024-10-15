@@ -1,4 +1,5 @@
-use crate::{object::Object, objsys::RefKey};
+use crate::object::Object;
+use crate::objsys::RefKey;
 
 
 pub struct InternalList {

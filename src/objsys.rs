@@ -1,13 +1,15 @@
 use std::fmt;
 use std::collections::HashMap;
-use object::Object;
-use node::Node;
-use crate::{heapobjs::{
+use crate::object::Object;
+use crate::node::Node;
+use crate::state::State;
+use crate::error::evalerror;
+use crate::heapobjs::{
     instance::MaybeObject,
     Instance,
     InternalFile,
     InternalList
-}, state::State, error::evalerror};
+};
 
 
 #[derive(Clone, PartialEq, Eq, Hash)]

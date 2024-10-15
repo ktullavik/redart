@@ -1,9 +1,9 @@
 use std::time::Instant;
 use std::collections::HashMap;
-use stack::Stack;
-use objsys::ObjSys;
-use objsys::RefKey;
-use node::Node;
+use crate::stack::Stack;
+use crate::objsys::ObjSys;
+use crate::objsys::RefKey;
+use crate::node::Node;
 
 
 // filepath:     Name of the file we are currently executing in.

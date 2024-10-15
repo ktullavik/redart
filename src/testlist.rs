@@ -1,4 +1,4 @@
-use dirs::Dirs;
+use crate::dirs::Dirs;
 
 
 pub const TESTS: &'static [&'static str] = &[

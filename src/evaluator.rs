@@ -1,11 +1,11 @@
 use std::ops::{BitAnd, BitOr, BitXor};
 use std::time::Duration;
 use std::time::Instant;
-use state::State;
-use node::{NodeType, Node};
-use builtin;
-use error::evalerror;
-use object::Object;
+use crate::state::State;
+use crate::node::{NodeType, Node};
+use crate::builtin;
+use crate::error::evalerror;
+use crate::object::Object;
 use crate::evalhelp::*;
 use crate::heapobjs::internallist::InternalList;
 

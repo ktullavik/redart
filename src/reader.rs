@@ -1,6 +1,7 @@
-use token::Token;
-use error::parseerror;
-use state::State;
+use crate::token::Token;
+use crate::error::parseerror;
+use crate::state::State;
+
 
 pub struct Reader {
     pos: usize,

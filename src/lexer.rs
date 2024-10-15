@@ -1,5 +1,5 @@
-use token::Token;
-use reader::Reader;
+use crate::token::Token;
+use crate::reader::Reader;
 use crate::error::lexerror;
 
 

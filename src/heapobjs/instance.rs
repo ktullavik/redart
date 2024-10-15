@@ -1,6 +1,6 @@
 use std::collections::HashMap;
-
-use crate::{object::Object, objsys::RefKey};
+use crate::object::Object;
+use crate::objsys::RefKey;
 
 
 pub enum MaybeObject {

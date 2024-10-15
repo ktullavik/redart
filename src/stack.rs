@@ -1,6 +1,6 @@
 use std::collections::HashMap;
-use object::Object;
-use objsys::{ObjSys, RefKey, trashman};
+use crate::object::Object;
+use crate::objsys::{ObjSys, RefKey, trashman};
 use crate::node::{Node, NodeType};
 
 

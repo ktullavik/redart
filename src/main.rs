@@ -25,10 +25,10 @@ use std::env;
 use std::fs::File;
 use std::collections::HashMap;
 use std::time::Instant;
-use state::State;
-use dirs::Dirs;
-use node::NodeType;
-use error::evalerror;
+use crate::state::State;
+use crate::dirs::Dirs;
+use crate::node::NodeType;
+use crate::error::evalerror;
 
 
 fn main() {
