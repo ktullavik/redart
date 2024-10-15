@@ -3,7 +3,7 @@ use reader::Reader;
 use token::Token;
 use node::{NodeType, Node};
 use parser::arglist;
-use error::dart_parseerror;
+use error::parseerror;
 use queues::*;
 
 
@@ -316,7 +316,7 @@ fn postop(reader: &mut Reader, ctx: &State) -> Node {
                     decnode.children.push(n);
                     decnode
                 }
-                x => dart_parseerror(
+                x => parseerror(
                     format!("Invalid node for decrement: {}", x),
                     ctx,
                     reader.tok())
@@ -338,7 +338,7 @@ fn postop(reader: &mut Reader, ctx: &State) -> Node {
                     decnode.children.push(n);
                     decnode
                 }
-                x => dart_parseerror(
+                x => parseerror(
                     format!("Invalid node for increment: {}", x),
                     ctx,
                     reader.tok())
@@ -474,7 +474,7 @@ fn term(reader: &mut Reader, state: &State) -> Node {
 
         Token::Add(_, _) => {
             // As Dart.
-            dart_parseerror(
+            parseerror(
                 "'+' is not a prefix operator.",
                 state,
                 reader.tok(),

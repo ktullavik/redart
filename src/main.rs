@@ -28,7 +28,7 @@ use std::time::Instant;
 use state::State;
 use dirs::Dirs;
 use node::NodeType;
-use error::dart_evalerror;
+use error::evalerror;
 
 
 fn main() {
@@ -213,7 +213,7 @@ fn filecurse(
             NodeType::ConstTopLazy(_, name, _, _) => {
                 if looktable.contains_key(name) {
                     // As dart.
-                    dart_evalerror(
+                    evalerror(
                         format!("'{}' is already declared in this scope.", name),
                         state,
                         &f

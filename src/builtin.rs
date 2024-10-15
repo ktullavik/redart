@@ -7,7 +7,7 @@ use crate::evalhelp::{argnodes_to_argobjs, call_function, MaybeRef};
 use crate::NodeType;
 use crate::node::Node;
 use crate::heapobjs::InternalFile;
-use crate::error::dart_evalerror;
+use crate::error::evalerror;
 
 
 pub fn has_function(name: &str) -> bool {
@@ -66,7 +66,7 @@ pub fn call(fnode: &Node, name: &str, state: &mut State) -> Object {
                             // Dart accepts ints and bools and whatnot as second param.
                             msg = format!(": {}", &args[1]);
                         }
-                        dart_evalerror(
+                        evalerror(
                             format!("Failed assertion{}", msg),
                             state,
                             fnode
@@ -74,7 +74,7 @@ pub fn call(fnode: &Node, name: &str, state: &mut State) -> Object {
                     }
                 }
                 _ => {
-                    dart_evalerror(
+                    evalerror(
                         format!("Expected bool. Got: {}", args[0]),
                         state,
                         &argnodes[0]
@@ -518,7 +518,7 @@ pub fn call(fnode: &Node, name: &str, state: &mut State) -> Object {
                     let r = rng.gen_range(0 .. *n);
                     return Object::Int(r);
                 }
-                x => dart_evalerror(format!("Expected int. Got {}", x), state, &argnodes[0])
+                x => evalerror(format!("Expected int. Got {}", x), state, &argnodes[0])
             }
         }
 

@@ -1,5 +1,5 @@
 use token::Token;
-use error::dart_parseerror;
+use error::parseerror;
 use state::State;
 
 pub struct Reader {
@@ -22,7 +22,7 @@ impl Reader {
         let t = &self.tokens[self.pos];
 
         if format!("{}", t) != sym {
-            dart_parseerror(
+            parseerror(
                 format!("Expected: '{}'. Got: '{}'.", sym, t),
                 state,
                 self.tok()

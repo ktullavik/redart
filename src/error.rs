@@ -4,13 +4,13 @@ use State;
 use crate::node::Node;
 
 
-pub fn dart_lexerror<S: Into<String>>(msg: S, line: usize, column: usize, filepath: &str) -> ! {
+pub fn lexerror<S: Into<String>>(msg: S, line: usize, column: usize, filepath: &str) -> ! {
     println!("{}:{}:{}: Error: {}", filepath, line, column, msg.into());
     process::exit(1);
 }
 
 
-pub fn dart_parseerror<S: Into<String>>(msg: S, state: &State, tok: Token) -> ! {
+pub fn parseerror<S: Into<String>>(msg: S, state: &State, tok: Token) -> ! {
 
     let (linenum, symnum) = tok.find_token_position();
 
@@ -24,7 +24,7 @@ pub fn dart_parseerror<S: Into<String>>(msg: S, state: &State, tok: Token) -> ! 
 }
 
 
-pub fn dart_evalerror<S: Into<String>>(msg: S, state: &State, node: &Node) -> ! {
+pub fn evalerror<S: Into<String>>(msg: S, state: &State, node: &Node) -> ! {
 
     let (linenum, symnum) = node.find_node_position();
 

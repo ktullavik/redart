@@ -4,7 +4,7 @@ use std::time::Instant;
 use state::State;
 use node::{NodeType, Node};
 use builtin;
-use error::dart_evalerror;
+use error::evalerror;
 use object::Object;
 use crate::evalhelp::*;
 use crate::heapobjs::internallist::InternalList;
@@ -78,7 +78,7 @@ pub fn eval(
                             }
                             NodeType::ConstTopLazy(_, name, _, _) |
                             NodeType::ConstTopVar(_, name, _, _, _) => {
-                                dart_evalerror(format!(
+                                evalerror(format!(
                                     "Cannot change const: {}", name),
                                     state,
                                     &n
@@ -88,7 +88,7 @@ pub fn eval(
                         }
                     }
 
-                    dart_evalerror(
+                    evalerror(
                         format!("Setter not found: '{}'", name),
                         state,
                         &node.children[0]
@@ -102,7 +102,7 @@ pub fn eval(
                     // larger scope, like outside a loop or in a field. But fail if it's already on lex stack.
                     if state.stack.has_in_lexscope(name) {
                         // As dart.
-                        dart_evalerror(
+                        evalerror(
                             format!("'{}' is already declared in this scope.", name),
                             state,
                             &node.children[0]
@@ -157,7 +157,7 @@ pub fn eval(
                                         // Eval lazy and replace.
 
                                         if *name == state.eval_var {
-                                            dart_evalerror(format!("Top level variable '{}' depends on itself.", name), state, node);
+                                            evalerror(format!("Top level variable '{}' depends on itself.", name), state, node);
                                         }
                                         if state.eval_var.len() == 0 {
                                             state.eval_var = name.clone();
@@ -187,7 +187,7 @@ pub fn eval(
                                     NodeType::ConstTopLazy(_, _, _, _) |
                                     NodeType::ConstTopVar(_, _, _, _, _) => {
                                         // As dart.
-                                        dart_evalerror(
+                                        evalerror(
                                             "Unsupported operation: Cannot modify an unmodifiable list",
                                             state,
                                             node
@@ -198,7 +198,7 @@ pub fn eval(
                                 return Object::Null;
                             }
                         }
-                        x => dart_evalerror(
+                        x => evalerror(
                             format!("Unexpected token: {}", x),
                             state,
                             &node.children[0].children[0]
@@ -218,7 +218,7 @@ pub fn eval(
                 Object::Bool(b) => {
                     Object::Bool(!b)
                 }
-                _ => dart_evalerror(
+                _ => evalerror(
                     format!("Illegal operand for !: {}", obj),
                     state,
                     &node.children[0]
@@ -239,14 +239,14 @@ pub fn eval(
                         Object::Bool(b2) => {
                             return Object::Bool(b1 || b2)
                         }
-                        _ => dart_evalerror(
+                        _ => evalerror(
                             format!("Illegal right operand for ||: {}", right_obj),
                             state,
                             &node.children[1]
                         )                    
                     }
                 }
-                _ => dart_evalerror(
+                _ => evalerror(
                     format!("Illegal left operand for ||: {}", left_obj),
                     state,
                     &node.children[0]
@@ -267,14 +267,14 @@ pub fn eval(
                         Object::Bool(b2) => {
                             return Object::Bool(b1 && b2)
                         }
-                        _ => dart_evalerror(
+                        _ => evalerror(
                             format!("Illegal right operand for &&: {}", right_obj),
                             state,
                             &node.children[1]
                         )
                     }
                 }
-                _ => dart_evalerror(
+                _ => evalerror(
                     format!("Illegal left operand for &&: {}", left_obj),
                     state,
                     &node.children[0]
@@ -298,7 +298,7 @@ pub fn eval(
                         Object::Double(x2) => {
                             return Object::Bool((n1 as f64) < x2)
                         }
-                        _ => dart_evalerror(
+                        _ => evalerror(
                             format!("Illegal right operand for comparison: {}", right_obj),
                             state,
                             &node.children[1]
@@ -316,14 +316,14 @@ pub fn eval(
                         Object::Double(x2) => {
                             return Object::Bool(x1 < x2)
                         }
-                        _ => dart_evalerror(
+                        _ => evalerror(
                             format!("Illegal right operand for comparison: {}", right_obj),
                             state,
                             &node.children[1]
                         )
                     }
                 }
-                _ => dart_evalerror(
+                _ => evalerror(
                     format!("Illegal left operand for comparison: {}", left_obj),
                     state,
                     &node.children[0]
@@ -347,7 +347,7 @@ pub fn eval(
                         Object::Double(x2) => {
                             return Object::Bool((n1 as f64) > x2)
                         }
-                        _ => dart_evalerror(
+                        _ => evalerror(
                             format!("Illegal right operand for comparison: {}", right_obj),
                             state,
                             &node.children[1]
@@ -365,14 +365,14 @@ pub fn eval(
                         Object::Double(x2) => {
                             return Object::Bool(x1 > x2)
                         }
-                        _ => dart_evalerror(
+                        _ => evalerror(
                             format!("Illegal right operand for comparison: {}", right_obj),
                             state,
                             &node.children[1]
                         )
                     }
                 }
-                _ => dart_evalerror(
+                _ => evalerror(
                     format!("Illegal left operand for comparison: {}", left_obj),
                     state,
                     &node.children[0]
@@ -396,7 +396,7 @@ pub fn eval(
                         Object::Double(x2) => {
                             return Object::Bool((n1 as f64) <= x2)
                         }
-                        _ => dart_evalerror(
+                        _ => evalerror(
                             format!("Illegal right operand for comparison: {}", right_obj),
                             state,
                             &node.children[1]
@@ -414,14 +414,14 @@ pub fn eval(
                         Object::Double(x2) => {
                             return Object::Bool(x1 <= x2)
                         }
-                        _ => dart_evalerror(
+                        _ => evalerror(
                             format!("Illegal right operand for comparison: {}", right_obj),
                             state,
                             &node.children[1]
                         )
                     }
                 }
-                _ => dart_evalerror(
+                _ => evalerror(
                     format!("Illegal left operand for comparison: {}", left_obj),
                     state,
                     &node.children[0]
@@ -445,7 +445,7 @@ pub fn eval(
                         Object::Double(x2) => {
                             return Object::Bool((n1 as f64) >= x2)
                         }
-                        _ => dart_evalerror(
+                        _ => evalerror(
                             format!("Illegal right operand for comparison: {}", right_obj),
                             state,
                             &node.children[1]
@@ -463,14 +463,14 @@ pub fn eval(
                         Object::Double(x2) => {
                             return Object::Bool(x1 >= x2)
                         }
-                        _ => dart_evalerror(
+                        _ => evalerror(
                             format!("Illegal right operand for comparison: {}", right_obj),
                             state,
                             &node.children[1]
                         )
                     }
                 }
-                _ => dart_evalerror(
+                _ => evalerror(
                     format!("Illegal left operand for comparison: {}", left_obj),
                     state,
                     &node.children[0]
@@ -517,7 +517,7 @@ pub fn eval(
                         _ => Object::Bool(false)
                     }
                 }
-                _ => dart_evalerror(
+                _ => evalerror(
                     format!("Equality not implemented for object: {}", left_obj),
                     state,
                     &node.children[0]
@@ -538,14 +538,14 @@ pub fn eval(
                         Object::Int(s2) => {
                             Object::Int(s1.bitand(s2))
                         }
-                        _ => dart_evalerror(
+                        _ => evalerror(
                             format!("Illegal right operand for bitwise and: {}", right_obj),
                             state,
                             &node.children[1]
                         )
                     }
                 }
-                _ => dart_evalerror(
+                _ => evalerror(
                     format!("Illegal left operand for bitwise and: {}", &left_obj),
                     state,
                     &node.children[0]
@@ -566,14 +566,14 @@ pub fn eval(
                         Object::Int(s2) => {
                             Object::Int(s1.bitor(s2))
                         }
-                        _ => dart_evalerror(
+                        _ => evalerror(
                             format!("Illegal right operand for bitwise or: {}", right_obj),
                             state,
                             &node.children[1]
                         )
                     }
                 }
-                _ => dart_evalerror(
+                _ => evalerror(
                     format!("Illegal left operand for bitwise or: {}", left_obj),
                     state,
                     &node.children[0]
@@ -594,14 +594,14 @@ pub fn eval(
                         Object::Int(s2) => {
                             Object::Int(s1.bitxor(s2))
                         }
-                        _ => dart_evalerror(
+                        _ => evalerror(
                             format!("Illegal right operand for bitwise xor: {}", right_obj),
                             state,
                             &node.children[1]
                         )
                     }
                 }
-                _ => dart_evalerror(
+                _ => evalerror(
                     format!("Illegal left operand for bitwise xor: {}", left_obj),
                     state,
                     &node.children[0]
@@ -625,7 +625,7 @@ pub fn eval(
                         Object::Double(s2) => {
                             Object::Double(*s1 as f64 + s2)
                         }
-                        _ => dart_evalerror(
+                        _ => evalerror(
                             format!("Illegal right operand for addition: {}", right_obj),
                             state,
                             &node.children[1]
@@ -642,7 +642,7 @@ pub fn eval(
                         Object::Double(s2) => {
                             Object::Double(s1 + s2)
                         }
-                        _ => dart_evalerror(
+                        _ => evalerror(
                             format!("Illegal right operand for addition: {}", right_obj),
                             state,
                             &node.children[1]
@@ -658,14 +658,14 @@ pub fn eval(
                             ret.push_str(s2);
                             return Object::String(ret);
                         }
-                        _ => dart_evalerror(
+                        _ => evalerror(
                             format!("Illegal right operand for addition: {}", right_obj),
                             state,
                             &node.children[1]
                         )
                     }
                 }
-                _ => dart_evalerror(
+                _ => evalerror(
                     format!("Illegal left operand for addition: {}", left_obj),
                     state,
                     &node.children[0]
@@ -685,7 +685,7 @@ pub fn eval(
                     Object::Double(x) => {
                         Object::Double(-*x)
                     }
-                    _ => dart_evalerror(
+                    _ => evalerror(
                         format!("Illegal operand for unary minus: {}", left_obj),
                         state,
                         &node.children[0]
@@ -704,7 +704,7 @@ pub fn eval(
                         Object::Double(s2) => {
                             Object::Double(*s1 as f64 - s2)
                         }
-                        _ => dart_evalerror(
+                        _ => evalerror(
                             format!("Illegal right operand for subtraction: {}", right_obj),
                             state,
                             &node.children[1]
@@ -721,14 +721,14 @@ pub fn eval(
                         Object::Double(s2) => {
                             Object::Double(s1 - s2)
                         }
-                        _ => dart_evalerror(
+                        _ => evalerror(
                             format!("Illegal right operand for subtraction: {}", right_obj),
                             state,
                             &node.children[1]
                         )
                     }
                 }
-                _ => dart_evalerror(
+                _ => evalerror(
                     format!("Illegal left operand for subtraction: {}", left_obj),
                     state,
                     &node.children[0]
@@ -751,7 +751,7 @@ pub fn eval(
                         Object::Double(s2) => {
                             Object::Double(*s1 as f64 * s2)
                         }
-                        _ => dart_evalerror(
+                        _ => evalerror(
                             format!("Illegal right operand for multiplication: {}", right_obj),
                             state,
                             &node.children[1]
@@ -768,14 +768,14 @@ pub fn eval(
                         Object::Double(s2) => {
                             Object::Double(s1 * s2)
                         }
-                        _ => dart_evalerror(
+                        _ => evalerror(
                             format!("Illegal right operand for multiplication: {}", right_obj),
                             state,
                             &node.children[1]
                         )
                     }
                 }
-                _ => dart_evalerror(
+                _ => evalerror(
                     format!("Illegal left operand for multiplication: {}", left_obj),
                     state,
                     &node.children[0]
@@ -798,7 +798,7 @@ pub fn eval(
                         Object::Double(s2) => {
                             Object::Double(*s1 as f64 / *s2)
                         }
-                        _ => dart_evalerror(
+                        _ => evalerror(
                             format!("Illegal right operand for division: {}", right_obj),
                             state,
                             &node.children[1]
@@ -815,14 +815,14 @@ pub fn eval(
                         Object::Double(s2) => {
                             Object::Double(*s1 as f64 / *s2)
                         }
-                        _ => dart_evalerror(
+                        _ => evalerror(
                             format!("Illegal right operand for division: {}", right_obj),
                             state,
                             &node.children[1]
                         )
                     }
                 },
-                _ => dart_evalerror(
+                _ => evalerror(
                     format!("Illegal left operand for divison: {}", left_obj),
                     state,
                     &node.children[0]
@@ -847,7 +847,7 @@ pub fn eval(
                                 state.stack.update(s.as_str(), newval.clone());
                                 return newval;
                             }
-                            _ => dart_evalerror(
+                            _ => evalerror(
                                 format!("Illegal operand for preincrement: {}", oldval),
                                 state,
                                 &node.children[0]
@@ -864,7 +864,7 @@ pub fn eval(
                                 this.set_field(s.clone(), newval.clone());
                                 return newval;
                             }
-                            _ => dart_evalerror(
+                            _ => evalerror(
                                 format!("Illegal operand for preincrement: {}", oldval),
                                 state,
                                 &node.children[0]
@@ -872,7 +872,7 @@ pub fn eval(
                         }
                     }
                 }
-                _ => dart_evalerror(
+                _ => evalerror(
                     format!("Illegal operand for preincrement: {}", valnode),
                     state,
                     &node.children[0]
@@ -897,7 +897,7 @@ pub fn eval(
                                 state.stack.update(s.as_str(), newval.clone());
                                 return newval;
                             }
-                            _ => dart_evalerror(
+                            _ => evalerror(
                                 format!("Illegal operand for predecrement: {}", oldval),
                                 state,
                                 &node.children[0]
@@ -914,7 +914,7 @@ pub fn eval(
                                 this.set_field(s.clone(), newval.clone());
                                 return newval;
                             }
-                            _ => dart_evalerror(
+                            _ => evalerror(
                                 format!("Illegal operand for predecrement: {}", oldval),
                                 state,
                                 &node.children[0]
@@ -922,7 +922,7 @@ pub fn eval(
                         }
                     }
                 }
-                _ => dart_evalerror(
+                _ => evalerror(
                     format!("Illegal operand for predecrement: {}", valnode),
                     state,
                     &node.children[0]
@@ -947,7 +947,7 @@ pub fn eval(
                                 state.stack.update(s.as_str(), newval);
                                 return oldval;
                             }
-                            _ => dart_evalerror(
+                            _ => evalerror(
                                 format!("Illegal operand for increment: {}", oldval),
                                 state,
                                 &node.children[0]
@@ -964,7 +964,7 @@ pub fn eval(
                                 this.set_field(s.clone(), newval);
                                 return oldval;
                             }
-                            _ => dart_evalerror(
+                            _ => evalerror(
                                 format!("Illegal operand for increment: {}", oldval),
                                 state,
                                 &node.children[0]
@@ -972,7 +972,7 @@ pub fn eval(
                         }
                     }
                 }
-                _ => dart_evalerror(
+                _ => evalerror(
                     format!("Illegal operand for increment: {}", valnode),
                     state,
                     &node.children[0]
@@ -997,7 +997,7 @@ pub fn eval(
                                 state.stack.update(s.as_str(), newval);
                                 return oldval;
                             }
-                            _ => dart_evalerror(
+                            _ => evalerror(
                                 format!("Illegal operand for decrement: {}", oldval),
                                 state,
                                 &node.children[0]
@@ -1014,7 +1014,7 @@ pub fn eval(
                                 this.set_field(s.clone(), newval);
                                 return oldval;
                             }
-                            _ => dart_evalerror(
+                            _ => evalerror(
                                 format!("Illegal operand for decrement: {}", oldval),
                                 state,
                                 &node.children[0]
@@ -1022,7 +1022,7 @@ pub fn eval(
                         }
                     }
                 }
-                _ => dart_evalerror(
+                _ => evalerror(
                     format!("Illegal operand for decrement: {}", valnode),
                     state,
                     &node.children[0]
@@ -1068,7 +1068,7 @@ pub fn eval(
         NodeType::Name(s, linenum, symnum) => {
 
             if state.in_const {
-                dart_evalerror(
+                evalerror(
                     "Not a constant expression.",
                     state,
                     node
@@ -1112,7 +1112,7 @@ pub fn eval(
                     NodeType::TopVarLazy(typ, name, _, _) => {
 
                         if *name == state.eval_var {
-                            dart_evalerror(
+                            evalerror(
                                 format!("Top level variable '{}' depends on itself.", name),
                                 state,
                                 &n
@@ -1142,7 +1142,7 @@ pub fn eval(
                     NodeType::ConstTopLazy(typ, name, _, _) => {
 
                         if *name == state.eval_var {
-                            dart_evalerror(
+                            evalerror(
                                 format!("Top level const '{}' depends on itself.", name),
                                 state,
                                 &n
@@ -1178,7 +1178,7 @@ pub fn eval(
                 state.stack.printstack();
             }
             // As dart.
-            dart_evalerror(
+            evalerror(
                 format!("Undefined name: '{}'.", s),
                 state,
                 node
@@ -1205,7 +1205,7 @@ pub fn eval(
 
                     if let Object::Int(n) = index_obj {
                         if n < 0 {
-                            dart_evalerror(
+                            evalerror(
                                 format!("Index must be positive: {}", n),
                                 state,
                                 node
@@ -1213,19 +1213,19 @@ pub fn eval(
                         }
                         return ilist.get_el(n as usize)
                     }
-                    dart_evalerror(
+                    evalerror(
                         format!("Illegal index: {}", index_obj),
                         state,
                         node
                     )
                 }
-                dart_evalerror(
+                evalerror(
                     format!("Expected reference, got: {}", ilist_ref),
                     state,
                     &node.children[0]
                 )
             }
-            dart_evalerror(
+            evalerror(
                 format!("Cannot index into object: {}", owner),
                 state,
                 &node.children[0]
@@ -1235,7 +1235,7 @@ pub fn eval(
         NodeType::MethodCall(name, owner, _filename, _, _) => {
 
             if state.in_const {
-                dart_evalerror(
+                evalerror(
                     "Not a constant expression.",
                     state,
                     node
@@ -1256,7 +1256,7 @@ pub fn eval(
         NodeType::FunCall(s, _, _) => {
 
             if state.in_const {
-                dart_evalerror(
+                evalerror(
                     "Not a constant expression.",
                     state,
                     node
@@ -1312,7 +1312,7 @@ pub fn eval(
                 return builtin::call(node, s, state);
             }
 
-            dart_evalerror(
+            evalerror(
                 format!("Function not found: {}", s),
                 state,
                 node
@@ -1414,7 +1414,7 @@ pub fn eval(
                 }
             }
             else {
-                dart_evalerror(
+                evalerror(
                     format!("Expected bool in conditional. Got: {}", cond),
                     state,
                     &node.children[0]
@@ -1471,7 +1471,7 @@ pub fn eval(
                         return Object::Null;
                     }
                     x => {
-                        dart_evalerror(
+                        evalerror(
                             format!("Not iterable: {}", x),
                             state,
                             &node.children[1]
@@ -1501,7 +1501,7 @@ pub fn eval(
                             eval(body, state);
                             eval(mutexpr, state);
                         }
-                        _ => dart_evalerror(
+                        _ => evalerror(
                             "Expected boolean expression.",
                             state,
                             &node.children[1]
@@ -1562,7 +1562,7 @@ pub fn eval(
             if state.objsys.has_this() {
                 return Object::Reference(state.objsys.get_this());
             }
-            dart_evalerror(
+            evalerror(
                 "Not found in context: 'this'.",
                 state,
                 node

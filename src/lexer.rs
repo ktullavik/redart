@@ -1,6 +1,6 @@
 use token::Token;
 use reader::Reader;
-use crate::error::dart_lexerror;
+use crate::error::lexerror;
 
 
 /// Not applicable for first char in name, where only letters are allowed
@@ -105,7 +105,7 @@ fn lex_real(input: &str, startpos: usize, interpol: usize, mut linenum: usize, m
                     }
                 }
                 if !closed {
-                    dart_lexerror("Unclosed quote.", linenum, symnum, filepath)
+                    lexerror("Unclosed quote.", linenum, symnum, filepath)
                 }
                 tokens.push(Token::Str(s, subs, linenum, symnum));
                 continue;
@@ -142,7 +142,7 @@ fn lex_real(input: &str, startpos: usize, interpol: usize, mut linenum: usize, m
                     }
                 }
                 if !closed {
-                    dart_lexerror("Unclosed quote.", linenum, symnum, filepath)
+                    lexerror("Unclosed quote.", linenum, symnum, filepath)
                 }
                 tokens.push(Token::Str(s, subs, linenum, symnum));
                 continue;
@@ -171,7 +171,7 @@ fn lex_real(input: &str, startpos: usize, interpol: usize, mut linenum: usize, m
                     }
                 }
                 else {
-                    dart_lexerror("Unexpected end of input: '/'", linenum, symnum, filepath)
+                    lexerror("Unexpected end of input: '/'", linenum, symnum, filepath)
                 }
                 continue;
             }
@@ -311,7 +311,7 @@ fn lex_real(input: &str, startpos: usize, interpol: usize, mut linenum: usize, m
                     }
                     else if nc == '.' {
                         if input.get(i+nl-1 .. i+nl) == Some(".") {
-                            dart_lexerror("Unexpected symbol: \".\"", linenum, symnum, filepath)
+                            lexerror("Unexpected symbol: \".\"", linenum, symnum, filepath)
                         }
                         is_int = false;
                         nl += 1;
@@ -344,7 +344,7 @@ fn lex_real(input: &str, startpos: usize, interpol: usize, mut linenum: usize, m
             }
 
             z => {
-                dart_lexerror(format!("Unrecognized symbol: {}", z), linenum, symnum, filepath)
+                lexerror(format!("Unrecognized symbol: {}", z), linenum, symnum, filepath)
             }
         }
 

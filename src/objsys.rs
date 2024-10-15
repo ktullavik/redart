@@ -7,7 +7,7 @@ use crate::{heapobjs::{
     Instance,
     InternalFile,
     InternalList
-}, state::State, error::dart_evalerror};
+}, state::State, error::evalerror};
 
 
 #[derive(Clone, PartialEq, Eq, Hash)]
@@ -59,7 +59,7 @@ impl Class {
         }
 
         if self.parent == "" {
-            dart_evalerror(format!("No such method: '{}'.", name), state, mnode)
+            evalerror(format!("No such method: '{}'.", name), state, mnode)
         }
 
         let p = state.objsys.get_class(self.parent.as_str());

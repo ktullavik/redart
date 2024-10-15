@@ -3,10 +3,10 @@ use reader::Reader;
 use token::Token;
 use node::{NodeType, Node};
 use expression::expression;
-use error::dart_parseerror;
+use error::parseerror;
 use object::{ParamObj, Object};
 use objsys::Class;
-use crate::{expression::access_help, error::dart_evalerror};
+use crate::{expression::access_help, error::evalerror};
 
 
 fn autoincludes() -> Vec<String> {
@@ -110,7 +110,7 @@ fn decl(reader: &mut Reader, state: &mut State) {
                             return;
                         }
 
-                        _ => dart_parseerror(
+                        _ => parseerror(
                                 format!("Unexpected token: {}", reader.tok()),
                                 state,
                                 reader.tok()
@@ -166,7 +166,7 @@ fn decl(reader: &mut Reader, state: &mut State) {
                             return;
                         }
 
-                        x => dart_parseerror(
+                        x => parseerror(
                             format!("Unexpected token: {}", x),
                             state,
                             reader.tok()
@@ -174,7 +174,7 @@ fn decl(reader: &mut Reader, state: &mut State) {
                     }
                 }
 
-                _ => dart_parseerror(
+                _ => parseerror(
                         "Expected name after 'const'.",
                         state,
                         reader.tok()
@@ -188,7 +188,7 @@ fn decl(reader: &mut Reader, state: &mut State) {
 
         Token::Import(_, _) => {
             // As Dart.
-            dart_parseerror(
+            parseerror(
                 "Directives must appear before any declarations.",
                 state,
                 reader.tok()
@@ -226,7 +226,7 @@ fn class(reader: &mut Reader, state: &mut State) {
                                     reader.skip("}", state);
                                 }
                 
-                                x => dart_parseerror(
+                                x => parseerror(
                                     format!("Unexpected token: {}", x),
                                     state,
                                     reader.tok()
@@ -234,7 +234,7 @@ fn class(reader: &mut Reader, state: &mut State) {
                             }
                         }
                         
-                        x => dart_parseerror(
+                        x => parseerror(
                             format!("Expected parent class name. Got: {}", x),
                             state,
                             x
@@ -248,7 +248,7 @@ fn class(reader: &mut Reader, state: &mut State) {
                     reader.skip("}", state);
                 }
 
-                x => dart_parseerror(
+                x => parseerror(
                     format!("Unexpected token: {}", x),
                     state,
                     x
@@ -306,7 +306,7 @@ fn readmembers(class: &mut Class, reader: &mut Reader, state: &mut State) {
                         }
 
                         x => {
-                            dart_parseerror(
+                            parseerror(
                                 format!("Expected constructor body, got: {}", x),
                                 state,
                                 reader.tok()
@@ -448,7 +448,7 @@ fn constructor_paramlist(reader: &mut Reader, state: &State) -> Node {
                         }
 
                         x => {
-                            dart_parseerror(
+                            parseerror(
                                 format!("Expected identifier. Got {}", x),
                                 state,
                                 reader.tok()
@@ -460,7 +460,7 @@ fn constructor_paramlist(reader: &mut Reader, state: &State) -> Node {
                 Token::Comma(_, _) => {
                     if !expect_comma {
                         // As dart.
-                        dart_parseerror(
+                        parseerror(
                             "Expected an identifier, but got ','.",
                             state,
                             reader.tok() 
@@ -486,7 +486,7 @@ fn constructor_paramlist(reader: &mut Reader, state: &State) -> Node {
         }
     }
     else {
-        dart_parseerror(
+        parseerror(
             "Expected parameter list after constructor declaration.",
             state,
             reader.tok()
@@ -558,7 +558,7 @@ fn paramlist(reader: &mut Reader, state: &State) -> Node {
         }
     }
     else {
-        dart_parseerror(
+        parseerror(
             "Expected parameter list after function declaration.",
             state,
             reader.tok()
@@ -918,7 +918,7 @@ fn statement(reader: &mut Reader, state: &State) -> Node {
                                     return forloop;
                                 }
 
-                                x => dart_parseerror(
+                                x => parseerror(
                                     format!("Unexpected token in for-loop: {}", x),
                                     state,
                                     reader.tok()
@@ -965,7 +965,7 @@ fn statement(reader: &mut Reader, state: &State) -> Node {
                         }
 
                         x => {
-                            dart_parseerror(
+                            parseerror(
                                 format!("Expected identifier or assignment. Got: {}", x),
                                 state,
                                 reader.tok()
@@ -975,7 +975,7 @@ fn statement(reader: &mut Reader, state: &State) -> Node {
                 }
 
                 _ => {
-                    dart_parseerror(
+                    parseerror(
                         "Expected identifier.",
                         state,
                         reader.tok()

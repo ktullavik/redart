@@ -4,7 +4,7 @@ use crate::node::{Node, NodeType};
 use crate::object::{Object, ParamObj};
 use crate::objsys::RefKey;
 use crate::state::State;
-use crate::error::dart_evalerror;
+use crate::error::evalerror;
 
 
 pub enum MaybeRef {
@@ -27,7 +27,7 @@ pub fn set_list_element(ulist_ref: Object, index: Object, value: Object, state: 
 
                 if let Object::Int(i) = index {
                     if i < 0 {
-                        dart_evalerror("Index must be positive.", state, indexnode)
+                        evalerror("Index must be positive.", state, indexnode)
                     }
 
                     ilist.set_el(i as usize, value);
@@ -77,7 +77,7 @@ pub fn call_function(
         Object::Function(funcname, filename, body, params) => {
 
             if args.children.len() != params.len() {
-                dart_evalerror(
+                evalerror(
                     format!("In method call {}, {} arguments expected but {} given.",
                         funcname, params.len(), args.children.len()),
                     state,
