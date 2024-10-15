@@ -55,18 +55,18 @@ impl Class {
     }
 
 
-    pub fn get_method(&self, name: &str, state: &State) -> Object {
+    pub fn get_method(&self, name: &str, state: &State, mnode: &Node) -> Object {
 
         if self.methods.contains_key(name) {
             return self.methods[name].clone();
         }
 
         if self.parent == "" {
-            dart_evalerror(format!("No such method: '{}'.", name), state)            
+            dart_evalerror(format!("No such method: '{}'.", name), state, mnode)
         }
 
         let p = state.objsys.get_class(self.parent.as_str());
-        p.get_method(name, state)
+        p.get_method(name, state, mnode)
     }
 
 

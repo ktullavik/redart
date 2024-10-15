@@ -34,10 +34,10 @@ fn disjunction(reader: &mut Reader, state: &State) -> Node {
 
     match reader.tok() {
 
-        Token::LogOr(_, _) => {
+        Token::LogOr(linenum, symnum) => {
             reader.next();
             let right = disjunction(reader, state);
-            let mut disnode = Node::new(NodeType::LogOr);
+            let mut disnode = Node::new(NodeType::LogOr(linenum, symnum));
             disnode.children.push(left);
             disnode.children.push(right);
             disnode
@@ -58,10 +58,10 @@ fn conjunction(reader: &mut Reader, state: &State) -> Node {
 
     match reader.tok() {
 
-        Token::LogAnd(_, _) => {
+        Token::LogAnd(linenum, symnum) => {
             reader.next();
             let right = conjunction(reader, state);
-            let mut connode = Node::new(NodeType::LogAnd);
+            let mut connode = Node::new(NodeType::LogAnd(linenum, symnum));
             connode.children.push(left);
             connode.children.push(right);
             connode
@@ -82,10 +82,10 @@ fn equality(reader: &mut Reader, state: &State) -> Node {
 
     match reader.tok() {
 
-        Token::Equal(_, _) => {
+        Token::Equal(linenum, symnum) => {
             reader.next();
             let right = comparison(reader, state);
-            let mut eqnode = Node::new(NodeType::Equal);
+            let mut eqnode = Node::new(NodeType::Equal(linenum, symnum));
             eqnode.children.push(left);
             eqnode.children.push(right);
             eqnode
@@ -106,34 +106,34 @@ fn comparison(reader: &mut Reader, state: &State) -> Node {
 
     match reader.tok() {
 
-        Token::LessThan(_, _) => {
+        Token::LessThan(linenum, symnum) => {
             reader.next();
             let right = bit_or(reader, state);
-            let mut connode = Node::new(NodeType::LessThan);
+            let mut connode = Node::new(NodeType::LessThan(linenum, symnum));
             connode.children.push(left);
             connode.children.push(right);
             connode
         }
-        Token::GreaterThan(_, _) => {
+        Token::GreaterThan(linenum, symnum) => {
             reader.next();
             let right = bit_or(reader, state);
-            let mut connode = Node::new(NodeType::GreaterThan);
+            let mut connode = Node::new(NodeType::GreaterThan(linenum, symnum));
             connode.children.push(left);
             connode.children.push(right);
             connode
         }
-        Token::LessOrEq(_, _) => {
+        Token::LessOrEq(linenum, symnum) => {
             reader.next();
             let right = bit_or(reader, state);
-            let mut connode = Node::new(NodeType::LessOrEq);
+            let mut connode = Node::new(NodeType::LessOrEq(linenum, symnum));
             connode.children.push(left);
             connode.children.push(right);
             connode
         }
-        Token::GreaterOrEq(_, _) => {
+        Token::GreaterOrEq(linenum, symnum) => {
             reader.next();
             let right= bit_or(reader, state);
-            let mut connode = Node::new(NodeType::GreaterOrEq);
+            let mut connode = Node::new(NodeType::GreaterOrEq(linenum, symnum));
             connode.children.push(left);
             connode.children.push(right);
             connode
@@ -152,9 +152,9 @@ fn bit_or(reader: &mut Reader, state: &State) -> Node {
     }
 
     match reader.tok() {
-        Token::BitOr(_, _) => {
+        Token::BitOr(linenum, symnum) => {
 
-            let mut node = Node::new(NodeType::BitOr);
+            let mut node = Node::new(NodeType::BitOr(linenum, symnum));
             node.children.push(left);
             reader.next();
             let right = bit_or(reader, state);
@@ -175,9 +175,9 @@ fn bit_xor(reader: &mut Reader, state: &State) -> Node {
     }
 
     match reader.tok() {
-        Token::BitXor(_, _) => {
+        Token::BitXor(linenum, symnum) => {
 
-            let mut node = Node::new(NodeType::BitXor);
+            let mut node = Node::new(NodeType::BitXor(linenum, symnum));
             node.children.push(left);
             reader.next();
             let right = bit_xor(reader, state);
@@ -198,9 +198,9 @@ fn bit_and(reader: &mut Reader, state: &State) -> Node {
     }
 
     match reader.tok() {
-        Token::BitAnd(_, _) => {
+        Token::BitAnd(linenum, symnum) => {
 
-            let mut node = Node::new(NodeType::BitAnd);
+            let mut node = Node::new(NodeType::BitAnd(linenum, symnum));
             node.children.push(left);
             reader.next();
             let right = bit_and(reader, state);
@@ -228,8 +228,8 @@ fn sum_help(reader: &mut Reader, righties: &mut Queue<Node>, ops: &mut Queue<Nod
 
     match reader.tok() {
 
-        Token::Add(_, _) => {
-            ops.add(Node::new(NodeType::Add)).ok();
+        Token::Add(linenum, symnum) => {
+            ops.add(Node::new(NodeType::Add(linenum, symnum))).ok();
             reader.next();
             let deeper = sum_help(reader, righties, ops, state);
             let mut node = ops.remove().unwrap();
@@ -237,8 +237,8 @@ fn sum_help(reader: &mut Reader, righties: &mut Queue<Node>, ops: &mut Queue<Nod
             node.children.push(righties.remove().unwrap());
             node
         }
-        Token::Sub(_, _) => {
-            ops.add(Node::new(NodeType::Sub)).ok();
+        Token::Sub(linenum, symnum) => {
+            ops.add(Node::new(NodeType::Sub(linenum, symnum))).ok();
             reader.next();
             let deeper = sum_help(reader, righties, ops, state);
             let mut node = ops.remove().unwrap();
@@ -270,8 +270,8 @@ fn product_help(reader: &mut Reader, righties: &mut Queue<Node>, ops: &mut Queue
 
     match reader.tok() {
 
-        Token::Mul(_, _) => {
-            ops.add(Node::new(NodeType::Mul)).ok();
+        Token::Mul(linenum, symnum) => {
+            ops.add(Node::new(NodeType::Mul(linenum, symnum))).ok();
             reader.next();
             let deeper = product_help(reader, righties, ops, ctx);
             let mut node = ops.remove().unwrap();
@@ -279,8 +279,8 @@ fn product_help(reader: &mut Reader, righties: &mut Queue<Node>, ops: &mut Queue
             node.children.push(righties.remove().unwrap());
             node
         }
-        Token::Div(_, _) => {
-            ops.add(Node::new(NodeType::Div)).ok();
+        Token::Div(linenum, symnum) => {
+            ops.add(Node::new(NodeType::Div(linenum, symnum))).ok();
             reader.next();
             let deeper = product_help(reader, righties, ops, ctx);
             let mut node = ops.remove().unwrap();
@@ -301,14 +301,18 @@ fn postop(reader: &mut Reader, ctx: &State) -> Node {
 
     match reader.tok() {
 
-        Token::Decrement(_, _) => {
+        Token::Decrement(linenum, symnum) => {
 
             reader.next();
 
             match node.nodetype {
-                NodeType::Name(s) => {
-                    let mut decnode = Node::new(NodeType::PostDecrement);
-                    let n = Node::new(NodeType::Name(s.clone()));
+                NodeType::Name(s, name_linenum, name_symnum) => {
+                    let mut decnode = Node::new(
+                        NodeType::PostDecrement(linenum, symnum)
+                    );
+                    let n = Node::new(
+                        NodeType::Name(s.clone(), name_linenum, name_symnum)
+                    );
                     decnode.children.push(n);
                     decnode
                 }
@@ -319,14 +323,18 @@ fn postop(reader: &mut Reader, ctx: &State) -> Node {
             }
         }
 
-        Token::Increment(_, _) => {
+        Token::Increment(linenum, symnum) => {
 
             reader.next();
 
             match node.nodetype {
-                NodeType::Name(s) => {
-                    let mut decnode = Node::new(NodeType::PostIncrement);
-                    let n = Node::new(NodeType::Name(s.clone()));
+                NodeType::Name(s, name_linenum, name_symnum) => {
+                    let mut decnode = Node::new(
+                        NodeType::PostIncrement(linenum, symnum)
+                    );
+                    let n = Node::new(
+                        NodeType::Name(s.clone(), name_linenum, name_symnum)
+                    );
                     decnode.children.push(n);
                     decnode
                 }
@@ -364,12 +372,14 @@ pub fn access_help(reader: &mut Reader, owner: Node, ctx: &State) -> Node {
 
             match reader.next() {
 
-                Token::Name(name, _, _) => {
+                Token::Name(name, linenum, symnum) => {
 
                     if !reader.more() {
                         // This path is taken when we have string interpolation with dots.
                         // Eg: print("${a.b}");
-                        let mut node = Node::new(NodeType::Name(name.clone()));
+                        let mut node = Node::new(
+                            NodeType::Name(name.clone(), linenum, symnum)
+                        );
                         node.children.push(owner);
                         return node;
                     }
@@ -378,25 +388,46 @@ pub fn access_help(reader: &mut Reader, owner: Node, ctx: &State) -> Node {
 
                         Token::Paren1(_, _) => {
                             let node = arglist(reader, ctx);
-                            let mut funcall_node = Node::new(NodeType::MethodCall(name.to_string(), Box::new(owner), ctx.filepath.clone()));
+                            let mut funcall_node = Node::new(
+                                NodeType::MethodCall(
+                                    name.to_string(),
+                                    Box::new(owner),
+                                    ctx.filepath.clone(),
+                                    linenum,
+                                    symnum
+                            ));
                             funcall_node.children.push(node);
                             access_help(reader, funcall_node, ctx)
                         }
 
+                        // FIXME, the next two are identical
+
                         Token::Brack1(_, _) => {
-                            let mut node = Node::new(NodeType::Name(name.clone()));
+                            let mut node = Node::new(
+                                NodeType::Name(
+                                    name.clone(),
+                                    linenum,
+                                    symnum
+                            ));
                             node.children.push(owner);
                             access_help(reader, node, ctx)
                         }
 
                         Token::Access(_, _) => {
-                            let mut node = Node::new(NodeType::Name(name.clone()));
+                            let mut node = Node::new(
+                                NodeType::Name(
+                                    name.clone(),
+                                    linenum,
+                                    symnum
+                            ));
                             node.children.push(owner);
                             access_help(reader, node, ctx)
                         }
 
                         _ => {
-                            let mut node = Node::new(NodeType::Name(name.clone()));
+                            let mut node = Node::new(
+                                NodeType::Name(name.clone(), linenum, symnum)
+                            );
                             node.children.push(owner);
                             node
                         }
@@ -408,11 +439,13 @@ pub fn access_help(reader: &mut Reader, owner: Node, ctx: &State) -> Node {
                 }
             }
         }
-        Token::Brack1(_, _) => {
+        Token::Brack1(linenum, symnum) => {
             reader.next();
             let index_node = expression(reader, ctx);
             reader.skip("]", ctx);
-            let mut collaccess = Node::new(NodeType::CollAccess);
+            let mut collaccess = Node::new(
+                NodeType::CollAccess(linenum, symnum)
+            );
             collaccess.children.push(owner);
             collaccess.children.push(index_node);
             if let Token::Brack1(_, _) = reader.tok() {
@@ -429,14 +462,14 @@ fn term(reader: &mut Reader, state: &State) -> Node {
 
     match reader.tok() {
 
-        Token::Int(val, _, _) => {
+        Token::Int(val, linenum, symnum) => {
             reader.next();
-            Node::new(NodeType::Int(val))
+            Node::new(NodeType::Int(val, linenum, symnum))
         }
 
-        Token::Double(val, _, _) => {
+        Token::Double(val, linenum, symnum) => {
             reader.next();
-            Node::new(NodeType::Double(val))
+            Node::new(NodeType::Double(val, linenum, symnum))
         }
 
         Token::Add(_, _) => {
@@ -448,29 +481,31 @@ fn term(reader: &mut Reader, state: &State) -> Node {
             );
         }
 
-        Token::Sub(_, _) => {
+        Token::Sub(linenum, symnum) => {
             // This handles unary minus.
             reader.next();
-            let mut unary = Node::new(NodeType::Sub);
+            let mut unary = Node::new(NodeType::Sub(linenum, symnum));
             let next = term(reader, state);
             unary.children.push(next);
             unary
         }
 
-        Token::Not(_, _) => {
+        Token::Not(linenum, symnum) => {
             reader.next();
-            let mut notnode = Node::new(NodeType::Not);
+            let mut notnode = Node::new(NodeType::Not(linenum, symnum));
             let next = term(reader, state);
             notnode.children.push(next);
             notnode
         }
 
-        Token::Str(ref s, interpols, _, _) => {
+        Token::Str(ref s, interpols, linenum, symnum) => {
+
+            let mut node = Node::new(NodeType::Str(s.clone(), linenum, symnum));
+
             if interpols.is_empty() {
                 reader.next();
-                return Node::new(NodeType::Str(s.clone()))
+                return node;
             }
-            let mut node = Node::new(NodeType::Str(s.clone()));
 
             for itp in interpols {
                 let mut r = Reader::new(itp);
@@ -484,52 +519,64 @@ fn term(reader: &mut Reader, state: &State) -> Node {
             node
         }
 
-        Token::Bool(v, _, _) => {
+        Token::Bool(v, linenum, symnum) => {
             reader.next();
-            Node::new(NodeType::Bool(v))
+            Node::new(NodeType::Bool(v, linenum, symnum))
         }
 
-        Token::Name(ref s, _, _) => {
+        Token::Name(ref s, linenum, symnum) => {
 
             if reader.more() {
                 match reader.next() {
                     Token::Paren1(_, _) => {
                         // Function call.
                         let args_node = arglist(reader, state);
-                        let mut funcall_node = Node::new(NodeType::FunCall(s.to_string()));
+                        let mut funcall_node = Node::new(
+                            NodeType::FunCall(s.to_string(), linenum, symnum)
+                        );
                         funcall_node.children.push(args_node);
                         return funcall_node;
                     }
                     Token::Brack1(_, _) => {
-                        let node = Node::new(NodeType::Name(s.clone()));
+                        let node = Node::new(
+                            NodeType::Name(s.clone(), linenum, symnum)
+                        );
                         return access_help(reader, node, state);
                     }
                     _ => {}
                 }
             }
-            Node::new(NodeType::Name(s.clone()))
+            Node::new(NodeType::Name(s.clone(), linenum, symnum))
         }
 
-        Token::Increment(_, _) => {
+        Token::Increment(linenum, symnum) => {
 
             match reader.next() {
-                Token::Name(name, _, _) => {
+                Token::Name(name, name_linenum, name_symnum) => {
                     reader.next();
-                    let mut node = Node::new(NodeType::PreIncrement);
-                    node.children.push(Node::new(NodeType::Name(name)));
+                    let mut node = Node::new(
+                        NodeType::PreIncrement(linenum, symnum)
+                    );
+                    node.children.push(Node::new(
+                        NodeType::Name(name, name_linenum, name_symnum))
+                    );
                     node
                 }
                 x => panic!("Invalid operand for increment: {}", x)
             }
         }
 
-        Token::Decrement(_, _) => {
+        Token::Decrement(linenum, symnum) => {
 
             match reader.next() {
-                Token::Name(name, _, _) => {
+                Token::Name(name, name_linenum, name_symnum) => {
                     reader.next();
-                    let mut node = Node::new(NodeType::PreDecrement);
-                    node.children.push(Node::new(NodeType::Name(name)));
+                    let mut node = Node::new(
+                        NodeType::PreDecrement(linenum, symnum)
+                    );
+                    node.children.push(Node::new(
+                        NodeType::Name(name, name_linenum, name_symnum))
+                    );
                     node
                 }
                 x => panic!("Invalid operand for decrement: {}", x)
@@ -543,10 +590,10 @@ fn term(reader: &mut Reader, state: &State) -> Node {
             wnode
         }
 
-        Token::Brack1(_, _) => {
+        Token::Brack1(linenum, symnum) => {
 
             reader.next();
-            let mut list_node = Node::new(NodeType::List);
+            let mut list_node = Node::new(NodeType::List(linenum, symnum));
             let mut expect_sep = false;
 
             match reader.tok() {
@@ -588,9 +635,9 @@ fn term(reader: &mut Reader, state: &State) -> Node {
             }
         }
 
-        Token::This(_, _) => {
+        Token::This(linenum, symnum) => {
             reader.next();
-            Node::new(NodeType::This)
+            Node::new(NodeType::This(linenum, symnum))
         }
 
         x => {

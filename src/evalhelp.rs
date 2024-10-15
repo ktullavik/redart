@@ -13,7 +13,7 @@ pub enum MaybeRef {
 }
 
 
-pub fn set_list_element(ulist_ref: Object, index: Object, value: Object, state: &mut State) -> Object {
+pub fn set_list_element(ulist_ref: Object, index: Object, value: Object, state: &mut State, indexnode: &Node) -> Object {
 
     match ulist_ref {
 
@@ -27,7 +27,7 @@ pub fn set_list_element(ulist_ref: Object, index: Object, value: Object, state: 
 
                 if let Object::Int(i) = index {
                     if i < 0 {
-                        dart_evalerror("Index must be positive.", state)
+                        dart_evalerror("Index must be positive.", state, indexnode)
                     }
 
                     ilist.set_el(i as usize, value);
@@ -45,7 +45,7 @@ pub fn create_function(funcnode: &Node) -> Object {
 
     match &funcnode.nodetype {
 
-        NodeType::FunDef(fname, filename) => {
+        NodeType::FunDef(fname, filename, _, _) => {
             let paramnodes = &funcnode.children[0];
             let bodynode = &funcnode.children[1];
             let mut paramobjs: Vec<ParamObj> = Vec::new();
@@ -53,7 +53,7 @@ pub fn create_function(funcnode: &Node) -> Object {
             for i in 0..paramnodes.children.len() {
                 let p = &paramnodes.children[i];
                 match &p.nodetype {
-                    NodeType::Name(s) => {
+                    NodeType::Name(s, _, _) => {
                         paramobjs.push(ParamObj { typ: String::from("var"), name: s.clone(), fieldinit: false });
                     }
                     x => panic!("Invalid parameter: {}", x)
@@ -77,8 +77,12 @@ pub fn call_function(
         Object::Function(funcname, filename, body, params) => {
 
             if args.children.len() != params.len() {
-                dart_evalerror(format!("In method call {}, {} arguments expected but {} given.",
-                funcname, params.len(), args.children.len()), state);
+                dart_evalerror(
+                    format!("In method call {}, {} arguments expected but {} given.",
+                        funcname, params.len(), args.children.len()),
+                    state,
+                    args
+                );
             }
     
             let mut argobjs = argnodes_to_argobjs(
@@ -132,7 +136,7 @@ pub fn create_constructor(funcnode: &Node) -> Object {
 
     match &funcnode.nodetype {
 
-        NodeType::Constructor(cname, filename) => {
+        NodeType::Constructor(cname, filename, _, _) => {
 
             let paramnodes = &funcnode.children[0];
             let bodynode = &funcnode.children[1];
@@ -142,10 +146,10 @@ pub fn create_constructor(funcnode: &Node) -> Object {
             for i in 0..paramnodes.children.len() {
                 let p = &paramnodes.children[i];
                 match &p.nodetype {
-                    NodeType::Name(s) => {
+                    NodeType::Name(s, _, _) => {
                         paramobjs.push(ParamObj{ typ: String::from(""), name: s.clone(), fieldinit: false });
                     }
-                    NodeType::ThisFieldInit(s) => {
+                    NodeType::ThisFieldInit(s, _, _) => {
                         paramobjs.push(ParamObj{ typ: String::from(""), name: s.clone(), fieldinit: true });
                     }
                     x => panic!("Invalid parameter: {}", x)
@@ -219,7 +223,7 @@ pub fn call_constructor(
                     // TODO: initializer list
 
                     if parent_name != "" {
-                        let parent_args = &Node::new(NodeType::ArgList);
+                        let parent_args = &Node::new(NodeType::ArgList(0, 0));
 
                         let ltable = &state.looktables[&state.filepath];
                         if ltable.contains_key(parent_name.as_str()) {
@@ -228,7 +232,7 @@ pub fn call_constructor(
                             let parent_cons = &state.globals[*parent_cons_index];
 
                             match parent_cons.nodetype {
-                                NodeType::Constructor(_, _) => {
+                                NodeType::Constructor(_, _, _, _) => {
                                     let parent_rk = call_constructor(&create_constructor(parent_cons), parent_args, state);
                                     let inst = state.objsys.get_this_instance_mut();
                                     inst.parent = MaybeObject::Some(parent_rk);

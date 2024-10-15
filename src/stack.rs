@@ -170,7 +170,7 @@ impl Stack {
 
         for node in globals {
             match node.nodetype.clone() {
-                NodeType::TopVar(_, _, val) => {
+                NodeType::TopVar(_, _, val, _, _) => {
                     match *val {
                         Object::Reference(rk) => {
                             trashman::mark(objsys, &rk);

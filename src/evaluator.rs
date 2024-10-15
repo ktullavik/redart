@@ -21,10 +21,10 @@ pub fn eval(
 
     match t {
 
-        NodeType::Assign => {
+        NodeType::Assign(_, _) => {
 
             match &node.children[0].nodetype {
-                NodeType::Name(name) => {
+                NodeType::Name(name, linenum, symnum) => {
 
                     let right_obj = eval(&node.children[1], state);
 
@@ -62,23 +62,39 @@ pub fn eval(
 
                         match &n.nodetype {
 
-                            NodeType::TopVarLazy(typ, _) |
-                            NodeType::TopVar(typ, _, _) => {
-                                let newval = Node::new(NodeType::TopVar(typ.clone(), name.clone(), Box::new(right_obj)));
+                            NodeType::TopVarLazy(typ, _, _, _) |
+                            NodeType::TopVar(typ, _, _, _, _) => {
+                                let newval = Node::new(
+                                    NodeType::TopVar(
+                                        typ.clone(),
+                                        name.clone(),
+                                        Box::new(right_obj),
+                                        linenum.clone(),
+                                        symnum.clone()
+                                    )
+                                );
                                 state.globals[global_index] = newval;
                                 return Object::Null;
                             }
-                            NodeType::ConstTopLazy(_, name) |
-                            NodeType::ConstTopVar(_, name, _) => {
-                                dart_evalerror(format!("Cannot change const: {}", name), state)
+                            NodeType::ConstTopLazy(_, name, _, _) |
+                            NodeType::ConstTopVar(_, name, _, _, _) => {
+                                dart_evalerror(format!(
+                                    "Cannot change const: {}", name),
+                                    state,
+                                    &n
+                                )
                             }
                             _ => panic!("Unexpected node type in globals: {}", n)
                         }
                     }
 
-                    dart_evalerror(format!("Setter not found: '{}'", name), state)
+                    dart_evalerror(
+                        format!("Setter not found: '{}'", name),
+                        state,
+                        &node.children[0]
+                    )
                 }
-                NodeType::TypedVar(_, name) => {
+                NodeType::TypedVar(_, name, _, _) => {
 
                     let right_obj = eval(&node.children[1], state);
 
@@ -86,26 +102,30 @@ pub fn eval(
                     // larger scope, like outside a loop or in a field. But fail if it's already on lex stack.
                     if state.stack.has_in_lexscope(name) {
                         // As dart.
-                        dart_evalerror(format!("'{}' is already declared in this scope.", name), state);
+                        dart_evalerror(
+                            format!("'{}' is already declared in this scope.", name),
+                            state,
+                            &node.children[0]
+                        );
                     }
                     state.stack.add_new(name, right_obj);
 
                     return Object::Null;
                 }
 
-                NodeType::CollAccess => {
+                NodeType::CollAccess(_, _) => {
 
                     let right_obj = eval(&node.children[1], state);
 
                     match &node.children[0].children[0].nodetype {
 
-                        NodeType::Name(name) => {
+                        NodeType::Name(name, linenum, symnum) => {
 
                             // Look on the stack.
                             if state.stack.has(name) {
                                 let ulist_ref = state.stack.get(name).clone();
                                 let index = eval(&node.children[0].children[1], state);
-                                set_list_element(ulist_ref, index, right_obj, state);
+                                set_list_element(ulist_ref, index, right_obj, state, &node.children[0].children[1]);
                                 return Object::Null;
                             }
 
@@ -117,7 +137,7 @@ pub fn eval(
                                 if this.has_field(name.to_string()) {
                                     let ulist_ref = this.get_field(name.to_string()).clone();
                                     let index = eval(&node.children[0].children[1], state);
-                                    set_list_element(ulist_ref, index, right_obj, state);
+                                    set_list_element(ulist_ref, index, right_obj, state, &node.children[0].children[1]);
                                     return Object::Null;
                                 }
                                 else {
@@ -133,42 +153,56 @@ pub fn eval(
 
                                 match &n.nodetype {
 
-                                    NodeType::TopVarLazy(typ, name) => {
+                                    NodeType::TopVarLazy(typ, name, _, _) => {
                                         // Eval lazy and replace.
 
                                         if *name == state.eval_var {
-                                            dart_evalerror(format!("Top level variable '{}' depends on itself.", name), state);
+                                            dart_evalerror(format!("Top level variable '{}' depends on itself.", name), state, node);
                                         }
                                         if state.eval_var.len() == 0 {
                                             state.eval_var = name.clone();
                                         }
 
                                         let compval = eval(&n.children[0], state);
-                                        let wrapped = Node::new(NodeType::TopVar(typ.clone(), name.clone(), Box::new(compval)));
+                                        let wrapped = Node::new(NodeType::TopVar(
+                                            typ.clone(),
+                                            name.clone(),
+                                            Box::new(compval),
+                                            linenum.clone(),
+                                            symnum.clone()
+                                        ));
                                         state.eval_var = String::from("");
                                         state.globals[global_index] = wrapped;
 
                                         let ulist_ref = eval(&node.children[0].children[0], state);
                                         let index = eval(&node.children[0].children[1], state);
-                                        set_list_element(ulist_ref, index, right_obj, state);
+                                        set_list_element(ulist_ref, index, right_obj, state, &node.children[0].children[1]);
                                     }
 
-                                    NodeType::TopVar(_,  _, _) => {
+                                    NodeType::TopVar(_,  _, _, _, _) => {
                                         let ulist_ref = eval(&node.children[0].children[0], state);
                                         let index = eval(&node.children[0].children[1], state);
-                                        set_list_element(ulist_ref, index, right_obj, state);
+                                        set_list_element(ulist_ref, index, right_obj, state, &node.children[0].children[1]);
                                     }
-                                    NodeType::ConstTopLazy(_, _) |
-                                    NodeType::ConstTopVar(_, _, _) => {
+                                    NodeType::ConstTopLazy(_, _, _, _) |
+                                    NodeType::ConstTopVar(_, _, _, _, _) => {
                                         // As dart.
-                                        dart_evalerror("Unsupported operation: Cannot modify an unmodifiable list", state)
+                                        dart_evalerror(
+                                            "Unsupported operation: Cannot modify an unmodifiable list",
+                                            state,
+                                            node
+                                        )
                                     }
                                     _ => panic!("Unexpected node type in globals: {}", n)
                                 }
                                 return Object::Null;
                             }
                         }
-                        x => dart_evalerror(format!("Unexpected token: {}", x), state)
+                        x => dart_evalerror(
+                            format!("Unexpected token: {}", x),
+                            state,
+                            &node.children[0].children[0]
+                        )
                     }
                     return Object::Null;
                 }
@@ -176,7 +210,7 @@ pub fn eval(
             }
         }
 
-        NodeType::Not => {
+        NodeType::Not(_, _) => {
 
             let obj = eval(&node.children[0], state);
 
@@ -184,11 +218,15 @@ pub fn eval(
                 Object::Bool(b) => {
                     Object::Bool(!b)
                 }
-                _ => dart_evalerror(format!("Illegal right operand for !: {}", obj), state)                    
+                _ => dart_evalerror(
+                    format!("Illegal operand for !: {}", obj),
+                    state,
+                    &node.children[0]
+                )                    
             }
         }
 
-        NodeType::LogOr => {
+        NodeType::LogOr(_, _) => {
 
             let left_obj = eval(&node.children[0], state);
 
@@ -201,14 +239,22 @@ pub fn eval(
                         Object::Bool(b2) => {
                             return Object::Bool(b1 || b2)
                         }
-                        _ => dart_evalerror(format!("Illegal right operand for ||: {}", right_obj), state)                    
+                        _ => dart_evalerror(
+                            format!("Illegal right operand for ||: {}", right_obj),
+                            state,
+                            &node.children[1]
+                        )                    
                     }
                 }
-                _ => dart_evalerror(format!("Illegal left operand for ||: {}", left_obj), state)                    
+                _ => dart_evalerror(
+                    format!("Illegal left operand for ||: {}", left_obj),
+                    state,
+                    &node.children[0]
+                )                    
             }
         }
 
-        NodeType::LogAnd => {
+        NodeType::LogAnd(_, _) => {
 
             let left_obj = eval(&node.children[0], state);
 
@@ -221,14 +267,22 @@ pub fn eval(
                         Object::Bool(b2) => {
                             return Object::Bool(b1 && b2)
                         }
-                        _ => dart_evalerror(format!("Illegal right operand for &&: {}", right_obj), state)
+                        _ => dart_evalerror(
+                            format!("Illegal right operand for &&: {}", right_obj),
+                            state,
+                            &node.children[1]
+                        )
                     }
                 }
-                _ => dart_evalerror(format!("Illegal left operand for &&: {}", left_obj), state)
+                _ => dart_evalerror(
+                    format!("Illegal left operand for &&: {}", left_obj),
+                    state,
+                    &node.children[0]
+                )
             }
         }
 
-        NodeType::LessThan => {
+        NodeType::LessThan(_, _) => {
 
             let left_obj = eval(&node.children[0], state);
 
@@ -244,7 +298,11 @@ pub fn eval(
                         Object::Double(x2) => {
                             return Object::Bool((n1 as f64) < x2)
                         }
-                        _ => dart_evalerror(format!("Illegal right operand for comparison: {}", right_obj), state)
+                        _ => dart_evalerror(
+                            format!("Illegal right operand for comparison: {}", right_obj),
+                            state,
+                            &node.children[1]
+                        )
                     }
                 }
 
@@ -258,14 +316,22 @@ pub fn eval(
                         Object::Double(x2) => {
                             return Object::Bool(x1 < x2)
                         }
-                        _ => dart_evalerror(format!("Illegal right operand for comparison: {}", right_obj), state)
+                        _ => dart_evalerror(
+                            format!("Illegal right operand for comparison: {}", right_obj),
+                            state,
+                            &node.children[1]
+                        )
                     }
                 }
-                _ => dart_evalerror(format!("Illegal left operand for comparison: {}", left_obj), state)
+                _ => dart_evalerror(
+                    format!("Illegal left operand for comparison: {}", left_obj),
+                    state,
+                    &node.children[0]
+                )
             }
         }
 
-        NodeType::GreaterThan => {
+        NodeType::GreaterThan(_, _) => {
 
             let left_obj = eval(&node.children[0], state);
 
@@ -281,7 +347,11 @@ pub fn eval(
                         Object::Double(x2) => {
                             return Object::Bool((n1 as f64) > x2)
                         }
-                        _ => dart_evalerror(format!("Illegal right operand for comparison: {}", right_obj), state)
+                        _ => dart_evalerror(
+                            format!("Illegal right operand for comparison: {}", right_obj),
+                            state,
+                            &node.children[1]
+                        )
                     }
                 }
 
@@ -295,14 +365,22 @@ pub fn eval(
                         Object::Double(x2) => {
                             return Object::Bool(x1 > x2)
                         }
-                        _ => dart_evalerror(format!("Illegal right operand for comparison: {}", right_obj), state)
+                        _ => dart_evalerror(
+                            format!("Illegal right operand for comparison: {}", right_obj),
+                            state,
+                            &node.children[1]
+                        )
                     }
                 }
-                _ => dart_evalerror(format!("Illegal left operand for comparison: {}", left_obj), state)
+                _ => dart_evalerror(
+                    format!("Illegal left operand for comparison: {}", left_obj),
+                    state,
+                    &node.children[0]
+                )
             }
         }
 
-        NodeType::LessOrEq => {
+        NodeType::LessOrEq(_, _) => {
 
             let left_obj = eval(&node.children[0], state);
 
@@ -318,7 +396,11 @@ pub fn eval(
                         Object::Double(x2) => {
                             return Object::Bool((n1 as f64) <= x2)
                         }
-                        _ => dart_evalerror(format!("Illegal right operand for comparison: {}", right_obj), state)
+                        _ => dart_evalerror(
+                            format!("Illegal right operand for comparison: {}", right_obj),
+                            state,
+                            &node.children[1]
+                        )
                     }
                 }
 
@@ -332,14 +414,22 @@ pub fn eval(
                         Object::Double(x2) => {
                             return Object::Bool(x1 <= x2)
                         }
-                        _ => dart_evalerror(format!("Illegal right operand for comparison: {}", right_obj), state)
+                        _ => dart_evalerror(
+                            format!("Illegal right operand for comparison: {}", right_obj),
+                            state,
+                            &node.children[1]
+                        )
                     }
                 }
-                _ => dart_evalerror(format!("Illegal left operand for comparison: {}", left_obj), state)
+                _ => dart_evalerror(
+                    format!("Illegal left operand for comparison: {}", left_obj),
+                    state,
+                    &node.children[0]
+                )
             }
         }
 
-        NodeType::GreaterOrEq => {
+        NodeType::GreaterOrEq(_, _) => {
 
             let left_obj = eval(&node.children[0], state);
 
@@ -355,7 +445,11 @@ pub fn eval(
                         Object::Double(x2) => {
                             return Object::Bool((n1 as f64) >= x2)
                         }
-                        _ => dart_evalerror(format!("Illegal right operand for comparison: {}", right_obj), state)
+                        _ => dart_evalerror(
+                            format!("Illegal right operand for comparison: {}", right_obj),
+                            state,
+                            &node.children[1]
+                        )
                     }
                 }
 
@@ -369,14 +463,22 @@ pub fn eval(
                         Object::Double(x2) => {
                             return Object::Bool(x1 >= x2)
                         }
-                        _ => dart_evalerror(format!("Illegal right operand for comparison: {}", right_obj), state)
+                        _ => dart_evalerror(
+                            format!("Illegal right operand for comparison: {}", right_obj),
+                            state,
+                            &node.children[1]
+                        )
                     }
                 }
-                _ => dart_evalerror(format!("Illegal left operand for comparison: {}", left_obj), state)
+                _ => dart_evalerror(
+                    format!("Illegal left operand for comparison: {}", left_obj),
+                    state,
+                    &node.children[0]
+                )
             }
         }
 
-        NodeType::Equal => {
+        NodeType::Equal(_, _) => {
 
             let left_obj = eval(&node.children[0], state);
             let right_obj = eval(&node.children[1], state);
@@ -415,11 +517,15 @@ pub fn eval(
                         _ => Object::Bool(false)
                     }
                 }
-                _ => dart_evalerror(format!("Equality not implemented for object: {}", left_obj), state)
+                _ => dart_evalerror(
+                    format!("Equality not implemented for object: {}", left_obj),
+                    state,
+                    &node.children[0]
+                )
             }
         }
 
-        NodeType::BitAnd => {
+        NodeType::BitAnd(_, _) => {
 
             let left_obj = eval(&node.children[0], state);
 
@@ -432,14 +538,22 @@ pub fn eval(
                         Object::Int(s2) => {
                             Object::Int(s1.bitand(s2))
                         }
-                        _ => dart_evalerror(format!("Illegal right operand for bitwise and: {}", right_obj), state)
+                        _ => dart_evalerror(
+                            format!("Illegal right operand for bitwise and: {}", right_obj),
+                            state,
+                            &node.children[1]
+                        )
                     }
                 }
-                _ => panic!("Illegal left operand for bitwise and: {}", &left_obj)
+                _ => dart_evalerror(
+                    format!("Illegal left operand for bitwise and: {}", &left_obj),
+                    state,
+                    &node.children[0]
+                )
             }
         }
 
-        NodeType::BitOr => {
+        NodeType::BitOr(_, _) => {
 
             let left_obj = eval(&node.children[0], state);
 
@@ -452,14 +566,22 @@ pub fn eval(
                         Object::Int(s2) => {
                             Object::Int(s1.bitor(s2))
                         }
-                        _ => dart_evalerror(format!("Illegal right operand for bitwise or: {}", right_obj), state)
+                        _ => dart_evalerror(
+                            format!("Illegal right operand for bitwise or: {}", right_obj),
+                            state,
+                            &node.children[1]
+                        )
                     }
                 }
-                _ => dart_evalerror(format!("Illegal left operand for bitwise or: {}", left_obj), state)
+                _ => dart_evalerror(
+                    format!("Illegal left operand for bitwise or: {}", left_obj),
+                    state,
+                    &node.children[0]
+                )
             }
         }
 
-        NodeType::BitXor => {
+        NodeType::BitXor(_, _) => {
 
             let left_obj = eval(&node.children[0], state);
 
@@ -472,14 +594,22 @@ pub fn eval(
                         Object::Int(s2) => {
                             Object::Int(s1.bitxor(s2))
                         }
-                        _ => dart_evalerror(format!("Illegal right operand for bitwise xor: {}", right_obj), state)
+                        _ => dart_evalerror(
+                            format!("Illegal right operand for bitwise xor: {}", right_obj),
+                            state,
+                            &node.children[1]
+                        )
                     }
                 }
-                _ => dart_evalerror(format!("Illegal left operand for bitwise xor: {}", left_obj), state)
+                _ => dart_evalerror(
+                    format!("Illegal left operand for bitwise xor: {}", left_obj),
+                    state,
+                    &node.children[0]
+                )
             }
         }
 
-        NodeType::Add => {
+        NodeType::Add(_, _) => {
 
             let left_obj = eval(&node.children[0], state);
 
@@ -495,7 +625,11 @@ pub fn eval(
                         Object::Double(s2) => {
                             Object::Double(*s1 as f64 + s2)
                         }
-                        _ => dart_evalerror(format!("Illegal right operand for addition: {}", right_obj), state)
+                        _ => dart_evalerror(
+                            format!("Illegal right operand for addition: {}", right_obj),
+                            state,
+                            &node.children[1]
+                        )
                     }
                 },
                 Object::Double(s1) => {
@@ -508,7 +642,11 @@ pub fn eval(
                         Object::Double(s2) => {
                             Object::Double(s1 + s2)
                         }
-                        _ => dart_evalerror(format!("Illegal right operand for addition: {}", right_obj), state)
+                        _ => dart_evalerror(
+                            format!("Illegal right operand for addition: {}", right_obj),
+                            state,
+                            &node.children[1]
+                        )
                     }
                 }
                 Object::String(s1) => {
@@ -520,14 +658,22 @@ pub fn eval(
                             ret.push_str(s2);
                             return Object::String(ret);
                         }
-                        _ => dart_evalerror(format!("Illegal right operand for addition: {}", right_obj), state)
+                        _ => dart_evalerror(
+                            format!("Illegal right operand for addition: {}", right_obj),
+                            state,
+                            &node.children[1]
+                        )
                     }
                 }
-                _ => dart_evalerror(format!("Illegal left operand for addition: {}", left_obj), state)
+                _ => dart_evalerror(
+                    format!("Illegal left operand for addition: {}", left_obj),
+                    state,
+                    &node.children[0]
+                )
             }
         }
 
-        NodeType::Sub => {
+        NodeType::Sub(_, _) => {
 
             let left_obj = eval(&node.children[0], state);
 
@@ -539,7 +685,11 @@ pub fn eval(
                     Object::Double(x) => {
                         Object::Double(-*x)
                     }
-                    _ => dart_evalerror(format!("Illegal operand for unary minus: {}", left_obj), state)
+                    _ => dart_evalerror(
+                        format!("Illegal operand for unary minus: {}", left_obj),
+                        state,
+                        &node.children[0]
+                    )
                 }
             }
 
@@ -554,7 +704,11 @@ pub fn eval(
                         Object::Double(s2) => {
                             Object::Double(*s1 as f64 - s2)
                         }
-                        _ => dart_evalerror(format!("Illegal right operand for subtraction: {}", right_obj), state)
+                        _ => dart_evalerror(
+                            format!("Illegal right operand for subtraction: {}", right_obj),
+                            state,
+                            &node.children[1]
+                        )
                     }
                 },
                 Object::Double(s1) => {
@@ -567,14 +721,22 @@ pub fn eval(
                         Object::Double(s2) => {
                             Object::Double(s1 - s2)
                         }
-                        _ => dart_evalerror(format!("Illegal right operand for subtraction: {}", right_obj), state)
+                        _ => dart_evalerror(
+                            format!("Illegal right operand for subtraction: {}", right_obj),
+                            state,
+                            &node.children[1]
+                        )
                     }
                 }
-                _ => dart_evalerror(format!("Illegal left operand for subtraction: {}", left_obj), state)
+                _ => dart_evalerror(
+                    format!("Illegal left operand for subtraction: {}", left_obj),
+                    state,
+                    &node.children[0]
+                )
             }
         }
 
-        NodeType::Mul => {
+        NodeType::Mul(_, _) => {
 
             let left_obj = eval(&node.children[0], state);
 
@@ -589,7 +751,11 @@ pub fn eval(
                         Object::Double(s2) => {
                             Object::Double(*s1 as f64 * s2)
                         }
-                        _ => dart_evalerror(format!("Illegal right operand for multiplication: {}", right_obj), state)
+                        _ => dart_evalerror(
+                            format!("Illegal right operand for multiplication: {}", right_obj),
+                            state,
+                            &node.children[1]
+                        )
                     }
                 },
                 Object::Double(s1) => {
@@ -602,14 +768,22 @@ pub fn eval(
                         Object::Double(s2) => {
                             Object::Double(s1 * s2)
                         }
-                        _ => dart_evalerror(format!("Illegal right operand for multiplication: {}", right_obj), state)
+                        _ => dart_evalerror(
+                            format!("Illegal right operand for multiplication: {}", right_obj),
+                            state,
+                            &node.children[1]
+                        )
                     }
                 }
-                _ => dart_evalerror(format!("Illegal left operand for multiplication: {}", left_obj), state)
+                _ => dart_evalerror(
+                    format!("Illegal left operand for multiplication: {}", left_obj),
+                    state,
+                    &node.children[0]
+                )
             }
         }
 
-        NodeType::Div => {
+        NodeType::Div(_, _) => {
 
             let left_obj = eval(&node.children[0], state);
 
@@ -624,7 +798,11 @@ pub fn eval(
                         Object::Double(s2) => {
                             Object::Double(*s1 as f64 / *s2)
                         }
-                        _ => dart_evalerror(format!("Illegal right operand for division: {}", right_obj), state)
+                        _ => dart_evalerror(
+                            format!("Illegal right operand for division: {}", right_obj),
+                            state,
+                            &node.children[1]
+                        )
                     }
                 },
                 Object::Double(s1) => {
@@ -637,19 +815,28 @@ pub fn eval(
                         Object::Double(s2) => {
                             Object::Double(*s1 as f64 / *s2)
                         }
-                        _ => dart_evalerror(format!("Illegal right operand for division: {}", right_obj), state)
+                        _ => dart_evalerror(
+                            format!("Illegal right operand for division: {}", right_obj),
+                            state,
+                            &node.children[1]
+                        )
                     }
                 },
-                _ => dart_evalerror(format!("Illegal left operand for divison: {}", left_obj), state)
+                _ => dart_evalerror(
+                    format!("Illegal left operand for divison: {}", left_obj),
+                    state,
+                    &node.children[0]
+                )
             }
         }
 
-        NodeType::PreIncrement => {
+        NodeType::PreIncrement(_, _) => {
 
+            // FIXME, needs eval
             let valnode = &node.children[0];
 
             match valnode.nodetype {
-                NodeType::Name(ref s) => {
+                NodeType::Name(ref s, _, _) => {
 
                     if state.stack.has(s) {
                         let oldval = state.stack.get(s).clone();
@@ -660,7 +847,11 @@ pub fn eval(
                                 state.stack.update(s.as_str(), newval.clone());
                                 return newval;
                             }
-                            _ => dart_evalerror(format!("Illegal operand for preincrement: {}", oldval), state)
+                            _ => dart_evalerror(
+                                format!("Illegal operand for preincrement: {}", oldval),
+                                state,
+                                &node.children[0]
+                            )
                         }
                     }
                     else {
@@ -673,20 +864,29 @@ pub fn eval(
                                 this.set_field(s.clone(), newval.clone());
                                 return newval;
                             }
-                            _ => dart_evalerror(format!("Illegal operand for preincrement: {}", oldval), state)
+                            _ => dart_evalerror(
+                                format!("Illegal operand for preincrement: {}", oldval),
+                                state,
+                                &node.children[0]
+                            )
                         }
                     }
                 }
-                _ => dart_evalerror(format!("Illegal operand for preincrement: {}", valnode), state)
+                _ => dart_evalerror(
+                    format!("Illegal operand for preincrement: {}", valnode),
+                    state,
+                    &node.children[0]
+                )
             }
         }
 
-        NodeType::PreDecrement => {
+        NodeType::PreDecrement(_, _) => {
 
+            // FIXME, needs eval
             let valnode = &node.children[0];
 
             match valnode.nodetype {
-                NodeType::Name(ref s) => {
+                NodeType::Name(ref s, _, _) => {
 
                     if state.stack.has(s) {
                         let oldval = state.stack.get(s).clone();
@@ -697,7 +897,11 @@ pub fn eval(
                                 state.stack.update(s.as_str(), newval.clone());
                                 return newval;
                             }
-                            _ => dart_evalerror(format!("Illegal operand for predecrement: {}", oldval), state)
+                            _ => dart_evalerror(
+                                format!("Illegal operand for predecrement: {}", oldval),
+                                state,
+                                &node.children[0]
+                            )
                         }
                     }
                     else {
@@ -710,20 +914,29 @@ pub fn eval(
                                 this.set_field(s.clone(), newval.clone());
                                 return newval;
                             }
-                            _ => dart_evalerror(format!("Illegal operand for predecrement: {}", oldval), state)
+                            _ => dart_evalerror(
+                                format!("Illegal operand for predecrement: {}", oldval),
+                                state,
+                                &node.children[0]
+                            )
                         }
                     }
                 }
-                _ => dart_evalerror(format!("Illegal operand for predecrement: {}", valnode), state)
+                _ => dart_evalerror(
+                    format!("Illegal operand for predecrement: {}", valnode),
+                    state,
+                    &node.children[0]
+                )
             }
         }
 
-        NodeType::PostIncrement => {
+        NodeType::PostIncrement(_, _) => {
 
+            // FIXME, needs eval
             let valnode = &node.children[0];
 
             match valnode.nodetype {
-                NodeType::Name(ref s) => {
+                NodeType::Name(ref s, _, _) => {
 
                     if state.stack.has(s) {
                         let oldval = state.stack.get(s).clone();
@@ -734,7 +947,11 @@ pub fn eval(
                                 state.stack.update(s.as_str(), newval);
                                 return oldval;
                             }
-                            _ => dart_evalerror(format!("Illegal operand for increment: {}", oldval), state)
+                            _ => dart_evalerror(
+                                format!("Illegal operand for increment: {}", oldval),
+                                state,
+                                &node.children[0]
+                            )
                         }
                     }
                     else {
@@ -747,20 +964,29 @@ pub fn eval(
                                 this.set_field(s.clone(), newval);
                                 return oldval;
                             }
-                            _ => dart_evalerror(format!("Illegal operand for increment: {}", oldval), state)
+                            _ => dart_evalerror(
+                                format!("Illegal operand for increment: {}", oldval),
+                                state,
+                                &node.children[0]
+                            )
                         }
                     }
                 }
-                _ => dart_evalerror(format!("Illegal operand for increment: {}", valnode), state)
+                _ => dart_evalerror(
+                    format!("Illegal operand for increment: {}", valnode),
+                    state,
+                    &node.children[0]
+                )
             }
         }
 
-        NodeType::PostDecrement => {
+        NodeType::PostDecrement(_, _) => {
 
+            // FIXME, needs eval
             let valnode = &node.children[0];
 
             match valnode.nodetype {
-                NodeType::Name(ref s) => {
+                NodeType::Name(ref s, _, _) => {
 
                     if state.stack.has(s) {
                         let oldval = state.stack.get(s).clone();
@@ -771,7 +997,11 @@ pub fn eval(
                                 state.stack.update(s.as_str(), newval);
                                 return oldval;
                             }
-                            _ => dart_evalerror(format!("Illegal operand for decrement: {}", oldval), state)
+                            _ => dart_evalerror(
+                                format!("Illegal operand for decrement: {}", oldval),
+                                state,
+                                &node.children[0]
+                            )
                         }
                     }
                     else {
@@ -784,27 +1014,35 @@ pub fn eval(
                                 this.set_field(s.clone(), newval);
                                 return oldval;
                             }
-                            _ => dart_evalerror(format!("Illegal operand for decrement: {}", oldval), state)
+                            _ => dart_evalerror(
+                                format!("Illegal operand for decrement: {}", oldval),
+                                state,
+                                &node.children[0]
+                            )
                         }
                     }
                 }
-                _ => dart_evalerror(format!("Illegal operand for decrement: {}", valnode), state)
+                _ => dart_evalerror(
+                    format!("Illegal operand for decrement: {}", valnode),
+                    state,
+                    &node.children[0]
+                )
             }
         }
 
-        NodeType::Int(val) => {
+        NodeType::Int(val, _, _) => {
             Object::Int(*val)
         },
 
-        NodeType::Double(val) => {
+        NodeType::Double(val, _, _) => {
             Object::Double(*val)
         },
 
-        NodeType::Bool(v) => {
+        NodeType::Bool(v, _, _) => {
             Object::Bool(*v)
         },
 
-        NodeType::Str(s) => {
+        NodeType::Str(s, _, _) => {
 
             if node.children.is_empty() {
                 return Object::String(s.clone())
@@ -827,10 +1065,14 @@ pub fn eval(
             return Object::String(built)
         },
 
-        NodeType::Name(s) => {
+        NodeType::Name(s, linenum, symnum) => {
 
             if state.in_const {
-                dart_evalerror("Not a constant expression.", state)
+                dart_evalerror(
+                    "Not a constant expression.",
+                    state,
+                    node
+                )
             }
 
             // For Name, having a child means having an owner.
@@ -867,10 +1109,14 @@ pub fn eval(
 
                 match &n.nodetype {
 
-                    NodeType::TopVarLazy(typ, name) => {
+                    NodeType::TopVarLazy(typ, name, _, _) => {
 
                         if *name == state.eval_var {
-                            dart_evalerror(format!("Top level variable '{}' depends on itself.", name), state);
+                            dart_evalerror(
+                                format!("Top level variable '{}' depends on itself.", name),
+                                state,
+                                &n
+                            );
                         }
                         if state.eval_var.len() == 0 {
                             state.eval_var = name.clone();
@@ -878,19 +1124,29 @@ pub fn eval(
 
                         let res = eval(&n.children[0], state);
                         state.eval_var = String::from("");
-                        let resolved_node = Node::new(NodeType::TopVar(typ.clone(), name.clone(), Box::new(res.clone())));
+                        let resolved_node = Node::new(NodeType::TopVar(
+                            typ.clone(),
+                            name.clone(),
+                            Box::new(res.clone()),
+                            linenum.clone(),
+                            symnum.clone()
+                        ));
                         state.globals[index] = resolved_node;
                         return res;
                     }
 
-                    NodeType::TopVar(_, _, val) => {
+                    NodeType::TopVar(_, _, val, _, _) => {
                         return *val.clone();
                     }
 
-                    NodeType::ConstTopLazy(typ, name) => {
+                    NodeType::ConstTopLazy(typ, name, _, _) => {
 
                         if *name == state.eval_var {
-                            dart_evalerror(format!("Top level const '{}' depends on itself.", name), state);
+                            dart_evalerror(
+                                format!("Top level const '{}' depends on itself.", name),
+                                state,
+                                &n
+                            );
                         }
                         if state.eval_var.len() == 0 {
                             state.eval_var = name.clone();
@@ -900,12 +1156,18 @@ pub fn eval(
                         let res = eval(&n.children[0], state);
                         state.in_const = false;
                         state.eval_var = String::from("");
-                        let resolved_node = Node::new(NodeType::ConstTopVar(typ.clone(), name.clone(), Box::new(res.clone())));
+                        let resolved_node = Node::new(NodeType::ConstTopVar(
+                            typ.clone(),
+                            name.clone(),
+                            Box::new(res.clone()),
+                            linenum.clone(),
+                            symnum.clone()
+                        ));
                         state.globals[index] = resolved_node;
                         return res;
                     }
 
-                    NodeType::ConstTopVar(_, _, val) => {
+                    NodeType::ConstTopVar(_, _, val, _, _) => {
                         return *val.clone();
                     }
 
@@ -916,19 +1178,23 @@ pub fn eval(
                 state.stack.printstack();
             }
             // As dart.
-            dart_evalerror(format!("Undefined name: '{}'.", s), state);
+            dart_evalerror(
+                format!("Undefined name: '{}'.", s),
+                state,
+                node
+            );
         }
 
-        NodeType::Return => {
+        NodeType::Return(_, _) => {
             let retval = eval(&node.children[0], state);
             return Object::Return(Box::new(retval));
         }
 
-        NodeType::CollAccess => {
+        NodeType::CollAccess(_, _) => {
 
             let owner = eval(&node.children[0], state);
 
-            let index_node = eval(&node.children[1], state);
+            let index_obj = eval(&node.children[1], state);
 
             if let Object::Reference(rk) = owner {
                 let ulist = state.objsys.get_instance(&rk);
@@ -937,23 +1203,43 @@ pub fn eval(
                 if let Object::Reference(ilist_rk) = ilist_ref {
                     let ilist = state.objsys.get_list(&ilist_rk);
 
-                    if let Object::Int(n) = index_node {
+                    if let Object::Int(n) = index_obj {
                         if n < 0 {
-                            dart_evalerror(format!("Index must be positive: {}", n), state)
+                            dart_evalerror(
+                                format!("Index must be positive: {}", n),
+                                state,
+                                node
+                            )
                         }
                         return ilist.get_el(n as usize)
                     }
-                    dart_evalerror(format!("Illegal index: {}", index_node), state)
+                    dart_evalerror(
+                        format!("Illegal index: {}", index_obj),
+                        state,
+                        node
+                    )
                 }
-                dart_evalerror(format!("Expected reference, got: {}", ilist_ref), state)
+                dart_evalerror(
+                    format!("Expected reference, got: {}", ilist_ref),
+                    state,
+                    &node.children[0]
+                )
             }
-            dart_evalerror(format!("Cannot index into object: {}", owner), state)
+            dart_evalerror(
+                format!("Cannot index into object: {}", owner),
+                state,
+                &node.children[0]
+            )
         }
 
-        NodeType::MethodCall(name, owner, _filename) => {
+        NodeType::MethodCall(name, owner, _filename, _, _) => {
 
             if state.in_const {
-                dart_evalerror("Not a constant expression.", state)
+                dart_evalerror(
+                    "Not a constant expression.",
+                    state,
+                    node
+                )
             }
 
             let reference: Object = eval(owner, state);
@@ -961,16 +1247,20 @@ pub fn eval(
             if let Object::Reference(refid) = reference {
                 let instance = state.objsys.get_instance(&refid);
                 let c = state.objsys.get_class(&instance.classname);
-                let meth_obj = c.get_method(name, state);
+                let meth_obj = c.get_method(name, state, node);
                 return call_function(MaybeRef::Ref(refid), &meth_obj, &node.children[0], state)
             }
             panic!("Can't access {} of {}", name, owner);
         }
 
-        NodeType::FunCall(s) => {
+        NodeType::FunCall(s, _, _) => {
 
             if state.in_const {
-                dart_evalerror("Not a constant expression.", state)
+                dart_evalerror(
+                    "Not a constant expression.",
+                    state,
+                    node
+                )
             }
 
             // First look in stack.
@@ -996,14 +1286,14 @@ pub fn eval(
                 let funcnode = &state.globals[*funcindex];
 
                 return match funcnode.nodetype {
-                    NodeType::FunDef(_, _) => {
+                    NodeType::FunDef(_, _, _, _) => {
                         call_function(
                             MaybeRef::None,
                             &create_function(&funcnode),
                             &node.children[0],
                             state)
                     }
-                    NodeType::Constructor(_, _) => {
+                    NodeType::Constructor(_, _, _, _) => {
                         call_constructor(
                             &create_constructor(&funcnode),
                             &node.children[0],
@@ -1015,28 +1305,33 @@ pub fn eval(
 
             // Third we check if we have a built-in function.
             if builtin::has_function(s) {
-                let mut args = argnodes_to_argobjs(
-                    &node.children[0].children,
-                    state);
-                return builtin::call(s, &mut args, state);
+                // let mut args = argnodes_to_argobjs(
+                //     &node.children[0].children,
+                //     state);
+                // return builtin::call(s, &mut args, state, node);
+                return builtin::call(node, s, state);
             }
 
-            dart_evalerror(format!("Function not found: {}", s), state)
+            dart_evalerror(
+                format!("Function not found: {}", s),
+                state,
+                node
+            )
         }
 
-        NodeType::FunDef(s, _) => {
+        NodeType::FunDef(s, _, _, _) => {
             let funcobj = create_function(node);
             state.stack.add_new(s, funcobj);
             return Object::Null;
         }
 
-        NodeType::Conditional => {
+        NodeType::Conditional(_, _) => {
 
             for condnode in &node.children {
 
                 match condnode.nodetype {
-                    NodeType::If |
-                    NodeType::ElseIf => {
+                    NodeType::If(_, _) |
+                    NodeType::ElseIf(_, _) => {
                         let boolnode= &condnode.children[0];
                         let cond = eval(&boolnode, state);
 
@@ -1053,7 +1348,7 @@ pub fn eval(
                             _ => panic!("Expected bool in conditional")
                         }
                     }
-                    NodeType::Else => {
+                    NodeType::Else(_, _) => {
                         let bodynode= &condnode.children[0];
                         state.stack.push_lex();
                         let ret = eval(&bodynode, state);
@@ -1066,7 +1361,7 @@ pub fn eval(
             return Object::Null;
         }
 
-        NodeType::While => {
+        NodeType::While(_, _) => {
 
             let boolnode = &node.children[0];
             let block = &node.children[1];
@@ -1095,7 +1390,7 @@ pub fn eval(
             return Object::Null;
         }
 
-        NodeType::DoWhile => {
+        NodeType::DoWhile(_, _) => {
 
             let block = &node.children[0];
             let boolnode = &node.children[1];
@@ -1119,13 +1414,17 @@ pub fn eval(
                 }
             }
             else {
-                panic!("Expected bool in conditional")
+                dart_evalerror(
+                    format!("Expected bool in conditional. Got: {}", cond),
+                    state,
+                    &node.children[0]
+                )
             }
 
             return Object::Null;
         }
 
-        NodeType::For => {
+        NodeType::For(_, _) => {
 
             if node.children.len() == 3 {
                 // Three children mean 'for x in name' loop.
@@ -1156,7 +1455,7 @@ pub fn eval(
         
                                 for c in cloned {
                                     match &typedvar.nodetype {
-                                        NodeType::TypedVar(_, name) => {
+                                        NodeType::TypedVar(_, name, _, _) => {
                                             state.stack.add_new(name, c);
                                             eval(body, state);
                                         }
@@ -1172,7 +1471,11 @@ pub fn eval(
                         return Object::Null;
                     }
                     x => {
-                        dart_evalerror(format!("Not iterable: {}", x), state)
+                        dart_evalerror(
+                            format!("Not iterable: {}", x),
+                            state,
+                            &node.children[1]
+                        )
                     }
                 }
             }
@@ -1198,14 +1501,18 @@ pub fn eval(
                             eval(body, state);
                             eval(mutexpr, state);
                         }
-                        x => dart_evalerror(format!("Expected bool. Got: {}", x), state)
+                        _ => dart_evalerror(
+                            "Expected boolean expression.",
+                            state,
+                            &node.children[1]
+                        )
                     }
                 }
             }
             return Object::Null;
         }
 
-        NodeType::Block => {
+        NodeType::Block(_, _) => {
 
             for c in &node.children {
 
@@ -1229,7 +1536,7 @@ pub fn eval(
             return Object::Null;
         }
 
-        NodeType::List => {
+        NodeType::List(_, _) => {
 
             let class = state.objsys.get_class("List");
             let mut inst = class.instantiate();
@@ -1250,15 +1557,19 @@ pub fn eval(
             return instref;
         }
 
-        NodeType::This => {
+        NodeType::This(_, _) => {
 
             if state.objsys.has_this() {
                 return Object::Reference(state.objsys.get_this());
             }
-            dart_evalerror("Not found in context: 'this'.", state)
+            dart_evalerror(
+                "Not found in context: 'this'.",
+                state,
+                node
+            )
         }
 
-        NodeType::Null => {
+        NodeType::Null(_, _) => {
             return Object::Null;
         }
 

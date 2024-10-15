@@ -59,6 +59,14 @@ impl Reader {
         return self.pos;
     }
 
+    pub fn linenum(&self) -> usize {
+        self.tokens[self.pos].find_token_position().0
+    }
+
+    pub fn symnum(&self) -> usize {
+        self.tokens[self.pos].find_token_position().1
+    }
+
     pub fn len(&self) -> usize {
         return self.tokens.len();
     }

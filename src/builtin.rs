@@ -3,12 +3,11 @@ use std::io::Read;
 use rand::Rng;
 use crate::state::State;
 use crate::object::Object;
-use crate::evalhelp::{call_function, MaybeRef};
+use crate::evalhelp::{argnodes_to_argobjs, call_function, MaybeRef};
 use crate::NodeType;
 use crate::node::Node;
 use crate::heapobjs::InternalFile;
 use crate::utils::dart_evalerror;
-
 
 
 pub fn has_function(name: &str) -> bool {
@@ -43,7 +42,11 @@ pub fn has_function(name: &str) -> bool {
 }
 
 
-pub fn call(name: &str, args: &mut Vec<Object>, state: &mut State) -> Object {
+pub fn call(fnode: &Node, name: &str, state: &mut State) -> Object {
+
+    let argnodes = &fnode.children[0].children;
+    let args = argnodes_to_argobjs(argnodes, state);
+
     match name {
 
         "assert" => {
@@ -57,40 +60,25 @@ pub fn call(name: &str, args: &mut Vec<Object>, state: &mut State) -> Object {
                 Object::Bool(b) => {
                     if !b {
 
-                        let mut msg = String::from("is not true.");
+                        let mut msg = String::from("");
 
                         if args.len() > 1 {
                             // Dart accepts ints and bools and whatnot as second param.
-                            msg = format!("{}", &args[1]);
+                            msg = format!(": {}", &args[1]);
                         }
-
-                        let filepath = &state.filepath;
-                        let linenum = 0;
-                        let sympos = 0;
-                        println!("'file://{}': Failed assertion: line {} pos {}: argument: {}", filepath, linenum, sympos, msg);
-                        // TODO: Dart manages to get the variable name in here.
-                        // println!("'file://{}': Failed assertion: line {} pos {}: 'argname': {}.", filename, linenum, sympos, msg);
-
-                        process::exit(1);
+                        dart_evalerror(
+                            format!("Failed assertion{}", msg),
+                            state,
+                            fnode
+                        )
                     }
                 }
                 _ => {
-                    // Should be caught generally, by type system. For now, msg like dart.
-                    // TODO, get line number, symbol number and object type.
-
-                    let filepath = &state.filepath;
-                    let linenum = 0;
-                    let sympos = 0;
-                    let objtype = "unknown";
-
-                    println!(
-                        "{}:{}:{}: Error: A value of type '{}' can't be assigned to a variable of type 'bool'.",
-                        filepath,
-                        linenum,
-                        sympos,
-                        objtype
+                    dart_evalerror(
+                        format!("Expected bool. Got: {}", args[0]),
+                        state,
+                        &argnodes[0]
                     );
-                    process::exit(1);
                 }
             }
         }
@@ -103,11 +91,24 @@ pub fn call(name: &str, args: &mut Vec<Object>, state: &mut State) -> Object {
 
                 let inst = state.objsys.get_instance(k);
                 let c = state.objsys.get_class(inst.classname.as_str());
-                let m = c.get_method("toString", state);
+
+                let fakenode = Node::new(
+                    NodeType::MethodCall(
+                        "toString".to_string(),
+                        Box::new(argnodes[0].clone()),
+                        state.filepath.clone(),
+                        argnodes[0].find_node_position().0,
+                        argnodes[0].find_node_position().1
+                ));
+                let m = c.get_method("toString", state, &fakenode);
 
                 match &m {
                     Object::Function(_, _, _, _) => {
-                        let tostring_args = Node::new(NodeType::ArgList);
+                        let tostring_args = Node::new(
+                            NodeType::ArgList(
+                                fnode.children[0].find_node_position().0,
+                                fnode.children[0].find_node_position().1)
+                        );
                         let strobj = call_function(MaybeRef::Ref(inst.id.clone()), &m, &tostring_args, state);
                         println!("{}", strobj);
                     }
@@ -517,7 +518,7 @@ pub fn call(name: &str, args: &mut Vec<Object>, state: &mut State) -> Object {
                     let r = rng.gen_range(0 .. *n);
                     return Object::Int(r);
                 }
-                x => dart_evalerror(format!("Expected int. Got {}", x), state)
+                x => dart_evalerror(format!("Expected int. Got {}", x), state, &argnodes[0])
             }
         }
 

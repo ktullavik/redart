@@ -1,6 +1,7 @@
 use std::process;
 use token::Token;
 use State;
+use crate::node::Node;
 
 
 pub fn dprint<S: Into<String>>(s: S) {
@@ -31,13 +32,15 @@ pub fn dart_parseerror<S: Into<String>>(msg: S, state: &State, tok: Token) -> ! 
 }
 
 
-pub fn dart_evalerror<S: Into<String>>(msg: S, state: &State) -> ! {
+pub fn dart_evalerror<S: Into<String>>(msg: S, state: &State, node: &Node) -> ! {
+
+    let (linenum, symnum) = node.find_node_position();
 
     if state.debug {
-        panic!("{}: Error: {}", state.filepath, msg.into());
+        panic!("{}:{}:{}: Error: {}", state.filepath, linenum, symnum, msg.into());
     }
     else {
-        println!("{}: Error: {}", state.filepath, msg.into());
+        println!("{}:{}:{}: Error: {}", state.filepath, linenum, symnum, msg.into());
         process::exit(1);
     }
 }

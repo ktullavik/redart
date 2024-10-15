@@ -72,13 +72,19 @@ fn decl(reader: &mut Reader, state: &mut State) {
             match reader.next() {
 
                 // Name of top level declaration.
-                Token::Name(name, _, _) => {
+                Token::Name(name, linenum, symnum) => {
 
                     match reader.next() {
 
                         Token::Paren1(_, _) => {
                             // Top level function
-                            let mut node = Node::new(NodeType::FunDef(name.to_string(), state.filepath.clone()));
+                            let mut node = Node::new(
+                                NodeType::FunDef(
+                                    name.to_string(),
+                                    state.filepath.clone(),
+                                    linenum,
+                                    symnum
+                                ));
                             let params = paramlist(reader, state);
                             node.children.push(params);
 
@@ -96,7 +102,13 @@ fn decl(reader: &mut Reader, state: &mut State) {
                             // interpreter will replace the TopVarLazy with a TopVar
                             // upon execution.
                             reader.next();
-                            let mut node = Node::new(NodeType::TopVarLazy(typ, name));
+                            let mut node = Node::new(
+                                NodeType::TopVarLazy(
+                                    typ,
+                                    name,
+                                    linenum,
+                                    symnum
+                                ));
                             let val = expression(reader, state);
                             node.children.push(val);
                             state.globals.push(node);
@@ -124,17 +136,22 @@ fn decl(reader: &mut Reader, state: &mut State) {
 
             match reader.next() {
 
-                Token::Name(type_or_name, _, _) => {
+                Token::Name(type_or_name, linenum1, symnum1) => {
 
                     match reader.next() {
 
-                        Token::Name(name, _, _) => {
+                        Token::Name(name, linenum2, symnum2) => {
                             reader.next();
                             reader.skip("=", state);
                             let val = expression(reader, state);
                             reader.skip(";", state);
                             let mut node = Node::new(
-                                NodeType::ConstTopLazy(type_or_name, name));
+                                NodeType::ConstTopLazy(
+                                    type_or_name,
+                                    name,
+                                    linenum2,
+                                    symnum2
+                                ));
                             node.children.push(val);
                             state.globals.push(node);
                             return;
@@ -145,7 +162,12 @@ fn decl(reader: &mut Reader, state: &mut State) {
                             let val = expression(reader, state);
                             reader.skip(";", state);
                             let mut node = Node::new(
-                                NodeType::ConstTopLazy(String::from("dynamic"), type_or_name.clone()));
+                                NodeType::ConstTopLazy(
+                                    String::from("dynamic"),
+                                    type_or_name.clone(),
+                                    linenum1,
+                                    symnum1
+                                ));
                             node.children.push(val);
                             state.globals.push(node);
                             println!("Inserted const: {}", type_or_name);
@@ -221,9 +243,10 @@ fn class(reader: &mut Reader, state: &mut State) {
                             }
                         }
                         
-                        x => dart_evalerror(
+                        x => dart_parseerror(
                             format!("Expected parent class name. Got: {}", x),
-                            state
+                            state,
+                            x
                         )
                     }
                 }
@@ -237,7 +260,7 @@ fn class(reader: &mut Reader, state: &mut State) {
                 x => dart_parseerror(
                     format!("Unexpected token: {}", x),
                     state,
-                    reader.tok()
+                    x
                 )
             }
 
@@ -266,14 +289,20 @@ fn readmembers(class: &mut Class, reader: &mut Reader, state: &mut State) {
 
         match reader.tok() {
 
-            Token::Name(mtype, _, _) => {
+            Token::Name(mtype, linenum, symnum) => {
 
                 if *mtype == class.name {
                     // Constructor
 
                     reader.next();
 
-                    let mut constructor_node = Node::new(NodeType::Constructor(class.name.clone(), state.filepath.clone()));
+                    let mut constructor_node = Node::new(
+                        NodeType::Constructor(
+                            class.name.clone(),
+                            state.filepath.clone(),
+                            linenum,
+                            symnum
+                        ));
                     let params = constructor_paramlist(reader, state);
                     constructor_node.children.push(params);
 
@@ -287,7 +316,9 @@ fn readmembers(class: &mut Class, reader: &mut Reader, state: &mut State) {
 
                         Token::EndSt(_, _) => {
                             reader.next();
-                            constructor_node.children.push(Node::new(NodeType::Null));
+                            constructor_node.children.push(
+                                Node::new(NodeType::Null(linenum, symnum))
+                            );
                         }
 
                         x => {
@@ -306,13 +337,15 @@ fn readmembers(class: &mut Class, reader: &mut Reader, state: &mut State) {
 
                 match reader.next() {
 
-                    Token::Name(fieldname, _, _) => {
+                    Token::Name(fieldname, linenum, symnum) => {
 
                         match reader.next() {
 
                             Token::Paren1(_, _) => {
                                 // Method
 
+                                // FIXME, why can't param_node be used directly?
+                                // Why do we need ParamObj which is not event a Node?
                                 let param_node = paramlist(reader, state);
 
                                 reader.skip("{", state);
@@ -324,10 +357,10 @@ fn readmembers(class: &mut Class, reader: &mut Reader, state: &mut State) {
                                 for i in 0..param_node.children.len() {
                                     let p = &param_node.children[i];
                                     match &p.nodetype {
-                                        NodeType::Name(s) => {
+                                        NodeType::Name(s, _, _) => {
                                             args.push(ParamObj{typ: String::from("var"), name: s.clone(), fieldinit: false});
                                         }
-                                        NodeType::TypedVar(t, s) => {
+                                        NodeType::TypedVar(t, s, _, _) => {
                                             args.push(ParamObj{typ: t.to_string(), name: s.clone(), fieldinit: false});
                                         }
                                         x => panic!("Invalid parameter: {}", x)
@@ -341,7 +374,7 @@ fn readmembers(class: &mut Class, reader: &mut Reader, state: &mut State) {
                             Token::EndSt(_, _) => {
                                 // Uninitialized field declare
                                 reader.next();
-                                class.add_field(mtype, fieldname, Node::new(NodeType::Null));
+                                class.add_field(mtype, fieldname, Node::new(NodeType::Null(linenum, symnum)));
                             }
 
                             Token::Assign(_, _) => {
@@ -381,9 +414,17 @@ fn readmembers(class: &mut Class, reader: &mut Reader, state: &mut State) {
 
     if !got_contructor {
         // Class without constructor. Add an implicit one.
-        let mut constructor_node = Node::new(NodeType::Constructor(class.name.clone(), state.filepath.clone()));
-        constructor_node.children.push(Node::new(NodeType::ParamList));
-        constructor_node.children.push(Node::new(NodeType::Null));
+        let mut constructor_node = Node::new(
+            NodeType::Constructor(
+                class.name.clone(),
+                state.filepath.clone(),
+                0,
+                0
+        ));
+        constructor_node.children.push(
+            Node::new(NodeType::ParamList(0, 0)));
+        constructor_node.children.push(
+            Node::new(NodeType::Null(0, 0)));
         state.globals.push(constructor_node);
     }
 
@@ -393,9 +434,9 @@ fn readmembers(class: &mut Class, reader: &mut Reader, state: &mut State) {
 fn constructor_paramlist(reader: &mut Reader, state: &State) -> Node {
     dprint(format!("Parse: paramlist: {}", reader.tok()));
 
-    if let Token::Paren1(_, _) = reader.tok() {
+    if let Token::Paren1(linenum, symnum) = reader.tok() {
 
-        let mut node = Node::new(NodeType::ParamList);
+        let mut node = Node::new(NodeType::ParamList(linenum, symnum));
         let mut expect_comma = false;
         reader.next();
 
@@ -414,8 +455,10 @@ fn constructor_paramlist(reader: &mut Reader, state: &State) -> Node {
 
                     match reader.tok() {
 
-                        Token::Name(s, _, _) => {
-                            let this_fieldinit = Node::new(NodeType::ThisFieldInit(s));
+                        Token::Name(s, linenum, symnum) => {
+                            let this_fieldinit = Node::new(
+                                NodeType::ThisFieldInit(s, linenum, symnum)
+                            );
                             node.children.push(this_fieldinit);
                             expect_comma = true;
                             reader.next();
@@ -444,8 +487,10 @@ fn constructor_paramlist(reader: &mut Reader, state: &State) -> Node {
                     expect_comma = false;
                 }
 
-                Token::Name(s, _, _) => {
-                    let paramnode= Node::new(NodeType::Name(s.to_string()));
+                Token::Name(s, linenum, symnum) => {
+                    let paramnode= Node::new(
+                        NodeType::Name(s.to_string(), linenum, symnum)
+                    );
                     node.children.push(paramnode);
                     expect_comma = true;
                     reader.next();
@@ -471,9 +516,9 @@ fn constructor_paramlist(reader: &mut Reader, state: &State) -> Node {
 fn paramlist(reader: &mut Reader, state: &State) -> Node {
     dprint(format!("Parse: paramlist: {}", reader.tok()));
 
-    if let Token::Paren1(_, _) = reader.tok() {
+    if let Token::Paren1(linenum, symnum) = reader.tok() {
 
-        let mut node = Node::new(NodeType::ParamList);
+        let mut node = Node::new(NodeType::ParamList(linenum, symnum));
         let mut expect_comma = false;
         reader.next();
 
@@ -494,19 +539,30 @@ fn paramlist(reader: &mut Reader, state: &State) -> Node {
                     expect_comma = false;
                 }
 
-                Token::Name(s, _, _) => {
+                Token::Name(s, linenum, symnum) => {
 
-                    if let Token::Name(s2, _, _) = reader.peek() {
+                    if let Token::Name(s2, linenum, symnum) = reader.peek() {
 
                         reader.next();
 
-                        let param= Node::new(NodeType::TypedVar(s.to_string(), s2.to_string()));
+                        let param= Node::new(
+                            NodeType::TypedVar(
+                                s.to_string(),
+                                s2.to_string(),
+                                linenum,
+                                symnum
+                        ));
                         node.children.push(param);
                         expect_comma = true;
                         reader.next();
                     }
                     else {
-                        let param= Node::new(NodeType::Name(s.to_string()));
+                        let param= Node::new(
+                            NodeType::Name(
+                                s.to_string(),
+                                linenum,
+                                symnum
+                        ));
                         node.children.push(param);
                         expect_comma = true;
                         reader.next();
@@ -533,9 +589,11 @@ fn paramlist(reader: &mut Reader, state: &State) -> Node {
 pub fn arglist(reader: &mut Reader, state: &State) -> Node {
     dprint(format!("Parse: arglist: {}", reader.tok()));
 
-    if let Token::Paren1(_, _) = reader.tok() {
+    if let Token::Paren1(linenum, symnum) = reader.tok() {
 
-        let mut node = Node::new(NodeType::ArgList);
+        let mut node = Node::new(
+            NodeType::ArgList(linenum, symnum)
+        );
         let mut expect_comma = false;
         reader.next();
 
@@ -581,8 +639,9 @@ pub fn arglist(reader: &mut Reader, state: &State) -> Node {
 fn block(reader: &mut Reader, state: &State) -> Node {
     dprint(format!("Parse: block: {}", reader.tok()));
 
-    let mut node = Node::new(NodeType::Block);
-
+    let mut node = Node::new(
+        NodeType::Block(reader.linenum(), reader.symnum())
+    );
 
     while reader.more() {
         dprint(format!("Parse: block loop at: {}, token: {}", reader.pos(), reader.tok()));
@@ -637,9 +696,11 @@ fn block(reader: &mut Reader, state: &State) -> Node {
 
 
 fn assign_help(left_node: Node, reader: &mut Reader, state: &State) -> Node {
+    let linenum = reader.linenum();
+    let symnum = reader.symnum();
     reader.next();
     let right_node = expression(reader, state);
-    let mut ass_node = Node::new(NodeType::Assign);
+    let mut ass_node = Node::new(NodeType::Assign(linenum, symnum));
     ass_node.children.push(left_node);
     ass_node.children.push(right_node);
     return ass_node;
@@ -651,14 +712,20 @@ fn statement(reader: &mut Reader, state: &State) -> Node {
 
     match reader.tok() {
 
-        Token::Name(s, _, _) => {
+        Token::Name(s, name_linenum1, name_symnum1) => {
 
             match reader.peek() {
 
-                Token::Name(name, _, _) => {
+                Token::Name(name, name_linenum2, name_symnum2) => {
                     // Two names in a row here indicates a typed variable or nested function declaration.
 
-                    let typed_var = Node::new(NodeType::TypedVar(s.to_string(), name.to_string()));
+                    let typed_var = Node::new(
+                        NodeType::TypedVar(
+                            s.to_string(),
+                            name.to_string(),
+                            name_linenum2,
+                            name_symnum2
+                    ));
                     reader.next();
                     reader.next();
 
@@ -675,7 +742,13 @@ fn statement(reader: &mut Reader, state: &State) -> Node {
                             reader.skip("{", state);
                             let body = block(reader, state);
 
-                            let mut funcnode = Node::new(NodeType::FunDef(name.clone(), state.filepath.clone()));
+                            let mut funcnode = Node::new(
+                                NodeType::FunDef(
+                                    name.clone(),
+                                    state.filepath.clone(),
+                                    name_linenum2,
+                                    name_symnum2
+                            ));
                             funcnode.children.push(params);
                             funcnode.children.push(body);
                             funcnode
@@ -689,7 +762,9 @@ fn statement(reader: &mut Reader, state: &State) -> Node {
 
                 Token::Access(_, _) => {
                     reader.next();
-                    let owner = Node::new(NodeType::Name(s));
+                    let owner = Node::new(
+                        NodeType::Name(s, name_linenum1, name_symnum1)
+                    );
                     let left_node = access_help(reader, owner, state);
 
                     match reader.tok() {
@@ -702,7 +777,9 @@ fn statement(reader: &mut Reader, state: &State) -> Node {
 
                 Token::Brack1(_, _) => {
                     reader.next();
-                    let owner = Node::new(NodeType::Name(s));
+                    let owner = Node::new(
+                        NodeType::Name(s, name_linenum1, name_symnum1)
+                    );
                     let left_node = access_help(reader, owner, state);
 
                     match reader.tok() {
@@ -713,10 +790,11 @@ fn statement(reader: &mut Reader, state: &State) -> Node {
                     }
                 }
 
-
                 Token::Assign(_, _) => {
                     reader.next();
-                    let left_node = Node::new(NodeType::Name(s.to_string()));
+                    let left_node = Node::new(
+                        NodeType::Name(s.to_string(), name_linenum1, name_symnum1)
+                    );
                     assign_help(left_node, reader, state)
                 }
 
@@ -726,17 +804,17 @@ fn statement(reader: &mut Reader, state: &State) -> Node {
             }
         }
 
-        Token::If(_, _) => {
+        Token::If(linenum, symnum) => {
             dprint("Parse: if");
 
-            let mut condnode = Node::new(NodeType::Conditional);
+            let mut condnode = Node::new(
+                NodeType::Conditional(linenum, symnum)
+            );
 
             let condpart = conditional(reader, state);
             condnode.children.push(condpart);
 
-
             loop {
-
                 let next_token = reader.tok();
 
                 match next_token {
@@ -756,7 +834,7 @@ fn statement(reader: &mut Reader, state: &State) -> Node {
             return condnode;
         }
 
-        Token::While(_, _) => {
+        Token::While(linenum, symnum) => {
 
             reader.next();
             reader.skip("(", state);
@@ -768,13 +846,13 @@ fn statement(reader: &mut Reader, state: &State) -> Node {
 
             let blocknode = block(reader, state);
 
-            let mut node = Node::new(NodeType::While);
+            let mut node = Node::new(NodeType::While(linenum, symnum));
             node.children.push(boolexpr);
             node.children.push(blocknode);
             return node;
         }
 
-        Token::Do(_, _) => {
+        Token::Do(linenum, symnum) => {
 
             reader.next();
             reader.skip("{", state);
@@ -788,36 +866,43 @@ fn statement(reader: &mut Reader, state: &State) -> Node {
 
             reader.skip(")", state);
 
-            let mut node = Node::new(NodeType::DoWhile);
+            let mut node = Node::new(NodeType::DoWhile(linenum, symnum));
             node.children.push(blocknode);
             node.children.push(boolexpr);
             return node;
         }
 
-        Token::For(_, _) => {
+        Token::For(for_linenum, for_symnum) => {
 
             reader.next();
             reader.skip("(", state);
 
             match reader.tok() {
 
-                Token::Name(n1, _, _) => {
+                Token::Name(n1, name_linenum, name_symnum) => {
                     reader.next();
 
                     match reader.tok() {
-                        Token::Name(n2, _, _) => {
+                        Token::Name(n2, name_linenum2, name_symnum2) => {
                             reader.next();
 
-                            let typvar = Node::new(NodeType::TypedVar(n1, n2));
+                            let typvar = Node::new(
+                                NodeType::TypedVar(
+                                    n1, n2, name_linenum2, name_linenum2)
+                            );
 
                             match reader.tok() {
 
-                                Token::Assign(_, _) => {
+                                Token::Assign(assign_linenum, assign_symnum) => {
                                     reader.skip("=", state);
 
                                     let initexpr = expression(reader, state);
         
-                                    let mut assign = Node::new(NodeType::Assign);
+                                    let mut assign = Node::new(
+                                        NodeType::Assign(
+                                            assign_linenum,
+                                            assign_symnum
+                                        ));
                                     assign.children.push(typvar);
                                     assign.children.push(initexpr);
         
@@ -834,7 +919,9 @@ fn statement(reader: &mut Reader, state: &State) -> Node {
         
                                     let body = block(reader, state);
         
-                                    let mut forloop = Node::new(NodeType::For);
+                                    let mut forloop = Node::new(
+                                        NodeType::For(for_linenum, for_symnum
+                                    ));
                                     forloop.children.extend([assign, condexpr, mutexpr, body]);
                                     return forloop;
                                 }
@@ -847,7 +934,9 @@ fn statement(reader: &mut Reader, state: &State) -> Node {
                                     reader.skip("{", state);
                                     let body = block(reader, state);
 
-                                    let mut forloop = Node::new(NodeType::For);
+                                    let mut forloop = Node::new(
+                                        NodeType::For(for_linenum, for_symnum
+                                    ));
                                     // let mut in_node = Node::new(NodeType::In);
                                     forloop.children.push(typvar);
                                     forloop.children.push(iterable);
@@ -866,13 +955,17 @@ fn statement(reader: &mut Reader, state: &State) -> Node {
 
                         // Without declaration
                         // for (i=x; ...
-                        Token::Assign(_, _) => {
+                        Token::Assign(assign_linenum, assign_symnum) => {
 
                             reader.next();
                             let initexpr = expression(reader, state);
 
-                            let mut assign = Node::new(NodeType::Assign);
-                            let namenode = Node::new(NodeType::Name(n1));
+                            let mut assign = Node::new(
+                                NodeType::Assign(assign_linenum, assign_symnum
+                                ));
+                            let namenode = Node::new(
+                                NodeType::Name(n1, name_linenum, name_symnum
+                            ));
 
                             assign.children.push(namenode);
                             assign.children.push(initexpr);
@@ -890,7 +983,9 @@ fn statement(reader: &mut Reader, state: &State) -> Node {
 
                             let body = block(reader, state);
 
-                            let mut forloop = Node::new(NodeType::For);
+                            let mut forloop = Node::new(
+                                NodeType::For(for_linenum, for_symnum
+                            ));
                             forloop.children.extend([assign, condexpr, mutexpr, body]);
 
                             return forloop;
@@ -903,7 +998,6 @@ fn statement(reader: &mut Reader, state: &State) -> Node {
                                 reader.tok()
                             );
                         }
-
                     }
                 }
 
@@ -917,10 +1011,10 @@ fn statement(reader: &mut Reader, state: &State) -> Node {
             }
         }
 
-        Token::Return(_, _) => {
+        Token::Return(linenum, symnum) => {
             reader.next();
             let val = expression(reader, state);
-            let mut ret = Node::new(NodeType::Return);
+            let mut ret = Node::new(NodeType::Return(linenum, symnum));
             ret.children.push(val);
             return ret;
         }
@@ -937,7 +1031,7 @@ fn conditional(reader: &mut Reader, ctx: &State) -> Node {
 
     match reader.tok() {
 
-        Token::If(_, _) => {
+        Token::If(linenum, symnum) => {
             reader.next();
             reader.skip("(", ctx);
 
@@ -948,18 +1042,18 @@ fn conditional(reader: &mut Reader, ctx: &State) -> Node {
 
             let bodynode = block(reader, ctx);
 
-            let mut ifnode = Node::new(NodeType::If);
+            let mut ifnode = Node::new(NodeType::If(linenum, symnum));
             ifnode.children.push(boolnode);
             ifnode.children.push(bodynode);
             return ifnode;
         }
-        Token::Else(_, _) => {
+        Token::Else(linenum, symnum) => {
 
             reader.next();
 
             match reader.tok() {
 
-                Token::If(_, _) => {
+                Token::If(linenum, symnum) => {
 
                     reader.next();
                     reader.skip("(", ctx);
@@ -971,7 +1065,7 @@ fn conditional(reader: &mut Reader, ctx: &State) -> Node {
 
                     let bodynode = block(reader, ctx);
 
-                    let mut elseifnode = Node::new(NodeType::ElseIf);
+                    let mut elseifnode = Node::new(NodeType::ElseIf(linenum, symnum));
                     elseifnode.children.push(boolnode);
                     elseifnode.children.push(bodynode);
                     return elseifnode;
@@ -983,7 +1077,7 @@ fn conditional(reader: &mut Reader, ctx: &State) -> Node {
 
                     let bodynode = block(reader, ctx);
 
-                    let mut elsenode = Node::new(NodeType::Else);
+                    let mut elsenode = Node::new(NodeType::Else(linenum, symnum));
                     elsenode.children.push(bodynode);
                     return elsenode;
                 }

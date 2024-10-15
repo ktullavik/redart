@@ -207,15 +207,16 @@ fn filecurse(
         let f = &state.globals[i];
 
         match &f.nodetype {
-            NodeType::FunDef(name, _) |
-            NodeType::Constructor(name, _) |
-            NodeType::TopVarLazy(_, name) |
-            NodeType::ConstTopLazy(_, name) => {
+            NodeType::FunDef(name, _, _, _) |
+            NodeType::Constructor(name, _, _, _) |
+            NodeType::TopVarLazy(_, name, _, _) |
+            NodeType::ConstTopLazy(_, name, _, _) => {
                 if looktable.contains_key(name) {
                     // As dart.
                     dart_evalerror(
                         format!("'{}' is already declared in this scope.", name),
-                        state
+                        state,
+                        &f
                     )
                 }
                 looktable.insert(name.clone(), i);
@@ -241,10 +242,10 @@ fn filecurse(
 
             let f = &state.globals[i];
             match &f.nodetype {
-                NodeType::FunDef(name, _) |
-                NodeType::Constructor(name, _) |
-                NodeType::TopVarLazy(_, name) |
-                NodeType::ConstTopLazy(_, name) => {
+                NodeType::FunDef(name, _, _, _) |
+                NodeType::Constructor(name, _, _, _) |
+                NodeType::TopVarLazy(_, name, _, _) |
+                NodeType::ConstTopLazy(_, name, _, _) => {
                     if !looktable.contains_key(name) {
                         looktable.insert(name.clone(), i);
                     }
@@ -282,7 +283,7 @@ fn evaluate(filepath: String, state: &mut State, dirs: &Dirs) {
     state.filepath = filename.to_string();
 
     match &mainfunc.nodetype {
-        NodeType::FunDef(_, _) => {
+        NodeType::FunDef(_, _, _, _) => {
             let mainbody = &mainfunc.children[1];
             state.stack.push_call();
             evaluator::eval(mainbody, state);
