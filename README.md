@@ -12,7 +12,8 @@ The ambition is to create a simple and portable implementation of Dart. It shoul
 | Initializer lists      | TODO                                                                                               |
 | Private members        | TODO                                                                                               |
 | Static members         | TODO                                                                                               |
-| Getters/setters        | TODO                                                                                               |
+| Getters                | TODO                                                                                               |
+| Setters                | TODO                                                                                               |
 | Optional arguments     | TODO                                                                                               |
 | Arrow functions        | TODO                                                                                               |
 | Abstract classes       | TODO                                                                                               |
