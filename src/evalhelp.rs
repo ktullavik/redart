@@ -94,8 +94,15 @@ pub fn call_function(
             // but stored in the new call frame.
     
             state.stack.push_call();
-            for i in 0 .. params.len() {
-                state.stack.add_new(params[i].name.as_str(), argobjs.pop().unwrap());
+
+            // Loop params backwards so that we can use pop().
+            let mut i = params.len() as isize;
+            loop {
+                i -= 1;
+                if i < 0 {
+                    break;
+                }
+                state.stack.add_new(params[i as usize].name.as_str(), argobjs.pop().unwrap());
             }
     
             let oldfilename = state.filepath.clone();
