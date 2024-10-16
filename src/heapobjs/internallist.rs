@@ -1,3 +1,6 @@
+use rand::seq::SliceRandom;
+use rand::thread_rng;
+
 use crate::object::Object;
 use crate::objsys::RefKey;
 
@@ -49,6 +52,12 @@ impl InternalList {
     
     pub fn remove_range(&mut self, start: usize, end: usize) {
         self.els.drain(start .. end);
+    }
+
+
+    pub fn shuffle(&mut self) {
+        let mut rng = thread_rng();
+        self.els.shuffle(&mut rng);
     }
 
 

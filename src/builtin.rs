@@ -19,6 +19,7 @@ pub fn has_function(name: &str) -> bool {
         "__LIST_CLEAR" |
         "__LIST_REMOVELAST" |
         "__LIST_REMOVERANGE" |
+        "__LIST_SHUFFLE" |
         "__LIST_TOSTRING" |
         "__MATH_ACOS" |
         "__MATH_ASIN" |
@@ -253,6 +254,19 @@ pub fn call(fnode: &Node, name: &str, state: &mut State) -> Object {
             return Object::Null;
         }
 
+        "__LIST_SHUFFLE" => {
+            if args.len() < 1 {
+                panic!("Argument expected by __LIST_SHUFFLE.");
+            }
+
+            if let Object::Reference(rk) = &args[0]  {
+                let ilist = state.objsys.get_list_mut(rk);
+                ilist.shuffle();
+                return Object::Null;
+            }
+            panic!("__LIST_SHUFFLE: ilist reference expected, got: {}", &args[0])
+        }
+
         "__LIST_TOSTRING" => {
             if args.len() < 1 {
                 panic!("Argument expected by __LIST_TOSTRING.");
@@ -262,6 +276,7 @@ pub fn call(fnode: &Node, name: &str, state: &mut State) -> Object {
                 let ilist = state.objsys.get_list(rk);
                 return Object::String(ilist.to_string());
             }
+            // XXX I think panic here
             return Object::String(format!("{}", args[0]));
         }
 

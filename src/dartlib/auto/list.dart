@@ -138,10 +138,13 @@ class List {
     // }
 
 
-    // Shuffles the elements of this list randomly. 
+    // Shuffles the elements of this list randomly.
+    // 
+    // TODO
     // void shuffle([Random? random]) {
-    //     assert(false, "Not implemented: List.shuffle()");
-    // }
+    void shuffle() {
+        __LIST_SHUFFLE(__list);
+    }
 
 
     // Sorts this list according to the order specified by the compare function. 
