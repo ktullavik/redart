@@ -1,4 +1,4 @@
-use crate::std::env;
+use std::env;
 
 
 pub struct Dirs {
