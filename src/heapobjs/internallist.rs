@@ -46,6 +46,11 @@ impl InternalList {
         Object::Null
     }
 
+    
+    pub fn remove_range(&mut self, start: usize, end: usize) {
+        self.els.drain(start .. end);
+    }
+
 
     pub fn foreach(&self, f: &dyn Fn(&Object)) {
 

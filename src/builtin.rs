@@ -18,6 +18,7 @@ pub fn has_function(name: &str) -> bool {
         "__LIST_ADD" |
         "__LIST_CLEAR" |
         "__LIST_REMOVELAST" |
+        "__LIST_REMOVERANGE" |
         "__LIST_TOSTRING" |
         "__MATH_ACOS" |
         "__MATH_ASIN" |
@@ -208,6 +209,48 @@ pub fn call(fnode: &Node, name: &str, state: &mut State) -> Object {
                 }
                 x => panic!("Unexepected argument for __LIST_REMOVELAST: {}", x)
             }
+        }
+
+        "__LIST_REMOVERANGE" => {
+            if args.len() != 3 {
+                panic!("Expected 3 arguments for __LIST_REMOVERANGE. Got: {}", args.len());
+            }
+
+            if let Object::Reference(rk) = &args[0]  {
+                let ilist = state.objsys.get_list_mut(rk);
+
+                match &args[1] {
+                    Object::Int(n1) => {
+
+                        if *n1 < 0 {
+                            panic!("First arg of __LIST_REMOVERANGE must be positive or 0. Got: {}", n1)
+                        }
+
+                        match &args[2] {
+
+                            Object::Int(n2) => {
+
+                                if *n2 < 0 {
+                                    panic!("Second arg of __LIST_REMOVERANGE must be positive or 0. Got: {}", n2)
+                                }
+                                if *n2 < *n1 {
+                                    panic!("Second arg of __LIST_REMOVERANGE must be greater than first arg. {} {}", n2, n1)
+                                }
+                                if *n2 as usize > ilist.els.len() {
+                                    panic!("Second arg of __LIST_REMOVERANGE must be less than list length.")
+                                }
+
+                                ilist.remove_range(*n1 as usize, *n2 as usize);
+                            }
+
+                            x => panic!("Unexpected second argument for __LIST_REMOVERANGE: {}", x)
+                        }
+                    }
+                    x => panic!("Unexpected first argument for __LIST_REMOVERANGE: {}", x)
+                }
+
+            }
+            return Object::Null;
         }
 
         "__LIST_TOSTRING" => {
