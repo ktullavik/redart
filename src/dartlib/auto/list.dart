@@ -93,7 +93,7 @@ class List {
 
     // Removes the object at position index from this list. 
     E removeAt(int index) {
-        assert(false, "Not implemented: List.removeAt()");
+        __LIST_REMOVERANGE(__list, index, index + 1);
     }
 
     // Removes and returns the last object in this list. 

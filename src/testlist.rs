@@ -110,6 +110,7 @@ pub const TESTS: &'static [&'static str] = &[
     "105.calling_into_list_of_objects.dart",
     "106.list_removerange.dart",
     "107.list_shuffle.dart",
+    "108.list_remove_at.dart",
 ];
 
 

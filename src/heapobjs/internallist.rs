@@ -42,6 +42,11 @@ impl InternalList {
     }
 
 
+    pub fn remove_at(&mut self, index: usize) -> Object {
+        self.els.remove(index)
+    }
+
+
     pub fn remove_last(&mut self) -> Object {
         if self.els.len() > 0 {
             return self.els.pop().unwrap()

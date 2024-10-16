@@ -17,6 +17,7 @@ pub fn has_function(name: &str) -> bool {
         "__IO_FILE_READ_AS_STRING" |
         "__LIST_ADD" |
         "__LIST_CLEAR" |
+        "__LIST_REMOVEAT" |
         "__LIST_REMOVELAST" |
         "__LIST_REMOVERANGE" |
         "__LIST_SHUFFLE" |
@@ -197,6 +198,36 @@ pub fn call(fnode: &Node, name: &str, state: &mut State) -> Object {
             return Object::Null;
         }
 
+        "__LIST_REMOVEAT" => {
+            if args.len() != 2 {
+                panic!("Two arguments expected by __LIST_REMOVEAT.");
+            }
+
+            match &args[0] {
+
+                Object::Reference(rk) => {
+                    
+                    match &args[1] {
+
+                        Object::Int(i) => {
+
+                            let ilist = state.objsys.get_list_mut(rk);
+
+                            if *i < 0 {
+                                panic!("Second argument of __LIST_REMOVEAT must be positive or 0. Got: {}", i)
+                            }
+                            if *i >= (ilist.els.len() as i64) {
+                                panic!("Second argument of __LIST_REMOVEAT is out of bounds: {} (list length is {})", i, ilist.els.len())
+                            }
+                            return ilist.remove_at(*i as usize)
+                        }
+                        x => panic!("Unexpected second argument for __LIST_REMOVEAT: {}", x)
+                    }
+                }
+                x => panic!("Unexepected first argument for __LIST_REMOVEAT: {}", x)
+            }
+        }
+
         "__LIST_REMOVELAST" => {
             if args.len() < 1 {
                 panic!("Argument expected by __LIST_REMOVELAST.");
@@ -224,7 +255,7 @@ pub fn call(fnode: &Node, name: &str, state: &mut State) -> Object {
                     Object::Int(n1) => {
 
                         if *n1 < 0 {
-                            panic!("First arg of __LIST_REMOVERANGE must be positive or 0. Got: {}", n1)
+                            panic!("Second arg of __LIST_REMOVERANGE must be positive or 0. Got: {}", n1)
                         }
 
                         match &args[2] {
@@ -232,13 +263,13 @@ pub fn call(fnode: &Node, name: &str, state: &mut State) -> Object {
                             Object::Int(n2) => {
 
                                 if *n2 < 0 {
-                                    panic!("Second arg of __LIST_REMOVERANGE must be positive or 0. Got: {}", n2)
+                                    panic!("Third arg of __LIST_REMOVERANGE must be positive or 0. Got: {}", n2)
                                 }
                                 if *n2 < *n1 {
-                                    panic!("Second arg of __LIST_REMOVERANGE must be greater than first arg. {} {}", n2, n1)
+                                    panic!("Third arg of __LIST_REMOVERANGE must be greater than first arg. {} {}", n2, n1)
                                 }
                                 if *n2 as usize > ilist.els.len() {
-                                    panic!("Second arg of __LIST_REMOVERANGE must be less than list length.")
+                                    panic!("Third arg of __LIST_REMOVERANGE must be less than list length.")
                                 }
 
                                 ilist.remove_range(*n1 as usize, *n2 as usize);
