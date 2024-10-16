@@ -1058,7 +1058,23 @@ pub fn eval(
             let mut built : String = String::new();
 
             for i in 0 .. evaled_itps.len() {
-                built = format!("{}{}{}", parts[0], built.clone(), evaled_itps[i].clone());
+
+                // If it's a reference, call the toString method on the object.
+                if let Object::Reference(rk) = &evaled_itps[i] {
+                    let inst = state.objsys.get_instance(&rk);
+                    let c = state.objsys.get_class(&inst.classname);
+                    let meth_obj = c.get_method("toString", state, &node.children[i]);
+                    let str_obj = call_function(
+                        MaybeRef::Ref(rk.clone()), 
+                        &meth_obj, 
+                        &node.children[0], 
+                        state
+                    );
+                    built = format!("{}{}{}", parts[0], built.clone(), str_obj);
+                }
+                else {
+                    built = format!("{}{}{}", parts[0], built.clone(), evaled_itps[i].clone());
+                }
             }
             built.push_str(parts.last().unwrap());
 
