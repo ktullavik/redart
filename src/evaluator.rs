@@ -1058,7 +1058,7 @@ pub fn eval(
             let mut built : String = String::new();
 
             for i in 0 .. evaled_itps.len() {
-                built = String::from(format!("{}{}{}", parts[0], built.clone(), evaled_itps[i].clone()).as_str());
+                built = format!("{}{}{}", parts[0], built.clone(), evaled_itps[i].clone());
             }
             built.push_str(parts.last().unwrap());
 
