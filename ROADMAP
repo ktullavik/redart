@@ -1,9 +1,0 @@
-
-
-* Figure out and implement the objsys structure and lookup mechanics so that
-  files can only use directly imported resources.
-
-
-
-
-
