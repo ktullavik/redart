@@ -17,6 +17,7 @@ pub fn has_function(name: &str) -> bool {
         "__IO_FILE_READ_AS_STRING" |
         "__LIST_ADD" |
         "__LIST_CLEAR" |
+        "__LIST_INSERT" |
         "__LIST_REMOVEAT" |
         "__LIST_REMOVELAST" |
         "__LIST_REMOVERANGE" |
@@ -198,6 +199,36 @@ pub fn call(fnode: &Node, name: &str, state: &mut State) -> Object {
             return Object::Null;
         }
 
+        "__LIST_INSERT" => {
+            if args.len() != 3 {
+                panic!("Three arguments expected by __LIST_INSERT.");
+            }
+
+            match &args[0] {
+
+                Object::Reference(rk) => {
+
+                    match &args[1] {
+
+                        Object::Int(n) => {
+
+                            let ilist = state.objsys.get_list_mut(rk);
+
+                            if *n < 0 {
+                                panic!("Negative index in __LIST_INSERT: {}", n)
+                            }
+                            if *n > (ilist.els.len() as i64) {
+                                panic!("Index out of bound in __LIST_INSERT: {} (list length is {})", n, ilist.els.len())
+                            }
+                            ilist.insert(n.clone() as usize, args[2].clone());
+                        }
+                        x => panic!("Unexpected second argument for __LIST_INSERT: {}", x)
+                    }
+                }
+                x => panic!("Unexpected first argument for __LIST_INSERT: {}", x)
+            }
+        }
+
         "__LIST_REMOVEAT" => {
             if args.len() != 2 {
                 panic!("Two arguments expected by __LIST_REMOVEAT.");
@@ -224,7 +255,7 @@ pub fn call(fnode: &Node, name: &str, state: &mut State) -> Object {
                         x => panic!("Unexpected second argument for __LIST_REMOVEAT: {}", x)
                     }
                 }
-                x => panic!("Unexepected first argument for __LIST_REMOVEAT: {}", x)
+                x => panic!("Unexpected first argument for __LIST_REMOVEAT: {}", x)
             }
         }
 

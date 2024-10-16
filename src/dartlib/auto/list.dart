@@ -63,7 +63,7 @@ class List {
 
     // Inserts element at position index in this list. 
     void insert(int index, E element) {
-        assert(false, "Not implemented: List.insert()");
+        __LIST_INSERT(__list, index, element);
     }
 
 

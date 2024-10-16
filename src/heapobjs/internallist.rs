@@ -42,6 +42,11 @@ impl InternalList {
     }
 
 
+    pub fn insert(&mut self, index: usize, el: Object) {
+        self.els.insert(index, el);
+    }
+
+
     pub fn remove_at(&mut self, index: usize) -> Object {
         self.els.remove(index)
     }
