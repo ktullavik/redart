@@ -16,6 +16,7 @@ pub fn has_function(name: &str) -> bool {
         "__IO_FILE_CREATE" |
         "__IO_FILE_READ_AS_STRING" |
         "__LIST_ADD" |
+        "__LIST_ADDALL" |
         "__LIST_CLEAR" |
         "__LIST_INSERT" |
         "__LIST_REMOVEAT" |
@@ -180,6 +181,58 @@ pub fn call(fnode: &Node, name: &str, state: &mut State) -> Object {
                 x => panic!("Unexpected argument for __LIST_ADD: {}", x)
             }
             return Object::Null;
+        }
+
+        "__LIST_ADDALL" => {
+            if args.len() != 2 {
+                panic!("Two arguments expected by __LIST_ADDALL");
+            }
+
+            match &args[0] {
+
+                Object::Reference(rk1) => {
+
+                    match &args[1] {
+
+                        Object::Reference(rk2) => {
+
+                            if !state.objsys.has_instance(rk2) {
+                                evalerror(
+                                    format!("Unexpeced argument for List.addAll(iterable)"),
+                                    state,
+                                    &argnodes[1]
+                                )
+                            }
+                            let arg_list_inst = state.objsys.get_instance(rk2);
+                            if !arg_list_inst.has_field(String::from("__list")) {
+                                evalerror(
+                                    format!("Unexpeced argument for List.addAll(iterable)"),
+                                    state,
+                                    &argnodes[1]
+                                )
+                            }
+
+                            let arg_ilist_ref = arg_list_inst.get_field(String::from("__list"));
+
+                            match arg_ilist_ref {
+
+                                Object::Reference(arg_ilist_rk) => {
+
+                                    if !state.objsys.has_list(arg_ilist_rk) {
+                                        panic!("Could not find list in __list reference.")
+                                    }        
+                                    let new_els = state.objsys.get_list(arg_ilist_rk).els.clone();
+                                    let ilist = state.objsys.get_list_mut(rk1);                            
+                                    ilist.add_all(new_els);
+                                }
+                                _ => panic!("Internal __list field was not a reference.")
+                            }
+                        }
+                        x => panic!("Unexpected second argument for __LIST_ADDALL: {}", x)
+                    }
+                }
+                x => panic!("Unexpected first argument for __LIST_ADDALL: {}", x)
+            }
         }
 
         "__LIST_CLEAR" => {

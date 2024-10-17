@@ -12,10 +12,13 @@ class List {
     }
 
 
-    // Appends all objects of iterable to the end of this list. 
+    // Appends all objects of iterable to the end of this list.
+    //
+    // TODO
     // void addAll(Iterable<E> iterable) {
-    //     assert(false, "Not implemented: List.addAll()");
-    // }
+    void addAll(List iterable) {
+        __LIST_ADDALL(__list, iterable);
+    }
 
 
     // An unmodifiable Map view of this list. 

@@ -132,6 +132,11 @@ impl ObjSys {
     }
 
 
+    pub fn has_list(&self, rk: &RefKey) -> bool {
+        self.listmap.contains_key(rk)
+    }
+
+
     pub fn get_instance(&self, id: &RefKey) -> &Instance {
         if self.instancemap.contains_key(id) {
             return &self.instancemap.get(id).unwrap();

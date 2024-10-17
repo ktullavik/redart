@@ -42,6 +42,13 @@ impl InternalList {
     }
 
 
+    pub fn add_all(&mut self, iterable: Vec<Object>) {
+        for el in iterable {
+            self.els.push(el);
+        }
+    }
+
+
     pub fn insert(&mut self, index: usize, el: Object) {
         self.els.insert(index, el);
     }
