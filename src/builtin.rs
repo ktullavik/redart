@@ -3,7 +3,7 @@ use rand::Rng;
 use crate::state::State;
 use crate::object::Object;
 use crate::evalhelp::{argnodes_to_argobjs, call_function, MaybeRef};
-use crate::NodeType;
+use crate::{api, NodeType};
 use crate::node::Node;
 use crate::heapobjs::InternalFile;
 use crate::error::evalerror;
@@ -168,231 +168,35 @@ pub fn call(fnode: &Node, name: &str, state: &mut State) -> Object {
         }
 
         "__LIST_ADD" => {
-            if args.len() != 2 {
-                panic!("Two arguments expected by __LIST_ADD.");
-            }
-
-            match args.get(0).unwrap() {
-
-                Object::Reference(rk) => {
-                    let ilist = state.objsys.get_list_mut(rk);
-                    ilist.add(args[1].clone());
-                }
-                x => panic!("Unexpected argument for __LIST_ADD: {}", x)
-            }
-            return Object::Null;
+            return api::list::add(fnode, args, state);
         }
-
         "__LIST_ADDALL" => {
-            if args.len() != 2 {
-                panic!("Two arguments expected by __LIST_ADDALL");
-            }
-
-            match &args[0] {
-
-                Object::Reference(rk1) => {
-
-                    match &args[1] {
-
-                        Object::Reference(rk2) => {
-
-                            if !state.objsys.has_instance(rk2) {
-                                evalerror(
-                                    format!("Unexpeced argument for List.addAll(iterable)"),
-                                    state,
-                                    &argnodes[1]
-                                )
-                            }
-                            let arg_list_inst = state.objsys.get_instance(rk2);
-                            if !arg_list_inst.has_field(String::from("__list")) {
-                                evalerror(
-                                    format!("Unexpeced argument for List.addAll(iterable)"),
-                                    state,
-                                    &argnodes[1]
-                                )
-                            }
-
-                            let arg_ilist_ref = arg_list_inst.get_field(String::from("__list"));
-
-                            match arg_ilist_ref {
-
-                                Object::Reference(arg_ilist_rk) => {
-
-                                    if !state.objsys.has_list(arg_ilist_rk) {
-                                        panic!("Could not find list in __list reference.")
-                                    }        
-                                    let new_els = state.objsys.get_list(arg_ilist_rk).els.clone();
-                                    let ilist = state.objsys.get_list_mut(rk1);                            
-                                    ilist.add_all(new_els);
-                                }
-                                _ => panic!("Internal __list field was not a reference.")
-                            }
-                        }
-                        x => panic!("Unexpected second argument for __LIST_ADDALL: {}", x)
-                    }
-                }
-                x => panic!("Unexpected first argument for __LIST_ADDALL: {}", x)
-            }
+            return api::list::add_all(fnode, argnodes, args, state);
         }
-
         "__LIST_CLEAR" => {
-            if args.len() != 1 {
-                panic!("Argument expected by __LIST_CLEAR.");
-            }
-
-            match args.get(0).unwrap() {
-
-                Object::Reference(rk) => {
-                    let ilist = state.objsys.get_list_mut(rk);
-                    ilist.set_elements(Vec::new());
-                    // state.liststore.set_elements(rk.clone(), Vec::new())
-                }
-                x => panic!("Unexepcted argument for __LIST_CLEAR: {}", x)
-            }
-            return Object::Null;
+            return api::list::clear(fnode, args, state);
         }
-
         "__LIST_INSERT" => {
-            if args.len() != 3 {
-                panic!("Three arguments expected by __LIST_INSERT.");
-            }
-
-            match &args[0] {
-
-                Object::Reference(rk) => {
-
-                    match &args[1] {
-
-                        Object::Int(n) => {
-
-                            let ilist = state.objsys.get_list_mut(rk);
-
-                            if *n < 0 {
-                                panic!("Negative index in __LIST_INSERT: {}", n)
-                            }
-                            if *n > (ilist.els.len() as i64) {
-                                panic!("Index out of bound in __LIST_INSERT: {} (list length is {})", n, ilist.els.len())
-                            }
-                            ilist.insert(n.clone() as usize, args[2].clone());
-                        }
-                        x => panic!("Unexpected second argument for __LIST_INSERT: {}", x)
-                    }
-                }
-                x => panic!("Unexpected first argument for __LIST_INSERT: {}", x)
-            }
+            return api::list::insert(fnode, argnodes, args, state);
         }
-
         "__LIST_REMOVEAT" => {
-            if args.len() != 2 {
-                panic!("Two arguments expected by __LIST_REMOVEAT.");
-            }
-
-            match &args[0] {
-
-                Object::Reference(rk) => {
-                    
-                    match &args[1] {
-
-                        Object::Int(i) => {
-
-                            let ilist = state.objsys.get_list_mut(rk);
-
-                            if *i < 0 {
-                                panic!("Second argument of __LIST_REMOVEAT must be positive or 0. Got: {}", i)
-                            }
-                            if *i >= (ilist.els.len() as i64) {
-                                panic!("Second argument of __LIST_REMOVEAT is out of bounds: {} (list length is {})", i, ilist.els.len())
-                            }
-                            return ilist.remove_at(*i as usize)
-                        }
-                        x => panic!("Unexpected second argument for __LIST_REMOVEAT: {}", x)
-                    }
-                }
-                x => panic!("Unexpected first argument for __LIST_REMOVEAT: {}", x)
-            }
+            return api::list::remove_at(fnode, argnodes, args, state);
         }
 
         "__LIST_REMOVELAST" => {
-            if args.len() < 1 {
-                panic!("Argument expected by __LIST_REMOVELAST.");
-            }
-
-            match args.get(0).unwrap() {
-
-                Object::Reference(rk) => {
-                    let ilist = state.objsys.get_list_mut(rk);
-                    return ilist.remove_last();
-                }
-                x => panic!("Unexepected argument for __LIST_REMOVELAST: {}", x)
-            }
+            return api::list::remove_last(fnode, args, state);
         }
 
         "__LIST_REMOVERANGE" => {
-            if args.len() != 3 {
-                panic!("Expected 3 arguments for __LIST_REMOVERANGE. Got: {}", args.len());
-            }
-
-            if let Object::Reference(rk) = &args[0]  {
-                let ilist = state.objsys.get_list_mut(rk);
-
-                match &args[1] {
-                    Object::Int(n1) => {
-
-                        if *n1 < 0 {
-                            panic!("Second arg of __LIST_REMOVERANGE must be positive or 0. Got: {}", n1)
-                        }
-
-                        match &args[2] {
-
-                            Object::Int(n2) => {
-
-                                if *n2 < 0 {
-                                    panic!("Third arg of __LIST_REMOVERANGE must be positive or 0. Got: {}", n2)
-                                }
-                                if *n2 < *n1 {
-                                    panic!("Third arg of __LIST_REMOVERANGE must be greater than first arg. {} {}", n2, n1)
-                                }
-                                if *n2 as usize > ilist.els.len() {
-                                    panic!("Third arg of __LIST_REMOVERANGE must be less than list length.")
-                                }
-
-                                ilist.remove_range(*n1 as usize, *n2 as usize);
-                            }
-
-                            x => panic!("Unexpected second argument for __LIST_REMOVERANGE: {}", x)
-                        }
-                    }
-                    x => panic!("Unexpected first argument for __LIST_REMOVERANGE: {}", x)
-                }
-
-            }
-            return Object::Null;
+            return api::list::remove_range(fnode, argnodes, args, state);
         }
 
         "__LIST_SHUFFLE" => {
-            if args.len() < 1 {
-                panic!("Argument expected by __LIST_SHUFFLE.");
-            }
-
-            if let Object::Reference(rk) = &args[0]  {
-                let ilist = state.objsys.get_list_mut(rk);
-                ilist.shuffle();
-                return Object::Null;
-            }
-            panic!("__LIST_SHUFFLE: ilist reference expected, got: {}", &args[0])
+            return api::list::shuffle(fnode, args, state);
         }
 
         "__LIST_TOSTRING" => {
-            if args.len() < 1 {
-                panic!("Argument expected by __LIST_TOSTRING.");
-            }
-
-            if let Object::Reference(rk) = &args[0]  {
-                let ilist = state.objsys.get_list(rk);
-                return Object::String(ilist.to_string());
-            }
-            // XXX I think panic here
-            return Object::String(format!("{}", args[0]));
+            return api::list::to_string(fnode, args, state);
         }
 
         "__MATH_ACOS" => {

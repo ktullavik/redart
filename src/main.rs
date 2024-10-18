@@ -19,6 +19,7 @@ mod reader;
 mod dirs;
 mod heapobjs;
 mod evalhelp;
+mod api;
 
 use std::io::prelude::*;
 use std::env;
