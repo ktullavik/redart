@@ -1,4 +1,5 @@
 use std::process;
+use crate::object::Object;
 use crate::token::Token;
 use crate::State;
 use crate::node::Node;
@@ -36,3 +37,45 @@ pub fn evalerror<S: Into<String>>(msg: S, state: &State, node: &Node) -> ! {
         process::exit(1);
     }
 }
+
+
+pub fn err_arg_count(
+    fname: &str,
+    expected: usize,
+    got: usize,
+    fnode: &Node,
+    state: &State) -> ! {
+
+    evalerror(
+        format!("Expected {} argument(s) for {}(). Got: {}", got, fname, expected),
+        state,
+        fnode)
+}
+
+
+pub fn err_arg_type(
+    fname: &str,
+    expected: &str,
+    got: &Object,
+    argnode: &Node,
+    state: &State) -> ! {
+
+    evalerror(
+        format!("Illegal argument '{}' for {}(). Expected type: {}", got, fname, expected),
+        state,
+        argnode);
+}
+
+
+pub fn check_argc(
+    fname: &str,
+    expected: usize,
+    got: usize,
+    fnode: &Node,
+    state: &State) {
+
+    if expected != got {
+        err_arg_count(fname, expected, got, fnode, state)
+    }
+}
+

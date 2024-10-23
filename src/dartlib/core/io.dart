@@ -7,7 +7,7 @@ class File {
 
     File(this.filename) {
         // This sets _internalFile
-        __IO_FILE_CREATE(this, filename);
+        __IO_FILE_CONSTRUCT(this, filename);
     }
 
 
