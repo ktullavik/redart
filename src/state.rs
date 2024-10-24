@@ -1,5 +1,6 @@
 use std::time::Instant;
 use std::collections::HashMap;
+use crate::node::NodeType;
 use crate::stack::Stack;
 use crate::objsys::ObjSys;
 use crate::objsys::RefKey;
@@ -53,4 +54,26 @@ impl  State {
             debug: false
         }
     }
+
+
+    pub fn has_global(&self, name: &str) -> bool {
+        self.looktables[&self.filepath].contains_key(name)
+    }
+
+
+    pub fn get_global(&self, name: &str) -> Node {
+        self.globals[self.looktables[&self.filepath].get(name).unwrap().clone()].clone()
+    }
+
+
+    pub fn get_global_ref(&self, name: &str) -> &Node {
+        &self.globals[self.looktables[&self.filepath].get(name).unwrap().clone()]
+    }
+
+
+    pub fn set_global(&mut self, name: &str, val: Node) {
+        self.globals[self.looktables[&self.filepath].get(name).unwrap().clone()] = val;
+    }
+
+
 }

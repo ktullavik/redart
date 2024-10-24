@@ -50,10 +50,9 @@ pub fn eval(
                     }
 
                     // Look for globals.
-                    let ltable = &state.looktables[&state.filepath];
-                    if ltable.contains_key(name) {
-                        let global_index = ltable.get(name).unwrap().clone();
-                        let n = state.globals[global_index].clone();
+                    if state.has_global(name) {
+
+                        let n = state.get_global_ref(name);
 
                         match &n.nodetype {
 
@@ -68,7 +67,7 @@ pub fn eval(
                                         symnum.clone()
                                     )
                                 );
-                                state.globals[global_index] = newval;
+                                state.set_global(name, newval);
                                 return Object::Null;
                             }
                             NodeType::ConstTopLazy(_, name, _, _) |
@@ -76,7 +75,7 @@ pub fn eval(
                                 evalerror(format!(
                                     "Cannot change const: {}", name),
                                     state,
-                                    &n
+                                    n
                                 )
                             }
                             _ => panic!("Unexpected node type in globals: {}", n)
@@ -150,33 +149,33 @@ pub fn eval(
                             }
 
                             // Look for globals.
-                            let ltable = &state.looktables[&state.filepath];
-                            if ltable.contains_key(name) {
-                                let global_index = ltable.get(name).unwrap().clone();
-                                let n = state.globals[global_index].clone();
+                            if state.has_global(name) {
+
+                                let n = state.get_global(name);
 
                                 match &n.nodetype {
 
-                                    NodeType::TopVarLazy(typ, name, _, _) => {
+                                    NodeType::TopVarLazy(typ, topname, _, _) => {
                                         // Eval lazy and replace.
 
-                                        if *name == state.eval_var {
-                                            evalerror(format!("Top level variable '{}' depends on itself.", name), state, node);
+                                        if *topname == state.eval_var {
+                                            evalerror(format!("Top level variable '{}' depends on itself.", topname), state, node);
                                         }
                                         if state.eval_var.len() == 0 {
-                                            state.eval_var = name.clone();
+                                            state.eval_var = topname.clone();
                                         }
 
                                         let compval = eval(&n.children[0], state);
+
                                         let wrapped = Node::new(NodeType::TopVar(
                                             typ.clone(),
-                                            name.clone(),
+                                            topname.clone(),
                                             Box::new(compval),
                                             linenum.clone(),
                                             symnum.clone()
                                         ));
                                         state.eval_var = String::from("");
-                                        state.globals[global_index] = wrapped;
+                                        state.set_global(topname.as_str(), wrapped);
 
                                         let ulist_ref = eval(&node.children[0].children[0], state);
                                         let index = eval(&node.children[0].children[1], state);
@@ -1166,10 +1165,9 @@ pub fn eval(
                 }
             }
 
-            let ltable = &state.looktables[&state.filepath];
-            if ltable.contains_key(s) {
-                let index = ltable.get(s).unwrap().clone();
-                let n = state.globals[index].clone();
+            if state.has_global(s) {
+
+                let n = state.get_global(s);
 
                 match &n.nodetype {
 
@@ -1195,7 +1193,7 @@ pub fn eval(
                             linenum.clone(),
                             symnum.clone()
                         ));
-                        state.globals[index] = resolved_node;
+                        state.set_global(s, resolved_node);
                         return res;
                     }
 
@@ -1227,7 +1225,7 @@ pub fn eval(
                             linenum.clone(),
                             symnum.clone()
                         ));
-                        state.globals[index] = resolved_node;
+                        state.set_global(s, resolved_node);
                         return res;
                     }
 
@@ -1335,11 +1333,9 @@ pub fn eval(
             }
 
             // Next we look at other functions available from current file.
-            let ltable = &state.looktables[&state.filepath];
-            if ltable.contains_key(s) {
+            if state.has_global(s) {
 
-                let funcindex = ltable.get(s).unwrap();
-                let funcnode = &state.globals[*funcindex];
+                let funcnode = state.get_global(s);
 
                 return match funcnode.nodetype {
                     NodeType::FunDef(_, _, _, _) => {

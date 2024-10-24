@@ -267,11 +267,9 @@ pub fn call_constructor(
                     if parent_name != "" {
                         let parent_args = &Node::new(NodeType::ArgList(0, 0));
 
-                        let ltable = &state.looktables[&state.filepath];
-                        if ltable.contains_key(parent_name.as_str()) {
+                        if state.has_global(parent_name.as_str()) {
 
-                            let parent_cons_index = ltable.get(parent_name.as_str()).unwrap();
-                            let parent_cons = &state.globals[*parent_cons_index];
+                            let parent_cons = state.get_global_ref(parent_name.as_str());
 
                             match parent_cons.nodetype {
                                 NodeType::Constructor(_, _, _, _) => {
