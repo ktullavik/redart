@@ -1255,9 +1255,7 @@ pub fn eval(
         NodeType::CollAccess(_, _) => {
 
             let owner = eval(&node.children[0], state);
-
             let index_obj = eval(&node.children[1], state);
-
             let ilist_ref = get_field(owner, "__list", state, &node.children[0]);
 
             if let Object::Reference(ilist_rk) = ilist_ref {
@@ -1267,11 +1265,10 @@ pub fn eval(
                     if n >= 0 {
                         return ilist.get_el(n as usize)
                     }
-                    evalerror(format!("Index must be positive: {}", n), state, node)
                 }
                 evalerror(format!("Illegal index: {}", index_obj), state, node)
             }
-            evalerror(format!("Expected reference, got: {}", ilist_ref), state, &node.children[0])
+            evalerror(format!("Not indexable: {}", ilist_ref), state, &node.children[0]);
         }
 
         NodeType::MethodCall(name, owner, _filename, _, _) => {
