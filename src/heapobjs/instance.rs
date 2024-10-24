@@ -31,16 +31,21 @@ impl Instance {
     }
 
 
+    // TODO, check if field exist.
+    // Must have a separate non-checked variant for
+    // instance creation.
     pub fn set_field(&mut self, name: String, value: Object) {
         self.fields.insert(name, value);
     }
 
-    pub fn get_field(&self, name: String) -> &Object {
-        self.fields.get(name.as_str()).unwrap()
+
+    pub fn get_field(&self, name: &str) -> Object {
+        self.fields.get(name).unwrap().clone()
     }
 
-    pub fn has_field(&self, name: String) -> bool {
-        self.fields.contains_key(name.as_str())
+
+    pub fn has_field(&self, name: &str) -> bool {
+        self.fields.contains_key(name)
     }
 
 

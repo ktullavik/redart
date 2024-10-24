@@ -48,7 +48,7 @@ pub fn eval(
                     // Look in 'this' instance.
                     if state.objsys.has_this() {
                         let this = state.objsys.get_this_instance_mut();
-                        if this.has_field(name.to_string()) {
+                        if this.has_field(name) {
                             this.set_field(name.to_string(), right_obj);
                             return Object::Null;
                         }
@@ -125,7 +125,14 @@ pub fn eval(
                             if state.stack.has(name) {
                                 let ulist_ref = state.stack.get(name).clone();
                                 let index = eval(&node.children[0].children[1], state);
-                                set_list_element(ulist_ref, index, right_obj, state, &node.children[0].children[1]);
+                                set_list_element(
+                                    ulist_ref,
+                                    index,
+                                    right_obj,
+                                    state,
+                                    &node.children[0].children[0],
+                                    &node.children[0].children[1]
+                                );
                                 return Object::Null;
                             }
 
@@ -134,10 +141,17 @@ pub fn eval(
 
                                 let this = state.objsys.get_this_instance_mut();
 
-                                if this.has_field(name.to_string()) {
-                                    let ulist_ref = this.get_field(name.to_string()).clone();
+                                if this.has_field(name) {
+                                    let ulist_ref = this.get_field(name);
                                     let index = eval(&node.children[0].children[1], state);
-                                    set_list_element(ulist_ref, index, right_obj, state, &node.children[0].children[1]);
+                                    set_list_element(
+                                        ulist_ref,
+                                        index,
+                                        right_obj,
+                                        state,
+                                        &node.children[0].children[0],
+                                        &node.children[0].children[1]
+                                    );
                                     return Object::Null;
                                 }
                                 else {
@@ -176,13 +190,27 @@ pub fn eval(
 
                                         let ulist_ref = eval(&node.children[0].children[0], state);
                                         let index = eval(&node.children[0].children[1], state);
-                                        set_list_element(ulist_ref, index, right_obj, state, &node.children[0].children[1]);
+                                        set_list_element(
+                                            ulist_ref,
+                                            index,
+                                            right_obj,
+                                            state,
+                                            &n,
+                                            &node.children[0].children[1]
+                                        );
                                     }
 
                                     NodeType::TopVar(_,  _, _, _, _) => {
                                         let ulist_ref = eval(&node.children[0].children[0], state);
                                         let index = eval(&node.children[0].children[1], state);
-                                        set_list_element(ulist_ref, index, right_obj, state, &node.children[0].children[1]);
+                                        set_list_element(
+                                            ulist_ref,
+                                            index,
+                                            right_obj,
+                                            state,
+                                            &n,
+                                            &node.children[0].children[1]
+                                        );
                                     }
                                     NodeType::ConstTopLazy(_, _, _, _) |
                                     NodeType::ConstTopVar(_, _, _, _, _) => {
@@ -855,12 +883,17 @@ pub fn eval(
                         }
                     }
                     else {
-                        let this = state.objsys.get_this_instance_mut();
-                        let oldval = this.get_field(s.clone()).clone();
+                        let oldval = get_field(
+                            state.objsys.get_this_object(), 
+                            s,
+                            state,
+                            valnode
+                        );
 
                         match oldval {
                             Object::Int(n) => {
                                 let newval = Object::Int(n + 1);
+                                let this = state.objsys.get_this_instance_mut();
                                 this.set_field(s.clone(), newval.clone());
                                 return newval;
                             }
@@ -905,12 +938,17 @@ pub fn eval(
                         }
                     }
                     else {
-                        let this = state.objsys.get_this_instance_mut();
-                        let oldval = this.get_field(s.clone()).clone();
+                        let oldval = get_field(
+                            state.objsys.get_this_object(),
+                            s,
+                            state,
+                            valnode
+                        );
 
                         match oldval {
                             Object::Int(n) => {
                                 let newval = Object::Int(n - 1);
+                                let this = state.objsys.get_this_instance_mut();
                                 this.set_field(s.clone(), newval.clone());
                                 return newval;
                             }
@@ -955,12 +993,17 @@ pub fn eval(
                         }
                     }
                     else {
-                        let this = state.objsys.get_this_instance_mut();
-                        let oldval = this.get_field(s.clone()).clone();
+                        let oldval = get_field(
+                            state.objsys.get_this_object(), 
+                            s,
+                            state,
+                            valnode
+                        );
 
                         match oldval {
                             Object::Int(n) => {
                                 let newval = Object::Int(n + 1);
+                                let this = state.objsys.get_this_instance_mut();
                                 this.set_field(s.clone(), newval);
                                 return oldval;
                             }
@@ -1005,12 +1048,17 @@ pub fn eval(
                         }
                     }
                     else {
-                        let this = state.objsys.get_this_instance_mut();
-                        let oldval = this.get_field(s.clone()).clone();
+                        let oldval = get_field(
+                            state.objsys.get_this_object(),
+                            s,
+                            state,
+                            valnode
+                        );
 
                         match oldval {
                             Object::Int(n) => {
                                 let newval = Object::Int(n - 1);
+                                let this = state.objsys.get_this_instance_mut();
                                 this.set_field(s.clone(), newval);
                                 return oldval;
                             }
@@ -1093,16 +1141,9 @@ pub fn eval(
 
             // For Name, having a child means having an owner.
             if node.children.len() > 0 {
-
                 // Run parent through the loop for lookup.
                 let owner = eval(&node.children[0], state);
-
-                // Owner is reference
-                if let Object::Reference(refid) = owner.clone() {
-                    let instance = state.objsys.get_instance(&refid);
-                    return instance.get_field(s.to_string()).clone();
-                }
-                panic!("Unexpected owner for {}: {}", s, owner);
+                return get_field(owner, s, state, node);
             }
 
             // Don't access stack or this if we are lazy evaling a topvar.
@@ -1111,10 +1152,7 @@ pub fn eval(
                     return state.stack.get(s).clone();
                 }
                 else if state.objsys.has_this() {
-                    let this = state.objsys.get_this_instance();
-                    if this.has_field(s.to_string()) {
-                        return this.get_field(s.clone()).clone();
-                    }
+                    return get_field(state.objsys.get_this_object(), s, state, node);
                 }
             }
 
@@ -1212,37 +1250,29 @@ pub fn eval(
 
             let index_obj = eval(&node.children[1], state);
 
-            if let Object::Reference(rk) = owner {
-                let ulist = state.objsys.get_instance(&rk);
-                let ilist_ref = ulist.get_field(String::from("__list"));
+            let ilist_ref = get_field(owner, "__list", state, &node.children[0]);
 
-                if let Object::Reference(ilist_rk) = ilist_ref {
-                    let ilist = state.objsys.get_list(&ilist_rk);
+            if let Object::Reference(ilist_rk) = ilist_ref {
+                let ilist = state.objsys.get_list(&ilist_rk);
 
-                    if let Object::Int(n) = index_obj {
-                        if n < 0 {
-                            evalerror(
-                                format!("Index must be positive: {}", n),
-                                state,
-                                node
-                            )
-                        }
-                        return ilist.get_el(n as usize)
+                if let Object::Int(n) = index_obj {
+                    if n < 0 {
+                        evalerror(
+                            format!("Index must be positive: {}", n),
+                            state,
+                            node
+                        )
                     }
-                    evalerror(
-                        format!("Illegal index: {}", index_obj),
-                        state,
-                        node
-                    )
+                    return ilist.get_el(n as usize)
                 }
                 evalerror(
-                    format!("Expected reference, got: {}", ilist_ref),
+                    format!("Illegal index: {}", index_obj),
                     state,
-                    &node.children[0]
+                    node
                 )
             }
             evalerror(
-                format!("Cannot index into object: {}", owner),
+                format!("Expected reference, got: {}", ilist_ref),
                 state,
                 &node.children[0]
             )
@@ -1450,50 +1480,37 @@ pub fn eval(
                 let iter_ref = eval(&node.children[1], state);
                 let body = &node.children[2];
 
-                match iter_ref {
+                let ilist_ref = get_field(iter_ref, "__list", state, node);
 
-                    Object::Reference(rk) => {
-                        let ulist = state.objsys.get_instance(&rk);
-                        let ilist_ref = ulist.get_field(String::from("__list"));
+                match &ilist_ref {
 
-                        match &ilist_ref {
+                    Object::Reference(ilist_rk) => {
+                        let ilist = state.objsys.get_list(&ilist_rk);
 
-                            Object::Reference(ilist_rk) => {
-                                let ilist = state.objsys.get_list(&ilist_rk);
-
-                                // Put var on new, inner, stack frame
-                                let mut cloned = Vec::new();
-                                for obj in &ilist.els {
-                                    cloned.push(obj.clone());
-                                }
-        
-                                state.stack.push_lex();
-        
-                                for c in cloned {
-                                    match &typedvar.nodetype {
-                                        NodeType::TypedVar(_, name, _, _) => {
-                                            state.stack.add_new(name, c);
-                                            eval(body, state);
-                                        }
-                                        _ => {
-                                            panic!("For loop expecped typed var. Got: {}", &typedvar);
-                                        }
-                                    }
-                                }
-                                state.stack.pop_lex();
-                            }
-                            x => panic!("Expected reference, got: {}", x)
+                        // Put var on new, inner, stack frame
+                        let mut cloned = Vec::new();
+                        for obj in &ilist.els {
+                            cloned.push(obj.clone());
                         }
-                        return Object::Null;
+
+                        state.stack.push_lex();
+
+                        for c in cloned {
+                            match &typedvar.nodetype {
+                                NodeType::TypedVar(_, name, _, _) => {
+                                    state.stack.add_new(name, c);
+                                    eval(body, state);
+                                }
+                                _ => {
+                                    panic!("For loop expecped typed var. Got: {}", &typedvar);
+                                }
+                            }
+                        }
+                        state.stack.pop_lex();
                     }
-                    x => {
-                        evalerror(
-                            format!("Not iterable: {}", x),
-                            state,
-                            &node.children[1]
-                        )
-                    }
+                    x => panic!("Expected reference, got: {}", x)
                 }
+                return Object::Null;
             }
             else if node.children.len() == 4 {
                 // Four children means loop of the form

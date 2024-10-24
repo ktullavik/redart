@@ -13,31 +13,43 @@ pub enum MaybeRef {
 }
 
 
-pub fn set_list_element(ulist_ref: Object, index: Object, value: Object, state: &mut State, indexnode: &Node) -> Object {
+pub fn get_field(obj: Object, field: &str, state: &State, node: &Node) -> Object {
 
-    match ulist_ref {
-
-        Object::Reference(ulist_rk) => {
-
-            let ulist = state.objsys.get_instance(&ulist_rk);
-            let ilist_ref = ulist.get_field(String::from("__list")).clone();
-
-            if let Object::Reference(ilist_rk) = ilist_ref {
-                let ilist = state.objsys.get_list_mut(&ilist_rk);
-
-                if let Object::Int(i) = index {
-                    if i < 0 {
-                        evalerror("Index must be positive.", state, indexnode)
-                    }
-
-                    ilist.set_el(i as usize, value);
-                    return Object::Null;
-                }
-            }
-            panic!("Expected reference when setting list element.")
+    if let Object::Reference(rk) = obj {
+        let inst = state.objsys.get_instance(&rk);
+        if inst.has_field(field) {
+            return inst.get_field(field);
         }
-        x => panic!("Unexpected token: {}", x)
+        if let MaybeObject::Some(p) = &inst.parent {
+            return get_field(p.clone(), field, state, node);
+        }
+        evalerror(
+            format!("Object of type '{}' has no field '{}'", inst.classname, field),
+            state,
+            node
+        )
     }
+    panic!("Not a reference: {}", obj);
+}
+
+
+pub fn set_list_element(ulist_ref: Object, index: Object, value: Object, state: &mut State, owner_node: &Node, index_node: &Node) -> Object {
+
+    let ilist_ref = get_field(ulist_ref, "__list", state, owner_node);
+
+    if let Object::Reference(ilist_rk) = ilist_ref {
+        let ilist = state.objsys.get_list_mut(&ilist_rk);
+
+        if let Object::Int(i) = index {
+            if i < 0 {
+                evalerror("Index must be positive.", state, index_node)
+            }
+
+            ilist.set_el(i as usize, value);
+            return Object::Null;
+        }
+    }
+    panic!("Expected reference when setting list element.")
 }
 
 

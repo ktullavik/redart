@@ -113,6 +113,7 @@ pub const TESTS: &'static [&'static str] = &[
     "108.list_remove_at.dart",
     "109.list_insert.dart",
     "110.list_add_all.dart",
+    "111.read_super_field.dart",
 ];
 
 

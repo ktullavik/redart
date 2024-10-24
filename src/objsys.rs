@@ -209,6 +209,11 @@ impl ObjSys {
     }
 
 
+    pub fn get_this_object(&self) -> Object {
+        return Object::Reference(self.this.clone());
+    }
+
+
 }
 
 

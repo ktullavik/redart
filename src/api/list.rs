@@ -36,7 +36,7 @@ pub fn add_all(
         if let Object::Reference(rk2) = &args[1] {
 
             let arg_list_inst = state.objsys.get_instance(rk2);
-            if !arg_list_inst.has_field(String::from("__list")) {
+            if !arg_list_inst.has_field("__list") {
                 evalerror(
                     format!("Unexpected argument type for List.addAll(): {}",
                             arg_list_inst.classname),
@@ -45,14 +45,14 @@ pub fn add_all(
                 )
             }
 
-            let arg_ilist_ref = arg_list_inst.get_field(String::from("__list"));
+            let arg_ilist_ref = arg_list_inst.get_field("__list");
 
             if let Object::Reference(arg_ilist_rk) = arg_ilist_ref {
 
-                if !state.objsys.has_list(arg_ilist_rk) {
+                if !state.objsys.has_list(&arg_ilist_rk) {
                     panic!("Could not find list in __list reference: {}", arg_ilist_rk)
                 }        
-                let new_els = state.objsys.get_list(arg_ilist_rk).els.clone();
+                let new_els = state.objsys.get_list(&arg_ilist_rk).els.clone();
                 let ilist = state.objsys.get_list_mut(rk1);                            
                 ilist.add_all(new_els);
                 return Object::Null;
