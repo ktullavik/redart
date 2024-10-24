@@ -23,10 +23,10 @@ pub fn eval(
 
         NodeType::Assign(_, _) => {
 
+            let right_obj = eval(&node.children[1], state);
+
             match &node.children[0].nodetype {
                 NodeType::Name(name, linenum, symnum) => {
-
-                    let right_obj = eval(&node.children[1], state);
 
                     if node.children[0].children.len() > 0 {
                         let left_obj = eval(&node.children[0].children[0], state);
@@ -90,9 +90,6 @@ pub fn eval(
                     )
                 }
                 NodeType::TypedVar(_, name, _, _) => {
-
-                    let right_obj = eval(&node.children[1], state);
-
                     // TypedVar means we will allocate a new one on stack even if the name exists in a
                     // larger scope, like outside a loop or in a field. But fail if it's already on lex stack.
                     if state.stack.has_in_lexscope(name) {
@@ -109,8 +106,6 @@ pub fn eval(
                 }
 
                 NodeType::CollAccess(_, _) => {
-
-                    let right_obj = eval(&node.children[1], state);
 
                     match &node.children[0].children[0].nodetype {
 
