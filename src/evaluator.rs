@@ -1550,11 +1550,8 @@ pub fn eval(
 
                 let retval = eval(c, state);
 
-                match &retval {
-                    Object::Return(_) => {
-                        return retval;
-                    }
-                    _ => {}
+                if let Object::Return(_) = retval {
+                    return retval;
                 }
             }
             return Object::Null;
