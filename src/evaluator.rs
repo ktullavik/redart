@@ -849,7 +849,6 @@ pub fn eval(
 
         NodeType::PreIncrement(_, _) => {
 
-            // FIXME, needs eval
             let valnode = &node.children[0];
 
             match valnode.nodetype {
@@ -909,7 +908,6 @@ pub fn eval(
 
         NodeType::PreDecrement(_, _) => {
 
-            // FIXME, needs eval
             let valnode = &node.children[0];
 
             match valnode.nodetype {
@@ -969,7 +967,6 @@ pub fn eval(
 
         NodeType::PostIncrement(_, _) => {
 
-            // FIXME, needs eval
             let valnode = &node.children[0];
 
             match valnode.nodetype {
@@ -1029,7 +1026,6 @@ pub fn eval(
 
         NodeType::PostDecrement(_, _) => {
 
-            // FIXME, needs eval
             let valnode = &node.children[0];
 
             match valnode.nodetype {
