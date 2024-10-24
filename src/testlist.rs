@@ -115,6 +115,10 @@ pub const TESTS: &'static [&'static str] = &[
     "110.list_add_all.dart",
     "111.read_super_field.dart",
     "112.write_super_field.dart",
+    "113.global_preincrement.dart",
+    "114.global_predecrement.dart",
+    "115.global_increment.dart",
+    "116.global_decrement.dart",
 ];
 
 

@@ -26,68 +26,12 @@ pub fn eval(
             let right_obj = eval(&node.children[1], state);
 
             match &node.children[0].nodetype {
-                NodeType::Name(name, linenum, symnum) => {
 
-                    if node.children[0].children.len() > 0 {
-                        let left_obj = eval(&node.children[0].children[0], state);
-                        set_field(left_obj, name, right_obj, state, &node.children[0]);
-                        return Object::Null;
-                    }
-
-                    // Look on the stack.
-                    if state.stack.has(name) {
-                        state.stack.update(name, right_obj);
-                        return Object::Null;
-                    }
-
-                    // Look in 'this' instance.
-                    if state.objsys.has_this() {
-                        let this = state.objsys.get_this_instance_mut();
-                        if this.has_field(name) {
-                            set_field(state.objsys.get_this_object(), name, right_obj, state, &node.children[0]);
-                            return Object::Null;
-                        }
-                    }
-
-                    // Look for globals.
-                    if state.has_global(name) {
-
-                        let n = state.get_global_ref(name);
-
-                        match &n.nodetype {
-
-                            NodeType::TopVarLazy(typ, _, _, _) |
-                            NodeType::TopVar(typ, _, _, _, _) => {
-                                let newval = Node::new(
-                                    NodeType::TopVar(
-                                        typ.clone(),
-                                        name.clone(),
-                                        Box::new(right_obj),
-                                        linenum.clone(),
-                                        symnum.clone()
-                                    )
-                                );
-                                state.set_global(name, newval);
-                                return Object::Null;
-                            }
-                            NodeType::ConstTopLazy(_, name, _, _) |
-                            NodeType::ConstTopVar(_, name, _, _, _) => {
-                                evalerror(format!(
-                                    "Cannot change const: {}", name),
-                                    state,
-                                    n
-                                )
-                            }
-                            _ => panic!("Unexpected node type in globals: {}", n)
-                        }
-                    }
-
-                    evalerror(
-                        format!("Setter not found: '{}'", name),
-                        state,
-                        &node.children[0]
-                    )
+                NodeType::Name(_, _, _) => {
+                    set_name(&node.children[0], right_obj, state);
+                    return Object::Null;
                 }
+
                 NodeType::TypedVar(_, name, _, _) => {
                     // TypedVar means we will allocate a new one on stack even if the name exists in a
                     // larger scope, like outside a loop or in a field. But fail if it's already on lex stack.
@@ -851,55 +795,15 @@ pub fn eval(
 
             let valnode = &node.children[0];
 
-            match valnode.nodetype {
-                NodeType::Name(ref s, _, _) => {
-
-                    if state.stack.has(s) {
-                        let oldval = state.stack.get(s).clone();
-
-                        match oldval {
-                            Object::Int(n) => {
-                                let newval = Object::Int(n + 1);
-                                state.stack.update(s.as_str(), newval.clone());
-                                return newval;
-                            }
-                            _ => evalerror(
-                                format!("Illegal operand for preincrement: {}", oldval),
-                                state,
-                                &node.children[0]
-                            )
-                        }
-                    }
-                    else {
-                        let oldval = get_field(
-                            state.objsys.get_this_object(), 
-                            s,
-                            state,
-                            valnode
-                        );
-
-                        match oldval {
-                            Object::Int(n) => {
-                                let newval = Object::Int(n + 1);
-                                set_field(
-                                    state.objsys.get_this_object(),
-                                    s,
-                                    newval.clone(),
-                                    state,
-                                    valnode
-                                );
-                                return newval;
-                            }
-                            _ => evalerror(
-                                format!("Illegal operand for preincrement: {}", oldval),
-                                state,
-                                &node.children[0]
-                            )
-                        }
-                    }
+            let oldval = get_name(valnode, state);
+            match oldval {
+                Object::Int(n) => {
+                    let newval = Object::Int(n + 1);
+                    set_name(valnode, newval.clone(), state);
+                    return newval;
                 }
                 _ => evalerror(
-                    format!("Illegal operand for preincrement: {}", valnode),
+                    format!("Illegal operand for preincrement: {}", oldval),
                     state,
                     &node.children[0]
                 )
@@ -910,55 +814,15 @@ pub fn eval(
 
             let valnode = &node.children[0];
 
-            match valnode.nodetype {
-                NodeType::Name(ref s, _, _) => {
-
-                    if state.stack.has(s) {
-                        let oldval = state.stack.get(s).clone();
-
-                        match oldval {
-                            Object::Int(n) => {
-                                let newval = Object::Int(n - 1);
-                                state.stack.update(s.as_str(), newval.clone());
-                                return newval;
-                            }
-                            _ => evalerror(
-                                format!("Illegal operand for predecrement: {}", oldval),
-                                state,
-                                &node.children[0]
-                            )
-                        }
-                    }
-                    else {
-                        let oldval = get_field(
-                            state.objsys.get_this_object(),
-                            s,
-                            state,
-                            valnode
-                        );
-
-                        match oldval {
-                            Object::Int(n) => {
-                                let newval = Object::Int(n - 1);
-                                set_field(
-                                    state.objsys.get_this_object(),
-                                    s,
-                                    newval.clone(),
-                                    state,
-                                    valnode
-                                );
-                                return newval;
-                            }
-                            _ => evalerror(
-                                format!("Illegal operand for predecrement: {}", oldval),
-                                state,
-                                &node.children[0]
-                            )
-                        }
-                    }
+            let oldval = get_name(valnode, state);
+            match oldval {
+                Object::Int(n) => {
+                    let newval = Object::Int(n - 1);
+                    set_name(valnode, newval.clone(), state);
+                    return newval;
                 }
                 _ => evalerror(
-                    format!("Illegal operand for predecrement: {}", valnode),
+                    format!("Illegal operand for predecrement: {}", oldval),
                     state,
                     &node.children[0]
                 )
@@ -969,55 +833,15 @@ pub fn eval(
 
             let valnode = &node.children[0];
 
-            match valnode.nodetype {
-                NodeType::Name(ref s, _, _) => {
-
-                    if state.stack.has(s) {
-                        let oldval = state.stack.get(s).clone();
-
-                        match oldval {
-                            Object::Int(n) => {
-                                let newval = Object::Int(n + 1);
-                                state.stack.update(s.as_str(), newval);
-                                return oldval;
-                            }
-                            _ => evalerror(
-                                format!("Illegal operand for increment: {}", oldval),
-                                state,
-                                &node.children[0]
-                            )
-                        }
-                    }
-                    else {
-                        let oldval = get_field(
-                            state.objsys.get_this_object(), 
-                            s,
-                            state,
-                            valnode
-                        );
-
-                        match oldval {
-                            Object::Int(n) => {
-                                let newval = Object::Int(n + 1);
-                                set_field(
-                                    state.objsys.get_this_object(),
-                                    s,
-                                    newval.clone(),
-                                    state,
-                                    valnode
-                                );
-                                return oldval;
-                            }
-                            _ => evalerror(
-                                format!("Illegal operand for increment: {}", oldval),
-                                state,
-                                &node.children[0]
-                            )
-                        }
-                    }
+            let oldval = get_name(valnode, state);
+            match oldval {
+                Object::Int(n) => {
+                    let newval = Object::Int(n + 1);
+                    set_name(valnode, newval.clone(), state);
+                    return oldval;
                 }
                 _ => evalerror(
-                    format!("Illegal operand for increment: {}", valnode),
+                    format!("Illegal operand for increment: {}", oldval),
                     state,
                     &node.children[0]
                 )
@@ -1028,55 +852,15 @@ pub fn eval(
 
             let valnode = &node.children[0];
 
-            match valnode.nodetype {
-                NodeType::Name(ref s, _, _) => {
-
-                    if state.stack.has(s) {
-                        let oldval = state.stack.get(s).clone();
-
-                        match oldval {
-                            Object::Int(n) => {
-                                let newval = Object::Int(n - 1);
-                                state.stack.update(s.as_str(), newval);
-                                return oldval;
-                            }
-                            _ => evalerror(
-                                format!("Illegal operand for decrement: {}", oldval),
-                                state,
-                                &node.children[0]
-                            )
-                        }
-                    }
-                    else {
-                        let oldval = get_field(
-                            state.objsys.get_this_object(),
-                            s,
-                            state,
-                            valnode
-                        );
-
-                        match oldval {
-                            Object::Int(n) => {
-                                let newval = Object::Int(n - 1);
-                                set_field(
-                                    state.objsys.get_this_object(),
-                                    s,
-                                    newval.clone(),
-                                    state,
-                                    valnode
-                                );
-                                return oldval;
-                            }
-                            _ => evalerror(
-                                format!("Illegal operand for decrement: {}", oldval),
-                                state,
-                                &node.children[0]
-                            )
-                        }
-                    }
+            let oldval = get_name(valnode, state);
+            match oldval {
+                Object::Int(n) => {
+                    let newval = Object::Int(n - 1);
+                    set_name(valnode, newval.clone(), state);
+                    return oldval;
                 }
                 _ => evalerror(
-                    format!("Illegal operand for decrement: {}", valnode),
+                    format!("Illegal operand for decrement: {}", oldval),
                     state,
                     &node.children[0]
                 )
@@ -1134,113 +918,8 @@ pub fn eval(
             return Object::String(built)
         },
 
-        NodeType::Name(s, linenum, symnum) => {
-
-            if state.in_const {
-                evalerror(
-                    "Not a constant expression.",
-                    state,
-                    node
-                )
-            }
-
-            // For Name, having a child means having an owner.
-            if node.children.len() > 0 {
-                // Run parent through the loop for lookup.
-                let owner = eval(&node.children[0], state);
-                return get_field(owner, s, state, node);
-            }
-
-            // Don't access stack or this if we are lazy evaling a topvar.
-            if state.eval_var == "" {
-                if state.stack.has(s) {
-                    return state.stack.get(s).clone();
-                }
-                else if state.objsys.has_this() {
-                    return get_field(state.objsys.get_this_object(), s, state, node);
-                }
-            }
-
-            if state.has_global(s) {
-
-                let n = state.get_global(s);
-
-                match &n.nodetype {
-
-                    NodeType::TopVarLazy(typ, name, _, _) => {
-
-                        if *name == state.eval_var {
-                            evalerror(
-                                format!("Top level variable '{}' depends on itself.", name),
-                                state,
-                                &n
-                            );
-                        }
-                        if state.eval_var.len() == 0 {
-                            state.eval_var = name.clone();
-                        }
-
-                        let res = eval(&n.children[0], state);
-                        state.eval_var = String::from("");
-                        let resolved_node = Node::new(NodeType::TopVar(
-                            typ.clone(),
-                            name.clone(),
-                            Box::new(res.clone()),
-                            linenum.clone(),
-                            symnum.clone()
-                        ));
-                        state.set_global(s, resolved_node);
-                        return res;
-                    }
-
-                    NodeType::TopVar(_, _, val, _, _) => {
-                        return *val.clone();
-                    }
-
-                    NodeType::ConstTopLazy(typ, name, _, _) => {
-
-                        if *name == state.eval_var {
-                            evalerror(
-                                format!("Top level const '{}' depends on itself.", name),
-                                state,
-                                &n
-                            );
-                        }
-                        if state.eval_var.len() == 0 {
-                            state.eval_var = name.clone();
-                        }
-
-                        state.in_const = true;
-                        let res = eval(&n.children[0], state);
-                        state.in_const = false;
-                        state.eval_var = String::from("");
-                        let resolved_node = Node::new(NodeType::ConstTopVar(
-                            typ.clone(),
-                            name.clone(),
-                            Box::new(res.clone()),
-                            linenum.clone(),
-                            symnum.clone()
-                        ));
-                        state.set_global(s, resolved_node);
-                        return res;
-                    }
-
-                    NodeType::ConstTopVar(_, _, val, _, _) => {
-                        return *val.clone();
-                    }
-
-                    _ => panic!("Unexpected node type in globals: {}", n)
-                }
-            }
-            if state.debug {
-                state.stack.printstack();
-            }
-            // As dart.
-            evalerror(
-                format!("Undefined name: '{}'.", s),
-                state,
-                node
-            );
+        NodeType::Name(_, _, _) => {
+            return get_name(node, state);
         }
 
         NodeType::Return(_, _) => {

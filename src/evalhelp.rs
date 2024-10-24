@@ -13,6 +13,193 @@ pub enum MaybeRef {
 }
 
 
+pub fn get_name(name_node: &Node, state: &mut State) -> Object {
+
+    if let NodeType::Name(s, linenum, symnum) = &name_node.nodetype {
+
+        if state.in_const {
+            evalerror(
+                "Not a constant expression.",
+                state,
+                name_node
+            )
+        }
+
+        // For Name, having a child means having an owner.
+        if name_node.children.len() > 0 {
+            // Run parent through the loop for lookup.
+            let owner = eval(&name_node.children[0], state);
+            return get_field(owner, s, state, name_node);
+        }
+
+        // Don't access stack or this if we are lazy evaling a topvar.
+        if state.eval_var == "" {
+            if state.stack.has(s) {
+                return state.stack.get(s).clone();
+            }
+            else if state.objsys.has_this() {
+                return get_field(state.objsys.get_this_object(), s, state, name_node);
+            }
+        }
+
+        if state.has_global(s) {
+
+            let n = state.get_global(s);
+
+            match &n.nodetype {
+
+                NodeType::TopVarLazy(typ, name, _, _) => {
+
+                    if *name == state.eval_var {
+                        evalerror(
+                            format!("Top level variable '{}' depends on itself.", name),
+                            state,
+                            &n
+                        );
+                    }
+                    if state.eval_var.len() == 0 {
+                        state.eval_var = name.clone();
+                    }
+
+                    let res = eval(&n.children[0], state);
+                    state.eval_var = String::from("");
+                    let resolved_node = Node::new(NodeType::TopVar(
+                        typ.clone(),
+                        name.clone(),
+                        Box::new(res.clone()),
+                        linenum.clone(),
+                        symnum.clone()
+                    ));
+                    state.set_global(s, resolved_node);
+                    return res;
+                }
+
+                NodeType::TopVar(_, _, val, _, _) => {
+                    return *val.clone();
+                }
+
+                NodeType::ConstTopLazy(typ, name, _, _) => {
+
+                    if *name == state.eval_var {
+                        evalerror(
+                            format!("Top level const '{}' depends on itself.", name),
+                            state,
+                            &n
+                        );
+                    }
+                    if state.eval_var.len() == 0 {
+                        state.eval_var = name.clone();
+                    }
+
+                    state.in_const = true;
+                    let res = eval(&n.children[0], state);
+                    state.in_const = false;
+                    state.eval_var = String::from("");
+                    let resolved_node = Node::new(NodeType::ConstTopVar(
+                        typ.clone(),
+                        name.clone(),
+                        Box::new(res.clone()),
+                        linenum.clone(),
+                        symnum.clone()
+                    ));
+                    state.set_global(s, resolved_node);
+                    return res;
+                }
+
+                NodeType::ConstTopVar(_, _, val, _, _) => {
+                    return *val.clone();
+                }
+
+                _ => panic!("Unexpected node type in globals: {}", n)
+            }
+        }
+        if state.debug {
+            state.stack.printstack();
+        }
+        // As dart.
+        evalerror(
+            format!("Undefined name: '{}'.", s),
+            state,
+            name_node
+        );
+    }
+    evalerror(format!("Not a name: {}", name_node), state, name_node);
+}
+
+
+pub fn set_name(name_node: &Node, val: Object, state: &mut State) {
+
+    if let NodeType::Name(name, linenum, symnum) = &name_node.nodetype {
+
+        if name_node.children.len() > 0 {
+            let left_obj = eval(&name_node.children[0], state);
+            set_field(left_obj, &name, val, state, &name_node);
+            return;
+        }
+
+        // Look on the stack.
+        if state.stack.has(&name) {
+            state.stack.update(&name, val);
+            return;
+        }
+
+        // Look in 'this' instance.
+        if state.objsys.has_this() {
+            let this = state.objsys.get_this_instance_mut();
+            if this.has_field(&name) {
+                set_field(state.objsys.get_this_object(), &name, val, state, &name_node);
+                return;
+            }
+        }
+
+        // Look for globals.
+        if state.has_global(&name) {
+
+            let n = state.get_global_ref(&name);
+
+            match &n.nodetype {
+
+                NodeType::TopVarLazy(typ, _, _, _) |
+                NodeType::TopVar(typ, _, _, _, _) => {
+                    let newval = Node::new(
+                        NodeType::TopVar(
+                            typ.clone(),
+                            name.clone(),
+                            Box::new(val),
+                            linenum.clone(),
+                            symnum.clone()
+                        )
+                    );
+                    state.set_global(&name, newval);
+                    return;
+                }
+                NodeType::ConstTopLazy(_, name, _, _) |
+                NodeType::ConstTopVar(_, name, _, _, _) => {
+                    evalerror(format!(
+                        "Cannot change const: {}", name),
+                        state,
+                        n
+                    )
+                }
+                _ => panic!("Unexpected node type in globals: {}", n)
+            }
+        }
+
+        evalerror(
+            format!("Setter not found: '{}'", name),
+            state,
+            &name_node
+        )
+    }
+
+    evalerror(
+        format!("Can not assign to: {}", name_node),
+        state,
+        name_node
+    )
+}
+
+
 pub fn get_field(obj: Object, field: &str, state: &State, node: &Node) -> Object {
 
     if let Object::Reference(rk) = obj {
