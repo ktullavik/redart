@@ -1264,26 +1264,14 @@ pub fn eval(
                 let ilist = state.objsys.get_list(&ilist_rk);
 
                 if let Object::Int(n) = index_obj {
-                    if n < 0 {
-                        evalerror(
-                            format!("Index must be positive: {}", n),
-                            state,
-                            node
-                        )
+                    if n >= 0 {
+                        return ilist.get_el(n as usize)
                     }
-                    return ilist.get_el(n as usize)
+                    evalerror(format!("Index must be positive: {}", n), state, node)
                 }
-                evalerror(
-                    format!("Illegal index: {}", index_obj),
-                    state,
-                    node
-                )
+                evalerror(format!("Illegal index: {}", index_obj), state, node)
             }
-            evalerror(
-                format!("Expected reference, got: {}", ilist_ref),
-                state,
-                &node.children[0]
-            )
+            evalerror(format!("Expected reference, got: {}", ilist_ref), state, &node.children[0])
         }
 
         NodeType::MethodCall(name, owner, _filename, _, _) => {
