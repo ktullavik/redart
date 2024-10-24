@@ -33,6 +33,29 @@ pub fn get_field(obj: Object, field: &str, state: &State, node: &Node) -> Object
 }
 
 
+pub fn set_field(obj: Object, field: &str, val: Object, state: &mut State, node: &Node) {
+
+    if let Object::Reference(rk) = &obj {
+        let inst = state.objsys.get_instance_mut(&rk);
+        
+        if inst.has_field(field) {
+            inst.set_field(String::from(field), val);
+            return;
+        }
+        if let MaybeObject::Some(p) = &inst.parent {
+            set_field(p.clone(), field, val, state, node);
+            return;
+        }
+        evalerror(
+            format!("Object of type '{}' has no field '{}'", inst.classname, field),
+            state,
+            node
+        )
+    }
+    panic!("Not a reference: {}", obj);
+}
+
+
 pub fn set_list_element(ulist_ref: Object, index: Object, value: Object, state: &mut State, owner_node: &Node, index_node: &Node) -> Object {
 
     let ilist_ref = get_field(ulist_ref, "__list", state, owner_node);

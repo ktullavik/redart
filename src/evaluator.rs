@@ -30,13 +30,8 @@ pub fn eval(
 
                     if node.children[0].children.len() > 0 {
                         let left_obj = eval(&node.children[0].children[0], state);
-
-                        if let Object::Reference(refid) = left_obj {
-                            let left_inst = state.objsys.get_instance_mut(&refid);
-                            left_inst.set_field(name.to_string(), right_obj);
-                            return Object::Null;
-                        }
-                        panic!("Expected reference");
+                        set_field(left_obj, name, right_obj, state, &node.children[0]);
+                        return Object::Null;
                     }
 
                     // Look on the stack.
@@ -49,7 +44,7 @@ pub fn eval(
                     if state.objsys.has_this() {
                         let this = state.objsys.get_this_instance_mut();
                         if this.has_field(name) {
-                            this.set_field(name.to_string(), right_obj);
+                            set_field(state.objsys.get_this_object(), name, right_obj, state, &node.children[0]);
                             return Object::Null;
                         }
                     }
@@ -893,8 +888,13 @@ pub fn eval(
                         match oldval {
                             Object::Int(n) => {
                                 let newval = Object::Int(n + 1);
-                                let this = state.objsys.get_this_instance_mut();
-                                this.set_field(s.clone(), newval.clone());
+                                set_field(
+                                    state.objsys.get_this_object(),
+                                    s,
+                                    newval.clone(),
+                                    state,
+                                    valnode
+                                );
                                 return newval;
                             }
                             _ => evalerror(
@@ -948,8 +948,13 @@ pub fn eval(
                         match oldval {
                             Object::Int(n) => {
                                 let newval = Object::Int(n - 1);
-                                let this = state.objsys.get_this_instance_mut();
-                                this.set_field(s.clone(), newval.clone());
+                                set_field(
+                                    state.objsys.get_this_object(),
+                                    s,
+                                    newval.clone(),
+                                    state,
+                                    valnode
+                                );
                                 return newval;
                             }
                             _ => evalerror(
@@ -1003,8 +1008,13 @@ pub fn eval(
                         match oldval {
                             Object::Int(n) => {
                                 let newval = Object::Int(n + 1);
-                                let this = state.objsys.get_this_instance_mut();
-                                this.set_field(s.clone(), newval);
+                                set_field(
+                                    state.objsys.get_this_object(),
+                                    s,
+                                    newval.clone(),
+                                    state,
+                                    valnode
+                                );
                                 return oldval;
                             }
                             _ => evalerror(
@@ -1058,8 +1068,13 @@ pub fn eval(
                         match oldval {
                             Object::Int(n) => {
                                 let newval = Object::Int(n - 1);
-                                let this = state.objsys.get_this_instance_mut();
-                                this.set_field(s.clone(), newval);
+                                set_field(
+                                    state.objsys.get_this_object(),
+                                    s,
+                                    newval.clone(),
+                                    state,
+                                    valnode
+                                );
                                 return oldval;
                             }
                             _ => evalerror(
