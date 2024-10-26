@@ -225,7 +225,7 @@ fn class(reader: &mut Reader, state: &mut State) {
                                     readmembers(&mut class, reader, state);
                                     reader.skip("}", state);
                                 }
-                
+
                                 x => parseerror(
                                     format!("Unexpected token: {}", x),
                                     state,
@@ -233,7 +233,7 @@ fn class(reader: &mut Reader, state: &mut State) {
                                 )
                             }
                         }
-                        
+
                         x => parseerror(
                             format!("Expected parent class name. Got: {}", x),
                             state,
@@ -280,39 +280,48 @@ fn readmembers(class: &mut Class, reader: &mut Reader, state: &mut State) {
 
                     reader.next();
 
-                    let mut constructor_node = Node::new(
-                        NodeType::Constructor(
-                            class.name.clone(),
-                            state.filepath.clone(),
-                            linenum,
-                            symnum
-                        ));
+                    let mut body = Node::new(NodeType::Null(reader.linenum(), reader.symnum()));
+                    let mut initlist = Node::new(NodeType::Null(reader.linenum(), reader.symnum()));
                     let params = constructor_paramlist(reader, state);
-                    constructor_node.children.push(params);
 
                     match reader.tok() {
 
+                        Token::Colon(_, _) => {
+                            initlist = initializer_list(reader, state);
+
+                            if let Token::Block1(_, _) = reader.tok() {
+                                reader.next();
+                                body  = block(reader, state);
+                            }    
+                        }
+
                         Token::Block1(_, _) => {
                             reader.next();
-                            let body  = block(reader, state);
-                            constructor_node.children.push(body);
+                            body  = block(reader, state);
                         }
 
                         Token::EndSt(_, _) => {
                             reader.next();
-                            constructor_node.children.push(
-                                Node::new(NodeType::Null(linenum, symnum))
-                            );
                         }
 
-                        x => {
+                        x =>
                             parseerror(
-                                format!("Expected constructor body, got: {}", x),
+                                format!("Unexpected token when parsing constructor: {}", reader.tok()),
                                 state,
-                                reader.tok()
+                                x
                             )
-                        }
                     }
+
+                    let constructor_node = Node::new(
+                        NodeType::Constructor(
+                            class.name.clone(),
+                            Box::new(params),
+                            Box::new(initlist),
+                            Box::new(body),
+                            state.filepath.clone(),
+                            linenum,
+                            symnum
+                    ));
 
                     got_contructor = true;
                     state.globals.push(constructor_node);
@@ -401,6 +410,9 @@ fn readmembers(class: &mut Class, reader: &mut Reader, state: &mut State) {
         let mut constructor_node = Node::new(
             NodeType::Constructor(
                 class.name.clone(),
+                Box::new(Node::new(NodeType::Null(reader.linenum(), reader.symnum()))),
+                Box::new(Node::new(NodeType::Null(reader.linenum(), reader.symnum()))),
+                Box::new(Node::new(NodeType::Null(reader.linenum(), reader.symnum()))),
                 state.filepath.clone(),
                 0,
                 0
@@ -610,6 +622,93 @@ pub fn arglist(reader: &mut Reader, state: &State) -> Node {
         panic!("Error: Expected start of arglist: '('. Found: {}", reader.tok())
     }
     panic!("Error when reading arg list.")
+}
+
+
+fn initializer_list(reader: &mut Reader, state: &State) -> Node {
+
+    let mut initlist = Node::new(NodeType::InitList(reader.linenum(), reader.symnum()));
+    let mut got_super = false;
+    let mut expect_comma = false;
+    let start = reader.tok().clone();
+
+    reader.next();
+
+    while reader.more() {
+
+        match reader.tok() {
+
+            Token::Name(name, _, _) => {
+
+                if got_super {
+                    parseerror(
+                        // As dart
+                        "The superconstructor call must be last in the initializer list",
+                        state,
+                        reader.tok()
+                    );
+                }
+                if expect_comma {
+                    parseerror("Expected separator, got: '{}'", state, reader.tok());
+                }
+
+                let name_node = Node::new(NodeType::Name(name, reader.linenum(), reader.pos()));
+                reader.next();
+                reader.skip("=", state);
+
+                let val_node = expression(reader, state);
+
+                let mut init = Node::new(NodeType::Initializer(reader.linenum(), reader.symnum()));
+                init.children.push(name_node);
+                init.children.push(val_node);
+                initlist.children.push(init);
+                expect_comma = true;
+            }
+
+            Token::Super(_, _) => {
+
+                if got_super {
+                    parseerror(
+                        // As dart
+                        "Unexpected superconstructor call",
+                        state,
+                        reader.tok()
+                    );
+                }
+                if expect_comma {
+                    parseerror("Expected separator, got: '{}'", state, reader.tok());
+                }
+
+                got_super = true;
+                let mut super_node = Node::new(NodeType::Super(reader.linenum(), reader.symnum()));
+                reader.next();
+                super_node.children.push(arglist(reader, state));
+                initlist.children.push(super_node);
+            }
+
+            Token::Comma(_, _) => {
+                if !expect_comma {
+                    parseerror("Unexpected symbol: ','", state, reader.tok());
+                }
+                reader.next();
+                expect_comma = false;
+            }
+
+            Token::EndSt(_, _) => {
+                reader.next();
+                break;
+            }
+
+            x => {
+                parseerror(format!("Unexpected token: {}", x), state, x)
+            }
+        }
+    }
+
+    if initlist.children.len() == 0 {
+        parseerror("Expected an initializer", state, start);
+    }
+    initlist
 }
 
 

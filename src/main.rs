@@ -209,7 +209,7 @@ fn filecurse(
 
         match &f.nodetype {
             NodeType::FunDef(name, _, _, _) |
-            NodeType::Constructor(name, _, _, _) |
+            NodeType::Constructor(name, _, _, _, _, _, _) |
             NodeType::TopVarLazy(_, name, _, _) |
             NodeType::ConstTopLazy(_, name, _, _) => {
                 if looktable.contains_key(name) {
@@ -244,7 +244,7 @@ fn filecurse(
             let f = &state.globals[i];
             match &f.nodetype {
                 NodeType::FunDef(name, _, _, _) |
-                NodeType::Constructor(name, _, _, _) |
+                NodeType::Constructor(name, _, _, _, _, _, _) |
                 NodeType::TopVarLazy(_, name, _, _) |
                 NodeType::ConstTopLazy(_, name, _, _) => {
                     if !looktable.contains_key(name) {

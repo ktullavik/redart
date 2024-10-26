@@ -49,6 +49,7 @@ pub enum Token {
   Brack1(usize, usize),
   Brack2(usize, usize),
   Comma(usize, usize),
+  Colon(usize, usize),
   // Modifiers
   Const(usize, usize),
   // Other
@@ -56,6 +57,7 @@ pub enum Token {
   Access(usize, usize),
   This(usize, usize),
   Return(usize, usize),
+  Super(usize, usize),
   Import(usize, usize),
   EndSt(usize, usize),
   End
@@ -122,6 +124,7 @@ impl fmt::Display for Token {
       Token::Brack1(_, _) => write!(f, "["),
       Token::Brack2(_, _) => write!(f, "]"),
       Token::Comma(_, _) => write!(f, ","),
+      Token::Colon(_, _) => write!(f, ":"),
       // Modifiers
       Token::Const(_, _) => write!(f, "const"),
       // Other
@@ -129,6 +132,7 @@ impl fmt::Display for Token {
       Token::Access(_, _) => write!(f, "."),
       Token::This(_, _)   => write!(f, "this"),
       Token::Return(_, _) => write!(f, "return"),
+      Token::Super(_, _) => write!(f, "super"),
       Token::Import(_, _) => write!(f, "import"),
       Token::EndSt(_, _) => write!(f, ";"),
       Token::End => write!(f, "END"),
@@ -183,12 +187,14 @@ impl Token {
       Token::Brack1(l, i) |
       Token::Brack2(l, i) |
       Token::Comma(l, i) |
+      Token::Colon(l, i) |
       // Modifiers
       Token::Const(l, i) |
       // Other
       Token::Assign(l, i) |
       Token::Access(l, i) |
       Token::This(l, i) |
+      Token::Super(l, i) |
       Token::Return(l, i) |
       Token::Import(l, i) |
       Token::EndSt(l, i) => {

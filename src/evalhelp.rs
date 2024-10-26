@@ -365,15 +365,12 @@ pub fn create_constructor(funcnode: &Node) -> Object {
 
     match &funcnode.nodetype {
 
-        NodeType::Constructor(cname, filename, _, _) => {
-
-            let paramnodes = &funcnode.children[0];
-            let bodynode = &funcnode.children[1];
+        NodeType::Constructor(cname, paramlist, initlist, body, filename, _, _) => {
 
             let mut paramobjs : Vec<ParamObj> = Vec::new();
 
-            for i in 0..paramnodes.children.len() {
-                let p = &paramnodes.children[i];
+            for i in 0..paramlist.children.len() {
+                let p = &paramlist.children[i];
                 match &p.nodetype {
                     NodeType::Name(s, _, _) => {
                         paramobjs.push(ParamObj{ typ: String::from(""), name: s.clone(), fieldinit: false });
@@ -384,7 +381,7 @@ pub fn create_constructor(funcnode: &Node) -> Object {
                     x => panic!("Invalid parameter: {}", x)
                 }
             }
-            return Object::Constructor(cname.to_string(), filename.clone(), bodynode.clone(), paramobjs);
+            return Object::Constructor(cname.to_string(), filename.clone(), paramobjs, *initlist.clone(), *body.clone());
         }
         _ => panic!("Invalid node type.")
     }
@@ -398,7 +395,7 @@ pub fn call_constructor(
 
     match funcobj {
 
-        Object::Constructor(cname, filename, body, params) => {
+        Object::Constructor(cname, filename, params, initlist, body) => {
 
             let args = argnodes_to_argobjs(
                 &args.children,
@@ -408,6 +405,8 @@ pub fn call_constructor(
             // Argtrees must be evaluated in callers context, but stored in new context.
 
             state.stack.push_call();
+            let oldfilename = state.filepath.clone();
+            state.filepath = filename.clone();
 
             // Make an instance.
 
@@ -424,14 +423,10 @@ pub fn call_constructor(
 
             let instref = state.objsys.register_instance(*inst).clone();
 
-            // Run the constructor body.
-
             match &instref {
                 Object::Reference(refid) => {
 
                     state.constructing.push(refid.clone());
-                    let oldfilename = state.filepath.clone();
-                    state.filepath = filename.clone();
                     let oldthis = state.objsys.get_this();
                     state.objsys.set_this(refid.clone());
 
@@ -447,19 +442,45 @@ pub fn call_constructor(
                             state.stack.add_new(params[i].name.as_str(), args[i].clone());
                         }
                     }
+
+
+                    let mut parent_args = &Node::new(NodeType::ArgList(0, 0));
+
+                    // Initializer list
+                    for i in 0 .. initlist.children.len() {
+                        let initter = &initlist.children[i];
+
+                        if let NodeType::Initializer(_, _) = initter.nodetype {
+
+                            if let NodeType::Name(fieldname, _, _) = &initter.children[0].nodetype {
+
+                                let fieldval = eval(&initter.children[1], state);
+                                let inst = state.objsys.get_this_instance_mut();
+                                inst.set_field(fieldname.clone(), fieldval)
+                            }
+                            else {
+                                panic!("Expected name node in initializer list");
+                            }
+                        }
+                        else if let NodeType::Super(_, _) = initter.nodetype {
+                            parent_args = &initter.children[0];
+                        }
+                        else {
+                            panic!("Expected initializer node in initializer list");
+                        }
+                    }
                      
                     // Initialize parent if it exists.
                     // TODO: initializer list
 
                     if parent_name != "" {
-                        let parent_args = &Node::new(NodeType::ArgList(0, 0));
 
                         if state.has_global(parent_name.as_str()) {
 
                             let parent_cons = state.get_global_ref(parent_name.as_str());
 
                             match parent_cons.nodetype {
-                                NodeType::Constructor(_, _, _, _) => {
+                                NodeType::Constructor(_, _, _, _, _, _, _) => {
                                     let parent_rk = call_constructor(&create_constructor(parent_cons), parent_args, state);
                                     let inst = state.objsys.get_this_instance_mut();
                                     inst.parent = MaybeObject::Some(parent_rk);
@@ -473,9 +494,9 @@ pub fn call_constructor(
                     eval(&body, state);
 
                     state.objsys.set_this(oldthis);
-                    state.filepath = oldfilename;
                     assert!(state.constructing.last().unwrap() == refid);
                     state.constructing.pop();
+                    state.filepath = oldfilename;
                     state.stack.pop_call();
 
                     return instref.clone();

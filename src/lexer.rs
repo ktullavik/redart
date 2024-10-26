@@ -35,6 +35,7 @@ fn read_word(tokens: &mut Vec<Token>, chars: &[char], start: usize, linenum: usi
         "in"      => Token::In(linenum, symnum),
         "const"   => Token::Const(linenum, symnum),
         "return"  => Token::Return(linenum, symnum),
+        "super"   => Token::Super(linenum, symnum),
         "class"   => Token::Class(linenum, symnum),
         "this"    => Token::This(linenum, symnum),
         "extends" => Token::Extends(linenum, symnum),
@@ -213,6 +214,10 @@ fn lex_real(input: &str, startpos: usize, interpol: usize, mut linenum: usize, m
 
             ';' => {
                 tokens.push(Token::EndSt(linenum, symnum));
+            }
+
+            ':' => {
+                tokens.push(Token::Colon(linenum, symnum));
             }
 
             '=' => {

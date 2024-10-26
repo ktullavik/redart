@@ -985,7 +985,7 @@ pub fn eval(
                     Object::Function(_, _, _, _) => {
                         call_function(MaybeRef::None, &funcobj, &node.children[0], state)
                     }
-                    Object::Constructor(_, _, _, _) => {
+                    Object::Constructor(_, _, _, _, _) => {
                         call_constructor(&funcobj, &node.children[0], state)
                     }
                     _ => panic!("Called non-callable.")
@@ -1005,7 +1005,7 @@ pub fn eval(
                             &node.children[0],
                             state)
                     }
-                    NodeType::Constructor(_, _, _, _) => {
+                    NodeType::Constructor(_, _, _, _, _, _, _) => {
                         call_constructor(
                             &create_constructor(&funcnode),
                             &node.children[0],

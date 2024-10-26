@@ -45,14 +45,17 @@ pub enum NodeType {
     List(usize, usize),
     CollAccess(usize, usize),
     This(usize, usize),
+    Super(usize, usize),
     FunDef(String, String, usize, usize), // funcname, filename
     FunCall(String, usize, usize),
     MethodCall(String, Box<Node>, String, usize, usize),  // methodname, owner, filename
     ParamList(usize, usize),
     ArgList(usize, usize),
     ThisFieldInit(String, usize, usize),
+    InitList(usize, usize),
+    Initializer(usize, usize),
     Return(usize, usize),
-    Constructor(String, String, usize, usize), // consname, filename
+    Constructor(String, Box<Node>, Box<Node>, Box<Node>, String, usize, usize), // consname, paramlist, initlist, body, filename
     Null(usize, usize),
 }
 
@@ -101,15 +104,18 @@ impl fmt::Display for NodeType {
             NodeType::Block(_, _)       => write!(f, "Block"),
             NodeType::List(_, _)        => write!(f, "[]"),
             NodeType::CollAccess(_, _)  => write!(f, "T[n]"),
-            NodeType::This(_, _)                                            => write!(f, "this"),
+            NodeType::This(_, _)        => write!(f, "this"),
+            NodeType::Super(_, _)       => write!(f, "super"),
             NodeType::FunDef(s, _filename, _, _)          => write!(f, "{}() {{}}", s),
             NodeType::FunCall(s, _, _)                             => write!(f, "{}()", s),
             NodeType::MethodCall(name, owner, _, _, _) => write!(f, "{}.{}()", name, owner),
             NodeType::ParamList(_, _)   => write!(f, "ParamList"),
             NodeType::ArgList(_, _)     => write!(f, "ArgList"),
             NodeType::ThisFieldInit(s, _, _)                      => write!(f, "this.{}", s),
+            NodeType::InitList(_, _)                                       => write!(f, "InitList"),
+            NodeType::Initializer(_, _)                                    => write!(f, "Initializer"),
             NodeType::Return(_, _)                                         => write!(f, "Return"),
-            NodeType::Constructor(name, _filename, _, _) => write!(f, "Constructor({})", name),
+            NodeType::Constructor(name, _, _, _, _, _, _) => write!(f, "Constructor({})", name),
             NodeType::Null(_, _)                                           => write!(f, "null"),
         }
     }
@@ -220,14 +226,17 @@ impl Node {
             NodeType::List(l, i) |
             NodeType::CollAccess(l, i) |
             NodeType::This(l, i) |
+            NodeType::Super(l, i) |
             NodeType::FunDef(_, _, l, i) |
             NodeType::FunCall(_, l, i) |
             NodeType::MethodCall(_, _, _, l, i) |
             NodeType::ParamList(l, i) |
             NodeType::ArgList(l, i) |
             NodeType::ThisFieldInit(_, l, i) |
+            NodeType::InitList(l, i) |
+            NodeType::Initializer(l, i) |
             NodeType::Return(l, i) |
-            NodeType::Constructor(_, _, l, i) |
+            NodeType::Constructor(_, _, _, _, _, l, i) |
             NodeType::Null(l, i)
             => {
                 (l.clone(), i.clone())
