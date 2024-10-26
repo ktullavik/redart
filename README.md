@@ -8,8 +8,8 @@ The ambition is to create a simple and portable implementation of Dart. It shoul
 | Garbage collector      | Simple mark-sweep collector implemented                                                            |
 | Type system            | Not much                                                                                           |
 | Standard library       | In progress                                                                                        |
-| Inheritance            | Limited to inheriting member of classes without constructor arguments. Awaiting initilizer lists   |
-| Initializer lists      | TODO                                                                                               |
+| Inheritance            | ✓                                                                                                  |
+| Initializer lists      | ✓                                                                                                  |
 | Private members        | TODO                                                                                               |
 | Static members         | TODO                                                                                               |
 | Getters                | TODO                                                                                               |
