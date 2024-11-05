@@ -527,7 +527,11 @@ fn paramlist(reader: &mut Reader, state: &State) -> Node {
 
                 Token::Comma(_, _) => {
                     if !expect_comma {
-                        panic!("Error: Unexpected separator in parameter list: ','.");
+                        parseerror(
+                            "Expected an identifier, but got ','.",
+                            state,
+                            reader.tok() 
+                        );
                     }
                     reader.next();
                     expect_comma = false;
