@@ -79,7 +79,7 @@ fn decl(reader: &mut Reader, state: &mut State) {
                                     linenum,
                                     symnum
                                 ));
-                            let params = paramlist(reader, state);
+                            let params = paramlist(reader, state, false);
                             node.children.push(params);
 
                             reader.skip("{", state);
@@ -282,7 +282,7 @@ fn readmembers(class: &mut Class, reader: &mut Reader, state: &mut State) {
 
                     let mut body = Node::new(NodeType::Null(reader.linenum(), reader.symnum()));
                     let mut initlist = Node::new(NodeType::Null(reader.linenum(), reader.symnum()));
-                    let params = constructor_paramlist(reader, state);
+                    let params = paramlist(reader, state, true);
 
                     match reader.tok() {
 
@@ -339,7 +339,7 @@ fn readmembers(class: &mut Class, reader: &mut Reader, state: &mut State) {
 
                                 // FIXME, why can't param_node be used directly?
                                 // Why do we need ParamObj which is not event a Node?
-                                let param_node = paramlist(reader, state);
+                                let param_node = paramlist(reader, state, false);
 
                                 reader.skip("{", state);
 
@@ -427,7 +427,7 @@ fn readmembers(class: &mut Class, reader: &mut Reader, state: &mut State) {
 }
 
 
-fn constructor_paramlist(reader: &mut Reader, state: &State) -> Node {
+fn paramlist(reader: &mut Reader, state: &State, is_constructor: bool) -> Node {
 
     if let Token::Paren1(linenum, symnum) = reader.tok() {
 
@@ -445,6 +445,16 @@ fn constructor_paramlist(reader: &mut Reader, state: &State) -> Node {
                 }
 
                 Token::This(_, _) => {
+
+                    if !is_constructor {
+                        // As dart.
+                        parseerror(
+                            "Initializing formal parameters can only be used in constructors",
+                            state,
+                            reader.tok()
+                        );
+                    }
+
                     reader.next();
                     reader.skip(".", state);
 
@@ -521,82 +531,6 @@ fn constructor_paramlist(reader: &mut Reader, state: &State) -> Node {
     else {
         parseerror(
             "Expected parameter list after constructor declaration.",
-            state,
-            reader.tok()
-        )
-    }
-    panic!("Error when reading param list.")
-}
-
-
-fn paramlist(reader: &mut Reader, state: &State) -> Node {
-
-    if let Token::Paren1(linenum, symnum) = reader.tok() {
-
-        let mut node = Node::new(NodeType::ParamList(linenum, symnum));
-        let mut expect_comma = false;
-        reader.next();
-
-        while reader.more() {
-
-            match reader.tok() {
-
-                Token::Paren2(_, _) => {
-                    reader.next();
-                    return node;
-                }
-
-                Token::Comma(_, _) => {
-                    if !expect_comma {
-                        parseerror(
-                            "Expected an identifier, but got ','.",
-                            state,
-                            reader.tok() 
-                        );
-                    }
-                    reader.next();
-                    expect_comma = false;
-                }
-
-                Token::Name(s, linenum, symnum) => {
-
-                    if let Token::Name(s2, linenum, symnum) = reader.peek() {
-
-                        reader.next();
-
-                        let param= Node::new(
-                            NodeType::TypedVar(
-                                s.to_string(),
-                                s2.to_string(),
-                                linenum,
-                                symnum
-                        ));
-                        node.children.push(param);
-                        expect_comma = true;
-                        reader.next();
-                    }
-                    else {
-                        let param= Node::new(
-                            NodeType::Name(
-                                s.to_string(),
-                                linenum,
-                                symnum
-                        ));
-                        node.children.push(param);
-                        expect_comma = true;
-                        reader.next();
-                    }
-                }
-
-                _ => {
-                    panic!("Unexpected token when reading parameters: {}", reader.tok())
-                }
-            }
-        }
-    }
-    else {
-        parseerror(
-            "Expected parameter list after function declaration.",
             state,
             reader.tok()
         )
@@ -837,7 +771,7 @@ fn statement(reader: &mut Reader, state: &State) -> Node {
                         Token::Paren1(_, _) => {
                             // Nested function declaration.
 
-                            let params = paramlist(reader, state);
+                            let params = paramlist(reader, state, false);
                             reader.skip("{", state);
                             let body = block(reader, state);
 
