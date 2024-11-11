@@ -60,7 +60,7 @@ pub enum Token {
   Super(usize, usize),
   Import(usize, usize),
   EndSt(usize, usize),
-  End
+  End(usize, usize)
 }
 
 
@@ -135,7 +135,7 @@ impl fmt::Display for Token {
       Token::Super(_, _) => write!(f, "super"),
       Token::Import(_, _) => write!(f, "import"),
       Token::EndSt(_, _) => write!(f, ";"),
-      Token::End => write!(f, "END"),
+      Token::End(_, _) => write!(f, "END"),
     }
   }
 }
@@ -197,10 +197,10 @@ impl Token {
       Token::Super(l, i) |
       Token::Return(l, i) |
       Token::Import(l, i) |
-      Token::EndSt(l, i) => {
+      Token::EndSt(l, i) |
+      Token::End(l, i) => {
         (l.clone(), i.clone())
       },
-      Token::End => panic!("Requested position of End token")
     }
   }
 

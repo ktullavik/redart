@@ -357,6 +357,6 @@ fn lex_real(input: &str, startpos: usize, interpol: usize, mut linenum: usize, m
         symnum += 1;
     }
 
-    tokens.push(Token::End);
+    tokens.push(Token::End(linenum, symnum));
     (tokens, i)
 }
