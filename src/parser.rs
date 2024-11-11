@@ -735,7 +735,7 @@ fn block(reader: &mut Reader, state: &State) -> Node {
                 break;
             }
 
-            Token::End => {
+            Token::End(_, _) => {
                 break;
             }
 
