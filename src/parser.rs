@@ -223,7 +223,7 @@ fn class(reader: &mut Reader, state: &mut State) {
                                 Token::Block1(_, _) => {
                                     reader.next();
                                     readmembers(&mut class, reader, state);
-                                    reader.skip("}", state);
+                                    reader.skip("}", state); // Ending class
                                 }
 
                                 x => parseerror(
@@ -245,7 +245,7 @@ fn class(reader: &mut Reader, state: &mut State) {
                 Token::Block1(_, _) => {
                     reader.next();
                     readmembers(&mut class, reader, state);
-                    reader.skip("}", state);
+                    reader.skip("}", state); // Ending class
                 }
 
                 x => parseerror(
@@ -483,12 +483,33 @@ fn constructor_paramlist(reader: &mut Reader, state: &State) -> Node {
                 }
 
                 Token::Name(s, linenum, symnum) => {
-                    let paramnode= Node::new(
-                        NodeType::Name(s.to_string(), linenum, symnum)
-                    );
-                    node.children.push(paramnode);
-                    expect_comma = true;
-                    reader.next();
+
+                    if let Token::Name(s2, linenum, symnum) = reader.peek() {
+
+                        reader.next();
+
+                        let param= Node::new(
+                            NodeType::TypedVar(
+                                s.to_string(),
+                                s2.to_string(),
+                                linenum,
+                                symnum
+                        ));
+                        node.children.push(param);
+                        expect_comma = true;
+                        reader.next();
+                    }
+                    else {
+                        let paramnode= Node::new(
+                            NodeType::Name(
+                                s.to_string(),
+                                linenum,
+                                symnum
+                        ));
+                        node.children.push(paramnode);
+                        expect_comma = true;
+                        reader.next();
+                    }
                 }
 
                 _ => {
@@ -755,7 +776,6 @@ fn block(reader: &mut Reader, state: &State) -> Node {
                 match reader.tok() {
 
                     Token::Block2(_, _) => {
-                        reader.next();
                         continue;
                     }
                     Token::EndSt(_, _) => {
