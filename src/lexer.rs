@@ -154,6 +154,7 @@ fn lex_real(input: &str, startpos: usize, interpol: usize, mut linenum: usize, m
                 symnum += 1;
                 if i < inp_length {
                     if chars[i] == '/' {
+                        // Comment
                         i += 1;
                         symnum += 1;
                         while i < inp_length  {
@@ -165,6 +166,25 @@ fn lex_real(input: &str, startpos: usize, interpol: usize, mut linenum: usize, m
                             }
                             i += 1;
                             symnum += 1;
+                        }
+                    }
+                    else if chars[i] == '*' {
+                        // Multi-line comment
+                        i += 1;
+                        while i < inp_length {
+                            if chars[i] == '*' {
+                                i += 1;
+                                if i < inp_length {
+                                    if chars[i] == '/' {
+                                        i += 1;
+                                        break;
+                                    }
+                                }
+                                else {
+                                    break;
+                                }
+                            }
+                            i += 1;
                         }
                     }
                     else {
