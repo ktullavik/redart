@@ -375,6 +375,9 @@ pub fn create_constructor(funcnode: &Node) -> Object {
                     NodeType::Name(s, _, _) => {
                         paramobjs.push(ParamObj{ typ: String::from(""), name: s.clone(), fieldinit: false });
                     }
+                    NodeType::TypedVar(t, s, _, _) => {
+                        paramobjs.push(ParamObj{ typ: t.clone(), name: s.clone(), fieldinit: false });
+                    }
                     NodeType::ThisFieldInit(s, _, _) => {
                         paramobjs.push(ParamObj{ typ: String::from(""), name: s.clone(), fieldinit: true });
                     }
