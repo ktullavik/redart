@@ -1144,9 +1144,7 @@ fn conditional(reader: &mut Reader, ctx: &State) -> Node {
         }
         Token::Else(linenum, symnum) => {
 
-            reader.next();
-
-            match reader.tok() {
+            match reader.next() {
 
                 Token::If(linenum, symnum) => {
 
