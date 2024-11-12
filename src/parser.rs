@@ -204,39 +204,34 @@ fn decl(reader: &mut Reader, state: &mut State) {
 
 fn class(reader: &mut Reader, state: &mut State) {
 
-    match reader.next() {
+    if let Token::Name(classname, _, _) = reader.next() {
 
-        Token::Name(classname, _, _) => {
+        let mut class = Class::new(classname.clone());
 
-            let mut class = Class::new(classname.clone());
-
-            if let Token::Extends(_, _) = reader.next() {
-                if let Token::Name(parentname, _, _) = reader.next() {
-                    class.parent = parentname;
-                    reader.next();
-                }
-                else {
-                    parseerror(
-                        "Expected parent class name",
-                        state,
-                        reader.tok()
-                    );
-                }
+        if let Token::Extends(_, _) = reader.next() {
+            if let Token::Name(parentname, _, _) = reader.next() {
+                class.parent = parentname;
+                reader.next();
             }
-            reader.skip("{", state);
-            readmembers(&mut class, reader, state);
-            reader.skip("}", state);
-            state.objsys.register_class(class);
+            else {
+                parseerror(
+                    "Expected parent class name",
+                    state,
+                    reader.tok()
+                );
+            }
         }
-
-        x => {
-            parseerror(
-                "Expected class name",
-                state,
-                x
-            );
-        }
+        reader.skip("{", state);
+        readmembers(&mut class, reader, state);
+        reader.skip("}", state);
+        state.objsys.register_class(class);
+        return;
     }
+    parseerror(
+        "Expected class name",
+        state,
+        reader.tok()
+    );
 }
 
 
