@@ -196,7 +196,11 @@ fn decl(reader: &mut Reader, state: &mut State) {
         }
 
         x => {
-            panic!("Expected top level declaration. Got {}", x);
+            parseerror(
+                format!("Expected top level declaration. Got {}", x),
+                state,
+                x
+        );
         }
     }
 }
