@@ -162,7 +162,6 @@ fn decl(reader: &mut Reader, state: &mut State) {
                                 ));
                             node.children.push(val);
                             state.globals.push(node);
-                            println!("Inserted const: {}", type_or_name);
                             return;
                         }
 
