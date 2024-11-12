@@ -231,7 +231,7 @@ fn class(reader: &mut Reader, state: &mut State) {
 
         x => {
             parseerror(
-                format!("Error: Expected class name. Got: {}", x),
+                "Expected class name",
                 state,
                 x
             );
