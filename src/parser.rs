@@ -205,60 +205,29 @@ fn decl(reader: &mut Reader, state: &mut State) {
 fn class(reader: &mut Reader, state: &mut State) {
 
     match reader.next() {
+
         Token::Name(classname, _, _) => {
 
             let mut class = Class::new(classname.clone());
 
-            match reader.next() {
-
-                Token::Extends(_, _) => {
-
-                    match reader.next() {
-                        
-                        Token::Name(parentname, _, _) => {
-                            class.parent = parentname;
-
-                            match reader.next() {
-
-                                Token::Block1(_, _) => {
-                                    reader.next();
-                                    readmembers(&mut class, reader, state);
-                                    reader.skip("}", state); // Ending class
-                                }
-
-                                x => parseerror(
-                                    format!("Unexpected token: {}", x),
-                                    state,
-                                    reader.tok()
-                                )
-                            }
-                        }
-
-                        x => parseerror(
-                            format!("Expected parent class name. Got: {}", x),
-                            state,
-                            x
-                        )
-                    }
-                }
-
-                Token::Block1(_, _) => {
+            if let Token::Extends(_, _) = reader.next() {
+                if let Token::Name(parentname, _, _) = reader.next() {
+                    class.parent = parentname;
                     reader.next();
-                    readmembers(&mut class, reader, state);
-                    reader.skip("}", state); // Ending class
                 }
-
-                x => parseerror(
-                    format!("Unexpected token: {}", x),
-                    state,
-                    x
-                )
             }
+            reader.skip("{", state);
+            readmembers(&mut class, reader, state);
+            reader.skip("}", state);
             state.objsys.register_class(class);
         }
 
         x => {
-            panic!("Error: Expected class name. Got: {}", x)
+            parseerror(
+                format!("Error: Expected class name. Got: {}", x),
+                state,
+                x
+            );
         }
     }
 }
