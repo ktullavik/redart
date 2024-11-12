@@ -215,6 +215,13 @@ fn class(reader: &mut Reader, state: &mut State) {
                     class.parent = parentname;
                     reader.next();
                 }
+                else {
+                    parseerror(
+                        "Expected parent class name",
+                        state,
+                        reader.tok()
+                    );
+                }
             }
             reader.skip("{", state);
             readmembers(&mut class, reader, state);
