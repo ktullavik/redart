@@ -6,6 +6,11 @@ class List {
     List();
 
 
+    int get length {
+        return __LIST_GET_LENGTH(__list);
+    }
+
+
     // Adds value to the end of this list, extending the length by one. 
     void add(el) {
         __LIST_ADD(__list, el);

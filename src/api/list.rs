@@ -1,6 +1,24 @@
 use crate::{error::evalerror, node::Node, object::Object, state::State};
 
 
+// GETTERS
+
+pub fn get_length(
+    args: Vec<Object>,
+    state: &mut State) -> Object {
+
+
+    if let Object::Reference(rk) = &args[0] {
+        let ilist = state.objsys.get_list_mut(rk);
+        return Object::Int(ilist.els.len() as i64);
+    }
+    panic!("Unexpected type of internal argument for List.get_length(): {}", &args[0])
+}
+
+
+
+// METHODS
+
 pub fn add(
     fnode: &Node,
     args: Vec<Object>,

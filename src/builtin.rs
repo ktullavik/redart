@@ -14,6 +14,7 @@ pub fn has_function(name: &str) -> bool {
         "__LIST_ADD" |
         "__LIST_ADDALL" |
         "__LIST_CLEAR" |
+        "__LIST_GET_LENGTH" |
         "__LIST_INSERT" |
         "__LIST_REMOVEAT" |
         "__LIST_REMOVELAST" |
@@ -69,6 +70,9 @@ pub fn call(fnode: &Node, name: &str, state: &mut State) -> Object {
         }
         "__LIST_CLEAR" => {
             api::list::clear(fnode, args, state)
+        }
+        "__LIST_GET_LENGTH" => {
+            api::list::get_length(args, state)
         }
         "__LIST_INSERT" => {
             api::list::insert(fnode, argnodes, args, state)
