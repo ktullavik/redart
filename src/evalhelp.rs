@@ -200,13 +200,27 @@ pub fn set_name(name_node: &Node, val: Object, state: &mut State) {
 }
 
 
-pub fn get_field(obj: Object, field: &str, state: &State, node: &Node) -> Object {
+pub fn get_field(obj: Object, field: &str, state: &mut State, node: &Node) -> Object {
 
     if let Object::Reference(rk) = obj {
         let inst = state.objsys.get_instance(&rk);
+
+        let c = state.objsys.get_class(&inst.classname);
+
+        if c.has_getter(field) {
+            let g = c.get_getter(field, state, node);
+            return call_function(
+                MaybeRef::Ref(rk.clone()), 
+                &g,
+                &Node::new(NodeType::ArgList(0, 0)), 
+                state
+            )
+        }
+
         if inst.has_field(field) {
             return inst.get_field(field);
         }
+
         if let MaybeObject::Some(p) = &inst.parent {
             return get_field(p.clone(), field, state, node);
         }

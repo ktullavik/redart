@@ -27,6 +27,7 @@ pub struct Class {
     pub name: String,
     pub fields: Vec<(String, String, Node)>,
     pub methods: HashMap<String, Object>,
+    pub getters: HashMap<String, Object>,
     pub parent: String
 }
 
@@ -39,6 +40,7 @@ impl Class {
             name,
             fields: Vec::new(),
             methods: HashMap::new(),
+            getters: HashMap::new(),
             parent: String::new()
         }
     }
@@ -67,6 +69,28 @@ impl Class {
         let p = state.objsys.get_class(self.parent.as_str());
         p.get_method(name, state, mnode)
     }
+
+
+    pub fn add_getter(&mut self, name: String, g: Object) {
+        self.getters.insert(name.clone(), g);
+    }
+
+
+    pub fn has_getter(&self, name: &str) -> bool {
+        if self.getters.contains_key(name) {
+            return true;
+        }
+        return false;
+    }
+
+
+    pub fn get_getter(&self, name: &str, state: &State, mnode: &Node) -> Object {
+        if self.getters.contains_key(name) {
+            return self.getters[name].clone();
+        }
+        evalerror(format!("No such getter: '{}'.", name), state, mnode)
+    }
+
 
 
     pub fn instantiate(&self) -> Box<Instance> {

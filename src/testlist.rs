@@ -122,6 +122,8 @@ pub const TESTS: &'static [&'static str] = &[
     "117.initializer_list.dart",
     "118.typed_cons_params.dart",
     "119.multiline_comment.dart",
+    "120.getter.dart",
+    "121.getter2.dart",
 ];
 
 

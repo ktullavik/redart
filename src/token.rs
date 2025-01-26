@@ -57,6 +57,7 @@ pub enum Token {
   Access(usize, usize),
   This(usize, usize),
   Return(usize, usize),
+  Get(usize, usize),
   Super(usize, usize),
   Import(usize, usize),
   EndSt(usize, usize),
@@ -132,6 +133,7 @@ impl fmt::Display for Token {
       Token::Access(_, _) => write!(f, "."),
       Token::This(_, _)   => write!(f, "this"),
       Token::Return(_, _) => write!(f, "return"),
+      Token::Get(_, _) => write!(f, "get"),
       Token::Super(_, _) => write!(f, "super"),
       Token::Import(_, _) => write!(f, "import"),
       Token::EndSt(_, _) => write!(f, ";"),
@@ -196,6 +198,7 @@ impl Token {
       Token::This(l, i) |
       Token::Super(l, i) |
       Token::Return(l, i) |
+      Token::Get(l, i) |
       Token::Import(l, i) |
       Token::EndSt(l, i) |
       Token::End(l, i) => {

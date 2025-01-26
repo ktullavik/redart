@@ -33,6 +33,7 @@ fn read_word(tokens: &mut Vec<Token>, chars: &[char], start: usize, linenum: usi
         "do"      => Token::Do(linenum, symnum),
         "for"     => Token::For(linenum, symnum),
         "in"      => Token::In(linenum, symnum),
+        "get"     => Token::Get(linenum, symnum),
         "const"   => Token::Const(linenum, symnum),
         "return"  => Token::Return(linenum, symnum),
         "super"   => Token::Super(linenum, symnum),

@@ -363,6 +363,30 @@ fn readmembers(class: &mut Class, reader: &mut Reader, state: &mut State) {
                         }
                     }
 
+                    Token::Get(_, _) => {
+
+                        match reader.next() {
+
+                            Token::Name(gettername, _, _) => {
+                                reader.next();
+                                reader.skip("{", state);
+
+                                let body = block(reader, state);
+
+                                let getterfunc = Object::Function(gettername.to_string(), state.filepath.clone(), body, Vec::new());
+                                class.add_getter(gettername.to_string(), getterfunc);
+                            }
+
+                            x => {
+                                parseerror(
+                                    "Expected name after 'get'",
+                                    state,
+                                    x
+                                );
+                            }
+                        }
+                    }
+
                     Token::Block2(_, _) => {
                         break;
                     }
