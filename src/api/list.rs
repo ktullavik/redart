@@ -7,14 +7,36 @@ pub fn get_length(
     args: Vec<Object>,
     state: &mut State) -> Object {
 
-
     if let Object::Reference(rk) = &args[0] {
-        let ilist = state.objsys.get_list_mut(rk);
+        let ilist = state.objsys.get_list(rk);
         return Object::Int(ilist.els.len() as i64);
     }
     panic!("Unexpected type of internal argument for List.get_length(): {}", &args[0])
 }
 
+
+pub fn get_first(
+    args: Vec<Object>,
+    state: &mut State) -> Object {
+
+    if let Object::Reference(rk) = &args[0] {
+        let ilist = state.objsys.get_list(rk);
+        return ilist.els.first().unwrap().clone();
+    }
+    panic!("Unexpected type of internal argument for List.get_first(): {}", &args[0])
+}
+
+
+pub fn get_last(
+    args: Vec<Object>,
+    state: &mut State) -> Object {
+
+    if let Object::Reference(rk) = &args[0] {
+        let ilist = state.objsys.get_list(rk);
+        return ilist.els.last().unwrap().clone();
+    }
+    panic!("Unexpected type of internal argument for List.get_last(): {}", &args[0])
+}
 
 
 // METHODS
@@ -316,3 +338,26 @@ pub fn to_string(
     }
     panic!("Unexpected internal argument for List.toString(): {}", args[0])
 }
+
+
+// INTERNAL
+
+// pub fn get_el(
+//     fnode: &Node,
+//     args: Vec<Object>,
+//     index: usize,
+//     state: &mut State) -> Object {
+
+//     if args.len() != 1 {
+//         panic!("One argument expected by List.get_el()");
+//     }
+
+//     if let Object::Reference(rk) = &args[0]  {
+//         let ilist = state.objsys.get_list(rk);
+//         return ilist.get_el(index);
+//     }
+//     panic!("Unexpected internal argument for List.get_at(): {}", args[0])
+// }
+
+
+

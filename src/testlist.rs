@@ -125,6 +125,8 @@ pub const TESTS: &'static [&'static str] = &[
     "120.getter.dart",
     "121.getter2.dart",
     "122.list_get_length.dart",
+    "123.list_get_first.dart",
+    "124.list_get_last.dart"
 ];
 
 

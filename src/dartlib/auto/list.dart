@@ -6,6 +6,16 @@ class List {
     List();
 
 
+    E get first {
+        return __LIST_GET_FIRST(__list);
+    }
+
+
+    E get last {
+        return __LIST_GET_LAST(__list);
+    }
+
+
     int get length {
         return __LIST_GET_LENGTH(__list);
     }
