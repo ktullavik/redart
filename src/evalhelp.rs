@@ -281,7 +281,7 @@ pub fn create_function(funcnode: &Node) -> Object {
 
     match &funcnode.nodetype {
 
-        NodeType::FunDef(fname, filename, _, _) => {
+        NodeType::FunDef(typ, fname, filename, _, _) => {
             let paramnodes = &funcnode.children[0];
             let bodynode = &funcnode.children[1];
             let mut paramobjs: Vec<ParamObj> = Vec::new();

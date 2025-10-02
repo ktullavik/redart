@@ -208,7 +208,7 @@ fn filecurse(
         let f = &state.globals[i];
 
         match &f.nodetype {
-            NodeType::FunDef(name, _, _, _) |
+            NodeType::FunDef(_, name, _, _, _) |
             NodeType::Constructor(name, _, _, _, _, _, _) |
             NodeType::TopVarLazy(_, name, _, _) |
             NodeType::ConstTopLazy(_, name, _, _) => {
@@ -243,7 +243,7 @@ fn filecurse(
 
             let f = &state.globals[i];
             match &f.nodetype {
-                NodeType::FunDef(name, _, _, _) |
+                NodeType::FunDef(_, name, _, _, _) |
                 NodeType::Constructor(name, _, _, _, _, _, _) |
                 NodeType::TopVarLazy(_, name, _, _) |
                 NodeType::ConstTopLazy(_, name, _, _) => {
@@ -284,7 +284,7 @@ fn evaluate(filepath: String, state: &mut State, dirs: &Dirs) {
     state.filepath = filename.to_string();
 
     match &mainfunc.nodetype {
-        NodeType::FunDef(_, _, _, _) => {
+        NodeType::FunDef(_, _, _, _, _) => {
             let mainbody = &mainfunc.children[1];
             state.stack.push_call();
             evaluator::eval(mainbody, state);

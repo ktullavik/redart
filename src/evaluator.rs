@@ -998,7 +998,7 @@ pub fn eval(
                 let funcnode = state.get_global(s);
 
                 return match funcnode.nodetype {
-                    NodeType::FunDef(_, _, _, _) => {
+                    NodeType::FunDef(_, _, _, _, _) => {
                         call_function(
                             MaybeRef::None,
                             &create_function(&funcnode),
@@ -1031,7 +1031,7 @@ pub fn eval(
             )
         }
 
-        NodeType::FunDef(s, _, _, _) => {
+        NodeType::FunDef(_, s, _, _, _) => {
             let funcobj = create_function(node);
             state.stack.add_new(s, funcobj);
             return Object::Null;

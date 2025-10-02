@@ -74,6 +74,7 @@ fn decl(reader: &mut Reader, state: &mut State) {
                             // Top level function
                             let mut node = Node::new(
                                 NodeType::FunDef(
+                                    typ,
                                     name.to_string(),
                                     state.filepath.clone(),
                                     linenum,
@@ -775,6 +776,7 @@ fn statement(reader: &mut Reader, state: &State) -> Node {
 
                             let mut funcnode = Node::new(
                                 NodeType::FunDef(
+                                    s,
                                     name.clone(),
                                     state.filepath.clone(),
                                     name_linenum2,

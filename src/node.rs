@@ -46,7 +46,7 @@ pub enum NodeType {
     CollAccess(usize, usize),
     This(usize, usize),
     Super(usize, usize),
-    FunDef(String, String, usize, usize), // funcname, filename
+    FunDef(String, String, String, usize, usize), // typename, funcname, filename
     FunCall(String, usize, usize),
     MethodCall(String, Box<Node>, String, usize, usize),  // methodname, owner, filename
     ParamList(usize, usize),
@@ -106,7 +106,7 @@ impl fmt::Display for NodeType {
             NodeType::CollAccess(_, _)  => write!(f, "T[n]"),
             NodeType::This(_, _)        => write!(f, "this"),
             NodeType::Super(_, _)       => write!(f, "super"),
-            NodeType::FunDef(s, _filename, _, _)          => write!(f, "{}() {{}}", s),
+            NodeType::FunDef(_, s, _filename, _, _)          => write!(f, "{}() {{}}", s),
             NodeType::FunCall(s, _, _)                             => write!(f, "{}()", s),
             NodeType::MethodCall(name, owner, _, _, _) => write!(f, "{}.{}()", name, owner),
             NodeType::ParamList(_, _)   => write!(f, "ParamList"),
@@ -227,7 +227,7 @@ impl Node {
             NodeType::CollAccess(l, i) |
             NodeType::This(l, i) |
             NodeType::Super(l, i) |
-            NodeType::FunDef(_, _, l, i) |
+            NodeType::FunDef(_, _, _, l, i) |
             NodeType::FunCall(_, l, i) |
             NodeType::MethodCall(_, _, _, l, i) |
             NodeType::ParamList(l, i) |
