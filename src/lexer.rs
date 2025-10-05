@@ -11,17 +11,17 @@ fn is_legal_namechar(c: char) -> bool {
 
 fn read_word(tokens: &mut Vec<Token>, chars: &[char], start: usize, linenum: usize, symnum: usize) -> usize {
     let mut len: usize = 0;
-    let mut sym = String::from("");
 
     while start + len < chars.len() {
         let nc: char = chars[start + len];
         if is_legal_namechar(nc) {
-            sym.push(nc);
             len += 1;
             continue;
         }
         break;
     }
+
+    let sym = String::from_iter(&chars[start .. start + len]);
 
     tokens.push(match sym.as_str() {
         "import"  => Token::Import(linenum, symnum),
