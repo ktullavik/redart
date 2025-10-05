@@ -329,14 +329,15 @@ fn lex_real(input: &str, startpos: usize, interpol: usize, mut linenum: usize, m
                 let mut is_int: bool = true;
 
                 while i + nl < inp_length {
-                    nc = input.get(i + nl .. i + nl + 1).unwrap().chars().next().unwrap();
+                    nc = chars[i + nl];
                     if nc.is_digit(10) {
                         nl += 1;
                         symnum += 1;
                         continue;
                     }
                     else if nc == '.' {
-                        if input.get(i+nl-1 .. i+nl) == Some(".") {
+                        if !is_int {
+                            // Two '.' in one number.
                             lexerror("Unexpected symbol: \".\"", linenum, symnum, filepath)
                         }
                         is_int = false;
