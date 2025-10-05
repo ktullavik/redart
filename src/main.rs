@@ -19,6 +19,7 @@ mod reader;
 mod dirs;
 mod heapobjs;
 mod evalhelp;
+// mod typechecker;
 mod api;
 
 use std::io::prelude::*;
@@ -272,6 +273,9 @@ fn evaluate(filepath: String, state: &mut State, dirs: &Dirs) {
     let basepath = parts.join("/");
 
     filecurse(basepath.clone(), String::from(filename), &mut memo, state, dirs);
+
+    //typechecker::typecheck(state);
+
 
     let toptable = &state.looktables[filename];
     if !toptable.contains_key("main") {

@@ -148,6 +148,7 @@ pub const FAILTESTS: &'static [&'static str] = &[
     "14.topvar_stack_leak.dart",
     "15.wrong_owner.dart",
     "16.wrong_owner2.dart",
+    "17.missing_return.dart"
 ];
 
 
